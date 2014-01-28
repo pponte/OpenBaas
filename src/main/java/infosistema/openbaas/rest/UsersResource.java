@@ -16,6 +16,7 @@ import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.http.Cookie;
@@ -80,7 +81,6 @@ public class UsersResource {
 		String newEmail = null;
 		Boolean newBaseLocationOption = null;
 		String newBaseLocation = null;
-		Boolean userUpdateFields = false;
 		
 		List<String> locationList = null;
 		Cookie sessionToken=null;
@@ -109,20 +109,18 @@ public class UsersResource {
 					newUserFile = (String) inputJsonObj.opt("userFile");
 					newBaseLocationOption = (Boolean) inputJsonObj.opt(User.BASE_LOCATION_OPTION);
 					newBaseLocation = (String) inputJsonObj.opt(User.BASE_LOCATION);
-					userUpdateFields = usersMid.updateUser(appId, userId, newUserName, newEmail,
-							newUserFile, newBaseLocationOption, newBaseLocation, location);
-					if(newBaseLocationOption==null){
-						User user = usersMid.getUserInApp(appId, userId);
-						if(user.getBaseLocationOption().equals("true"))
-							usersMid.updateUserLocation(userId, appId, newBaseLocation);
-					}else{
-						if(newBaseLocationOption==true)
-							usersMid.updateUserLocation(userId, appId, newBaseLocation);
+					Map<String, String> metadata = Metadata.getNewMetadata(location);
+					Result res = usersMid.updateUser(appId, userId, newUserName, newEmail, newUserFile, newBaseLocationOption, newBaseLocation, location, metadata);
+					
+					if (newBaseLocationOption == null) {
+						User user = (User)usersMid.getUserInApp(appId, userId).getData();
+						newBaseLocationOption = user.getBaseLocationOption().equals("true");
 					}
-					if(userUpdateFields){
+
+					if (newBaseLocationOption == true)
+						usersMid.updateUserLocation(userId, appId, newBaseLocation, metadata);
+					if (res != null){
 						sessionMid.refreshSession(sessionToken.getValue(), location, userAgent);
-						Metadata meta = usersMid.updateMetadata(appId, null, userId, userId, ModelEnum.users, location);
-						Result res = new Result(usersMid.getUserInApp(appId, userId), meta);		
 						return Response.status(Status.OK).entity(res).build();
 					}
 				}
@@ -226,16 +224,14 @@ public class UsersResource {
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			Log.debug("", this, "findById", "********Finding User info************");
-			User temp = null;
 			if (AppsMiddleLayer.getInstance().appExists(appId)) {
-				temp = usersMid.getUserInApp(appId, userId);
-				if (temp != null) {
-					Metadata meta = usersMid.getMetadata(appId, null, userId, ModelEnum.users);
-					Result res = new Result(temp, meta);
-					Log.debug("", this, "findById", "userId: " + temp.getUserId()+ "email: " + temp.getEmail());
+				Result res = usersMid.getUserInApp(appId, userId);
+				if (res != null) {
+					//Metadata meta = usersMid.getMetadata(appId, null, userId, ModelEnum.users);
+					//Result res = new Result(temp, meta);
 					response = Response.status(Status.OK).entity(res).build();
 				} else {
-					response = Response.status(Status.NOT_FOUND).entity(temp).build();
+					response = Response.status(Status.NOT_FOUND).entity(userId).build();
 				}
 			} else {
 				response = Response.status(Status.NOT_FOUND).entity(appId).build();

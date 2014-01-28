@@ -15,7 +15,6 @@ import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
-import java.util.Iterator;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,11 +33,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 public class UserDataResource {
 
@@ -83,18 +78,11 @@ public class UserDataResource {
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (appsMid.appExists(appId) && usersMid.userIdExists(appId, userId)) {
-				if (docMid.insertDocumentInPath(appId, userId, path, inputJson, location)) {
-					Metadata meta = null;
-					Iterator<?> it = inputJson.keys();
-					while (it.hasNext()) { 
-						String key = it.next().toString();
-						meta = docMid.createMetadata(appId, userId, key, userId, location, inputJson);
-					}
-					Result res = new Result(inputJson.toString(), meta);		
+				Result res = docMid.insertDocumentInPath(appId, userId, path, inputJson, location, Metadata.getNewMetadata(location));
+				if (res != null)				
 					response = Response.status(Status.OK).entity(res).build();
-				} else {
+				else
 					response = Response.status(Status.BAD_REQUEST).entity(new Error(inputJson.toString())).build();
-				}
 			} else {
 				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
 			}
@@ -127,11 +115,9 @@ public class UserDataResource {
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (docMid.existsDocumentInPath(appId, null, path)) {
-				if (docMid.updateDocumentInPath(appId, userId, path, inputJson, location)){
-					Metadata meta = docMid.updateMetadata(appId, userId, docMid.convertPathToString(path), userId, location, inputJson);
-					Result res = new Result(inputJson.toString(), meta);		
+				Result res = docMid.updateDocumentInPath(appId, userId, path, inputJson, location, Metadata.getNewMetadata(location));
+				if (res != null)
 					response = Response.status(Status.OK).entity(res).build();
-				}
 				else
 					response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
 			} else {
@@ -156,13 +142,8 @@ public class UserDataResource {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		if (code == 1) {
 			if (docMid.existsDocumentInPath(appId, userId, path)) {
-				if (docMid.deleteDocumentInPath(appId, userId, path)){
-					Boolean meta = docMid.deleteMetadata(appId, userId, docMid.convertPathToString(path), ModelEnum.data);
-					if(meta)
-						response = Response.status(Status.OK).entity("").build();
-					else
-						response = Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Del Meta")).build();
-				}
+				if (docMid.deleteDocumentInPath(appId, userId, path))
+					response = Response.status(Status.OK).entity("").build();
 				else
 					response = Response.status(Status.BAD_REQUEST).entity(new Error(path.toString())).build();
 			} else {
@@ -231,19 +212,11 @@ public class UserDataResource {
 				}
 				return response;
 			} else if (docMid.existsDocumentInPath(appId, userId, path)) {
-				Object data = docMid.getDocumentInPath(appId, userId, path);
-				if (data == null)
+				Result res = docMid.getDocumentInPath(appId, userId, path, true);
+				if (res == null || res.getData() == null)
 					response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
-				else{
-					try {
-						if (data instanceof JSONObject) data = (DBObject)JSON.parse(data.toString());
-						Metadata meta = docMid.getMetadata(appId, userId, docMid.convertPathToString(path), ModelEnum.data);
-						Result res = new Result(data, meta);
-						response = Response.status(Status.OK).entity(res).build();
-					} catch (Exception e) {
-						response = Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-					}	
-				}
+				else
+					response = Response.status(Status.OK).entity(res).build();
 			} else {
 				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
 			}

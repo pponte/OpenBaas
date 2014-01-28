@@ -82,14 +82,11 @@ public class StorageResource {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
-			String storageId = mediaMid.createMedia(uploadedInputStream, fileDetail, appId, ModelEnum.storage, location);
-			if (storageId == null) { 
+			Result res = mediaMid.createMedia(uploadedInputStream, fileDetail, appId, userId, ModelEnum.storage,location, Metadata.getNewMetadata(location));
+			if (res == null || res.getData() == null) 
 				response = Response.status(Status.BAD_REQUEST).entity(appId).build();
-			} else {
-				Metadata meta = mediaMid.createMetadata(appId, null, storageId, userId, ModelEnum.storage, location);
-				Result res = new Result(storageId, meta);
+			else
 				response = Response.status(Status.OK).entity(res).build();
-			}
 		} else if(code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
 		} else if(code == -1)
@@ -116,9 +113,7 @@ public class StorageResource {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		if (SessionMiddleLayer.getInstance().sessionTokenExists(sessionToken)) {
 			if (mediaMid.mediaExists(appId, ModelEnum.storage, storageId)) {
-				this.mediaMid.deleteMedia(appId, ModelEnum.storage, storageId);
-				Boolean meta = mediaMid.deleteMetadata(appId, null, storageId, ModelEnum.storage);
-				if(meta)
+				if(mediaMid.deleteMedia(appId, ModelEnum.storage, storageId))
 					response = Response.status(Status.OK).entity("").build();
 				else
 					response = Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Del Meta")).build();

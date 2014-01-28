@@ -16,12 +16,12 @@ import com.mongodb.DBCollection;
 public class MediaModel extends ModelAbstract {
 
 	// request types
-	public static final String APP_MEDIA_COLL_FORMAT = "app%sdata";
+	public static final String APP_MEDIA_COLL_FORMAT = "app%smedia";
 	protected static final String _TYPE = "_type";
 	private static final String TYPE_QUERY_FORMAT = "{" + _TYPE + ": \"%s\"";
-	private static final String ID_FORMAT = "%s:%s";
 
 	private static BasicDBObject dataProjection = null; 	
+	private static BasicDBObject dataProjectionMetadata = null; 	
 
 	public MediaModel() {
 	}
@@ -35,18 +35,23 @@ public class MediaModel extends ModelAbstract {
 		return super.getCollection(String.format(APP_MEDIA_COLL_FORMAT, appId));
 	}
 	
-	protected BasicDBObject getDataProjection() {
-		if (dataProjection == null) {
-			dataProjection = super.getDataProjection(new BasicDBObject());
-			dataProjection.append(_TYPE, ZERO);
+	@Override
+	protected BasicDBObject getDataProjection(boolean getMetadata) {
+		if (getMetadata) {
+			if (dataProjectionMetadata == null) {
+				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
+				dataProjectionMetadata.append(_TYPE, ZERO);
+			}
+			return dataProjectionMetadata;
+		} else {
+			if (dataProjection == null) {
+				dataProjection = super.getDataProjection(new BasicDBObject(), false);
+				dataProjection.append(_TYPE, ZERO);
+			}
+			return dataProjection;
 		}
-		return dataProjection;
 	}
 
-	private String getMediaId(ModelEnum type, String objId) {
-		return String.format(ID_FORMAT, type.toString(), objId);
-	}
-	
 	private String getTypeQuery(ModelEnum type) {
 		if (type == null) return "";
 		return String.format(TYPE_QUERY_FORMAT, type.toString());
@@ -54,21 +59,20 @@ public class MediaModel extends ModelAbstract {
 
 	// *** CREATE *** //
 	
-	public Boolean createMedia(String appId, ModelEnum type, String objId, Map<String, String> fields) {
+	public JSONObject createMedia(String appId, String userId, ModelEnum type, String objId, Map<String, String> mediaFields, Map<String, String> extraMetadata) {
 		try{
 			if (type == null) {
 				Log.error("", this, "createMedia", "Media as no type.");
-				return false;
+				return null;
 			}
-			JSONObject data = getJSonObject(fields);
+			JSONObject data = getJSonObject(mediaFields);
 			data.put(_ID, objId);
 			data.put(_TYPE, type.toString());
-			super.insert(appId, data);
+			return super.insert(appId, data, getMetadaJSONObject(getMetadataCreate(userId, extraMetadata)));
 		} catch (Exception e) {
 			Log.error("", this, "createMedia", "An error ocorred.", e);
-			return false;
 		}
-		return true;
+		return null;
 	}
 	
 	
@@ -90,10 +94,10 @@ public class MediaModel extends ModelAbstract {
 
 	// *** GET *** //
 
-	public Map<String, String> getMedia(String appId, ModelEnum type, String objId) {
+	public JSONObject getMedia(String appId, ModelEnum type, String objId, boolean getMetadata) {
 		//CACHE
 		try {
-			return getObjectFields(super.getDocument(appId, objId));
+			return super.getDocument(appId, objId, getMetadata);
 		} catch (JSONException e) {
 			Log.error("", this, "getMedia", "Error getting Media.", e);
 		}
@@ -112,7 +116,7 @@ public class MediaModel extends ModelAbstract {
 	public String getMediaField(String appId, ModelEnum type, String objId, String field) {
 		//CACHE
 		try {
-			return getMedia(appId, type, objId).get(field).toString();
+			return getMedia(appId, type, objId, false).get(field).toString();
 		} catch (Exception e) {
 			return null;
 		}
@@ -123,8 +127,7 @@ public class MediaModel extends ModelAbstract {
 	
 	public Boolean deleteMedia(String appId, ModelEnum type, String objId) {
 		//CACHE
-		String id = getMediaId(type, objId);
-		return super.deleteDocument(appId, id);		
+		return super.deleteDocument(appId, objId);		
 	}
 
 	
@@ -132,8 +135,7 @@ public class MediaModel extends ModelAbstract {
 	
 	public Boolean mediaExists(String appId, ModelEnum type, String objId) {
 		//CACHE
-		String id =objId;
-		return super.existsNode(appId, id);
+		return super.existsNode(appId, objId);
 	}
 
 	// *** OTHERS *** //

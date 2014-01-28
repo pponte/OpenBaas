@@ -1,7 +1,6 @@
 package infosistema.openbaas.rest;
 
 import infosistema.openbaas.data.Error;
-import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
 import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
@@ -73,7 +72,7 @@ public class AppResource {
 			boolean FileSystem;
 			String appId = null;
 			String appKey = null;
-			boolean readSucess = false, created = false;
+			boolean readSucess = false;
 			try {
 				appName = (String) inputJsonObj.get("appName");
 				confirmUsersEmail = (boolean) inputJsonObj.optBoolean("confirmUsersEmail", false);
@@ -93,20 +92,12 @@ public class AppResource {
 			if (readSucess) {
 				appId = Utils.getRandomString(IDLENGTH);
 				appKey = Utils.getRandomString(IDLENGTH);
-				created = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem);
+				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem);
 			}
-			if (created) {
-				temp = this.appsMid.getApp(appId);
-				Metadata meta = appsMid.createMetadata(appId, null, null, "admin", null, null);
-				Result res = new Result(temp, meta);
+			if (temp != null) {
+				Result res = new Result(temp, null);
 				response = Response.status(Status.CREATED).entity(res).build();
 			} else {
-				// 302 is not implemented in the response status, we can create
-				// it
-				// using Response.StatusType, or simply send the code to the
-				// constructor
-				// and let the browser interpret it.
-				// No time for details = put 302 in the parameter
 				response = Response.status(302).entity(new Error("not created")).build();
 			}
 			Log.debug("", this, "createApp", "TIME TO FULLFILL REQUEST: " + (System.currentTimeMillis() - start));
@@ -172,8 +163,7 @@ public class AppResource {
 			
 			if (this.appsMid.appExists(appId)) {
 				temp = this.appsMid.updateAllAppFields(appId, newAlive, newAppName,newConfirmUsersEmail,newAWS,newFTP,newFileSystem);
-				Metadata meta = appsMid.updateMetadata(appId, null, null, "admin", null, null);
-				Result res = new Result(temp, meta);
+				Result res = new Result(temp, null);
 				response = Response.status(Status.OK).entity(res).build();
 			} else {
 				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
@@ -204,13 +194,6 @@ public class AppResource {
 		if (code == 1) {
 			Log.debug("", this, "deleteApp", "*Deleting App (setting as inactive)*");
 			if (this.appsMid.removeApp(appId)) {
-				Log.debug("", this, "deleteApp", "******Deletion OK*******");
-				Boolean meta = appsMid.deleteMetadata(appId, null, null, null);
-				if(meta)
-					response = Response.status(Status.OK).entity("").build();
-				else
-					response = Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Del Meta")).build();
-				
 				response = Response.status(Status.OK).entity(appId).build();
 			} else
 				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
@@ -245,10 +228,10 @@ public class AppResource {
 			Application temp = appsMid.getApp(appId);
 			if (temp == null)
 				return Response.status(Status.NOT_FOUND).entity(new Error("App not exist")).build();
-			
-			Metadata meta = appsMid.updateMetadata(appId, null, null, "admin", null, null);
-			Result res = new Result(temp, meta);
-			response = Response.status(Status.OK).entity(res).build();
+			else {
+				Result res = new Result(temp, null);
+				response = Response.status(Status.OK).entity(res).build();
+			}
 		} else if(code == -2){
 			 response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
 		 }else if(code == -1)

@@ -3,6 +3,7 @@ package infosistema.openbaas.middleLayer;
 import java.util.Date;
 import java.util.HashMap;
 
+
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
 
@@ -41,20 +42,20 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 	 * @param appName
 	 * @return
 	 */
-	public boolean createApp(String appId, String appKey, String appName, boolean userEmailConfirmation,
+	public Application createApp(String appId, String appKey, String appName, boolean userEmailConfirmation,
 			boolean AWS,boolean FTP,boolean FileSystem) {
 		byte[] salt = null;
 		byte[] hash = null;
-		Boolean res= false;
 		PasswordEncryptionService service = new PasswordEncryptionService();
+		Application app = null;
 		try {
 			salt = service.generateSalt();
 			hash = service.getEncryptedPassword(appKey, salt);
-			res = appModel.createApp(appId,appKey, hash, salt, appName, new Date().toString(), userEmailConfirmation,AWS,FTP,FileSystem);
+			app = appModel.createApp(appId,appKey, hash, salt, appName, new Date().toString(), userEmailConfirmation,AWS,FTP,FileSystem);
 		} catch (Exception e) {
 			Log.error("", this, "createApp Login","", e); 
 		}
-		return res;
+		return app;
 	}
 
 	public boolean createAppFileSystem(String appId) {
@@ -122,8 +123,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 
 	public Boolean authenticateApp(String appId, String appKey) {
 		try {
-			AppsMiddleLayer appsMid = AppsMiddleLayer.getInstance();
-			HashMap<String, String> fieldsAuth = appsMid.getAuthApp(appId);
+			HashMap<String, String> fieldsAuth = getAuthApp(appId);
 			byte[] salt = null;
 			byte[] hash = null;
 			if(fieldsAuth.containsKey("hash") && fieldsAuth.containsKey("salt")){

@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -32,9 +31,9 @@ import infosistema.openbaas.dataaccess.geolocation.Geolocation;
 import infosistema.openbaas.dataaccess.models.AppModel;
 import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.dataaccess.models.MediaModel;
-import infosistema.openbaas.dataaccess.models.MetadataModel;
 import infosistema.openbaas.dataaccess.models.SessionModel;
 import infosistema.openbaas.dataaccess.models.UserModel;
+import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
 public abstract class MiddleLayerAbstract {
@@ -44,7 +43,6 @@ public abstract class MiddleLayerAbstract {
 	protected AppModel appModel;
 	protected UserModel userModel;
 	protected DocumentModel docModel;
-	protected MetadataModel metadataModel;
 	protected SessionModel sessionsModel;
 	protected MediaModel mediaModel;
 	protected Geolocation geo;
@@ -56,7 +54,6 @@ public abstract class MiddleLayerAbstract {
 		docModel = new DocumentModel();
 		appModel = new AppModel();;
 		userModel = new UserModel();
-		metadataModel = new MetadataModel(); 
 		sessionsModel = new SessionModel();
 		mediaModel = new MediaModel();
 		geo = Geolocation.getInstance();
@@ -231,14 +228,20 @@ public abstract class MiddleLayerAbstract {
 					orderBy="storageId";
 				if(orderBy.equals("_id")&&type.compareTo(ModelEnum.image)==0)
 					orderBy="imageId";
-				Map<String, String> temp = mediaModel.getMedia(appId, type, key);
-				value = temp.get(orderBy);
+				JSONObject temp = mediaModel.getMedia(appId, type, key, false);
+				try {
+					value = temp.getString(orderBy);
+				} catch (Exception e) {}
 			}
 			if(type.compareTo(ModelEnum.users)==0){
 				if(orderBy.equals("_id"))
 					orderBy="userId";
-				Map<String, String> temp = userModel.getUser(appId, key);
-				value = temp.get(orderBy);
+				JSONObject temp = userModel.getUser(appId, key, false);
+				try {
+					value = temp.getString(orderBy);
+				} catch (Exception e) {
+					Log.error("", this, "paginate", "Error getting orderBy field (" + orderBy + ")", e);
+				}
 			}
 			if(type.compareTo(ModelEnum.data)==0){
 				//TODO Nota JM: Nao esta implementado nem me parece possivel.
@@ -295,68 +298,4 @@ public abstract class MiddleLayerAbstract {
         return sortedMap;
     }
 
-
-	// *** METADATA *** //
-
-	public String getMetaKey(String appId, String userId, String id, ModelEnum type) {
-		String appIdStr = "apps." + appId;
-		String userIdStr = (userId == null ? "" : ".users." + userId);
-		String typeStr = ((type == null || userId != null) ? "" : "." + type.toString());
-		String idStr = id != null ? "." + id : "";
-		return appIdStr + userIdStr + typeStr + idStr;
-	}
-
-	public Metadata getMetadata(String appId, String userId, String id, ModelEnum type) {
-		String key = getMetaKey(appId, userId, id, type);
-		metadataModel = new MetadataModel(); 
-		Metadata retObj = new Metadata();
-		Map<String, String> fields = metadataModel.getMetadata(key);
-		DateFormat df = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
-		try { 
-			retObj.setCreateDate(df.parse(fields.get(Metadata.CREATE_DATE)));
-		} catch (Exception e) {}
-		retObj.setCreateUser(fields.get(Metadata.CREATE_USER));
-		try {
-			retObj.setLastUpdateDate(df.parse(fields.get(Metadata.LAST_UPDATE_DATE)));
-		} catch (Exception e) {}
-		retObj.setLastUpdateUser(fields.get(Metadata.LAST_UPDATE_USER));
-		retObj.setLocation(fields.get(Metadata.LOCATION));
-		return retObj;
-	}
-	
-	public Metadata createMetadata(String appId, String userId, String id, String creatorId, ModelEnum type, String location) {
-		String key = getMetaKey(appId, userId, id, type);
-		metadataModel = new MetadataModel(); 
-		Map<String, String> fields = new HashMap<String, String>();
-		fields.put(Metadata.CREATE_DATE, (new Date()).toString());
-		fields.put(Metadata.CREATE_USER, creatorId);
-		fields.put(Metadata.LAST_UPDATE_DATE, (new Date()).toString());
-		fields.put(Metadata.LAST_UPDATE_USER, creatorId);
-		fields.put(Metadata.LOCATION, location);
-		if (metadataModel.createUpdateMetadata(key, fields))
-			return getMetadata(appId, userId, id, type);
-		else
-			return null;
-	}
-	
-	public Metadata updateMetadata(String appId, String userId, String id, String creatorId, ModelEnum type, String location) {
-		String key = getMetaKey(appId, userId, id, type);
-		metadataModel = new MetadataModel(); 
-		Map<String, String> fields = new HashMap<String, String>();
-		fields.put(Metadata.LAST_UPDATE_DATE, (new Date()).toString());
-		fields.put(Metadata.LAST_UPDATE_USER, creatorId);
-		if (location != null && !"".equals(location))
-			fields.put(Metadata.LOCATION, location);
-		if (metadataModel.createUpdateMetadata(key, fields))
-			return getMetadata(appId, userId, id, type);
-		else
-			return null;
-	}
-	
-	public Boolean deleteMetadata(String appId, String userId, String id, ModelEnum type) {
-		String key = getMetaKey(appId, userId, id, type);
-		metadataModel = new MetadataModel(); 
-		return metadataModel.deleteMetadata(key, true);
-	}
-	
 }

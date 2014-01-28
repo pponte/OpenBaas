@@ -80,15 +80,11 @@ public class AudioResource {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
-			String audioId = mediaMid.createMedia(uploadedInputStream, fileDetail, appId, ModelEnum.audio, location);
-			if (audioId == null) { 
+			Result res = mediaMid.createMedia(uploadedInputStream, fileDetail, appId, userId, ModelEnum.audio, location, Metadata.getNewMetadata(location));
+			if (res == null || res.getData() == null)
 				response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
-			} else {
-				Metadata meta = mediaMid.createMetadata(appId, null, audioId, userId, ModelEnum.audio, location);
-				Result res = new Result(audioId, meta);
-				
+			else
 				response = Response.status(Status.OK).entity(res).build();
-			}
 		} else if(code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
 		} else if(code == -1)
@@ -120,9 +116,7 @@ public class AudioResource {
 		if (code == 1) {
 			Log.debug("", this, "deleteAudio", "***********Deleting Audio***********");
 			if (mediaMid.mediaExists(appId, ModelEnum.audio, audioId)) {
-				this.mediaMid.deleteMedia(appId, ModelEnum.audio, audioId);
-				Boolean meta = mediaMid.deleteMetadata(appId, null, audioId, ModelEnum.audio);
-				if(meta)
+				if(mediaMid.deleteMedia(appId, ModelEnum.audio, audioId))
 					response = Response.status(Status.OK).entity("").build();
 				else
 					response = Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Del Meta")).build();
@@ -193,13 +187,9 @@ public class AudioResource {
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			Log.debug("", this, "findAudioById", "********Finding Audio Meta**********");
-			Audio temp = null;
 			if (appsMid.appExists(this.appId)) {
 				if (mediaMid.mediaExists(this.appId, ModelEnum.audio, audioId)) {
-					temp = (Audio)(mediaMid.getMedia(appId, ModelEnum.audio, audioId));
-					Metadata meta = mediaMid.getMetadata(appId, null, audioId, ModelEnum.audio);
-					Result res = new Result(temp, meta);
-					
+					Result res = mediaMid.getMedia(appId, ModelEnum.audio, audioId, true);
 					response = Response.status(Status.OK).entity(res).build();
 				} else {
 					response = Response.status(Status.NOT_FOUND).entity(new Error("")).build();
@@ -234,7 +224,7 @@ public class AudioResource {
 		if (code == 1) {
 			Log.debug("", this, "downloadAudio", "*********Downloading Audio**********");
 			if (this.mediaMid.mediaExists(appId, ModelEnum.audio, audioId)) {
-				Audio audio = (Audio)(mediaMid.getMedia(appId, ModelEnum.audio, audioId));
+				Audio audio = (Audio)(mediaMid.getMedia(appId, ModelEnum.audio, audioId, false).getData());
 				sucess = mediaMid.download(appId, ModelEnum.audio, audioId,audio.getFileExtension());
 				if (sucess!=null)
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)

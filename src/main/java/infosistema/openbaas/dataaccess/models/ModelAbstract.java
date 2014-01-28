@@ -1,5 +1,6 @@
 package infosistema.openbaas.dataaccess.models;
 
+import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.utils.Const;
@@ -7,8 +8,8 @@ import infosistema.openbaas.utils.Log;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ public abstract class ModelAbstract {
 	protected static final int ZERO = 0; 
 	protected static final String _ID = "_id"; 
 	protected static final String _USER_ID = "_userId";
+	public static final String _METADATA = "_metadata"; 
 		
 	private static final String AND_QUERY_FORMAT = "{%s, %s}";
 	private static final String OR_QUERY_FORMAT = "{$or: [%s, %s]}";
@@ -42,7 +44,9 @@ public abstract class ModelAbstract {
 	private static final String ID_QUERY_FORMAT = "{\"" + _ID +"\": \"%s\"}";
 	private static final String USER_ID_QUERY_FORMAT = "{\"" + _USER_ID +"\": \"%s\"}";
 	private static final String CHILD_IDS_TO_REMOVE_QUERY_FORMAT = "{\"" + _ID +"\":  {$regex: \"%s.\"}}";
-
+	private static final String METADATA_KEY_FORMAT = _METADATA + ".%s"; 
+	
+	
 	// *** VARIABLES *** //
 	
 	private MongoClient mongoClient;
@@ -60,10 +64,12 @@ public abstract class ModelAbstract {
 	
 	// *** PROTECTED *** //
 
-	protected abstract BasicDBObject getDataProjection();
+	protected abstract BasicDBObject getDataProjection(boolean getMetadata);
 
-	protected BasicDBObject getDataProjection(BasicDBObject dataProjection) {
+	protected BasicDBObject getDataProjection(BasicDBObject dataProjection, boolean getMetadata) {
 		dataProjection.append(_ID, ZERO);
+		if (!getMetadata)
+			dataProjection.append(_METADATA, ZERO);
 		return dataProjection;
 	}
 
@@ -81,17 +87,7 @@ public abstract class ModelAbstract {
 		}
 		return obj;
 	}
-	
-	protected Map<String, String> getObjectFields(JSONObject obj) throws JSONException  {
-		Map<String, String> fields = new HashMap<String, String>();
-		Iterator it = obj.keys();
-		while (it.hasNext()) {
-			String key = it.next().toString();
-			fields.put(key, obj.getString(key));
-		}
-		return fields;
-	}
-	
+
 	protected List<String> removeLast(List<String> path) {
 		List<String> newPath = null;
 		if (path != null && path.size() > 0) {
@@ -109,19 +105,38 @@ public abstract class ModelAbstract {
 		return newPath;
 	}
 	
-	// *** CREATE *** //
-
- 	protected Boolean insert(String appId, JSONObject value) throws JSONException{
-		DBCollection coll = getCollection(appId);
-		JSONObject  data = new JSONObject(value.toString());
-		DBObject dbData = (DBObject)JSON.parse(data.toString());
-		coll.insert(dbData);
-		return true;
+	private String getMetadataKey(String key) {
+		return String.format(METADATA_KEY_FORMAT, key);
 	}
 	
+	protected JSONObject getMetadaJSONObject(Map<String, String> metadata) {
+		JSONObject obj = new JSONObject();
+		for (String key: metadata.keySet()) {
+			try {
+				obj.append(key, metadata.get(key));
+			} catch (JSONException e) {
+				Log.error("", this, "updateMetadata", "Error updating metadata key: " + key, e);
+			}
+		}
+		return obj;
+	}
+	
+	
+	// *** CREATE *** //
+
+ 	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata) throws JSONException{
+		DBCollection coll = getCollection(appId);
+		JSONObject data = new JSONObject(value.toString());
+		if (metadata != null) data.append(_METADATA, metadata);
+		DBObject dbData = (DBObject)JSON.parse(data.toString());
+		coll.insert(dbData);
+		return data;
+	}
+	
+ 	
 	// *** UPDATE *** //
 	
-	protected Boolean updateDocumentValue(String appId, String id, String key, Object value) throws JSONException{
+	protected JSONObject updateDocumentValue(String appId, String id, String key, Object value) throws JSONException{
 		DBCollection coll = getCollection(appId);
 		try{
 			if (value instanceof JSONObject)
@@ -135,10 +150,22 @@ public abstract class ModelAbstract {
 			coll.update(dbQuery, dbUpdate);
 		} catch (Exception e) {
 			Log.error("", this, "updateDocument", "An error ocorred.", e); 
-			return false;
+			return null;
 		}
-		return true;
+		return getDocument(appId, id, true);
 	}
+
+	protected void updateMetadata(String appId, String id, Map<String, String> metadata) {
+		if (metadata == null) return;
+		for (String key: metadata.keySet()) {
+			try {
+				updateDocumentValue(appId, id, getMetadataKey(key), metadata.get(key));
+			} catch (JSONException e) {
+				Log.error("", this, "updateMetadata", "Error updating metadata key: " + key, e);
+			}
+		}
+	}
+
 	
 	// *** DELETE *** //
 	
@@ -167,6 +194,7 @@ public abstract class ModelAbstract {
 		return true;
 	}
 	
+	
 	// *** GET LIST *** //
 
 	public List<String> getDocuments(String appId, String userId, String path, JSONObject query, String orderType) throws Exception {
@@ -190,30 +218,30 @@ public abstract class ModelAbstract {
 	protected String getQueryString(String appId, String path, JSONObject query, String orderType) throws Exception {
 		if (query!=null) {
 			if(query.has(OperatorEnum.oper.toString())){
-				OperatorEnum oper = OperatorEnum.valueOf(query.getString(OperatorEnum.oper.toString())); 
-				if (oper == null)
-					throw new Exception("Error in query."); 
-				else if (oper.equals(OperatorEnum.and)) {
-					String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
-					String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
-					return getAndQueryString(oper1, oper2);
-				} else if (oper.equals(OperatorEnum.or)) {
-					String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
-					String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
-					return getOrQueryString(oper1, oper2);
-				} else if (oper.equals(OperatorEnum.not)) {
-					String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
-					return getNotQueryString(oper1);
-				} else {
-					String value = null; 
-					try { value = query.getString(QueryParameters.ATTR_VALUE); } catch (Exception e) {}
-					String attribute = null;
-					try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
-					if (attribute == null) {
-						try { attribute = query.getString(QueryParameters.ATTR_PATH); } catch (Exception e) {}
-					}
-					return getOperationQueryString(oper, attribute, value);
+			OperatorEnum oper = OperatorEnum.valueOf(query.getString(OperatorEnum.oper.toString())); 
+			if (oper == null)
+				throw new Exception("Error in query."); 
+			else if (oper.equals(OperatorEnum.and)) {
+				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
+				String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
+				return getAndQueryString(oper1, oper2);
+			} else if (oper.equals(OperatorEnum.or)) {
+				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
+				String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
+				return getOrQueryString(oper1, oper2);
+			} else if (oper.equals(OperatorEnum.not)) {
+				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
+				return getNotQueryString(oper1);
+			} else {
+				String value = null; 
+				try { value = query.getString(QueryParameters.ATTR_VALUE); } catch (Exception e) {}
+				String attribute = null;
+				try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
+				if (attribute == null) {
+					try { attribute = query.getString(QueryParameters.ATTR_PATH); } catch (Exception e) {}
 				}
+				return getOperationQueryString(oper, attribute, value);
+			}
 			}else
 				return query.toString();
 		} else {
@@ -273,11 +301,11 @@ public abstract class ModelAbstract {
 
 	// *** GET *** //
 
-	protected JSONObject getDocument(String appId, String id) throws JSONException {
+	protected JSONObject getDocument(String appId, String id, boolean getMetadata) throws JSONException {
 		DBCollection coll = getCollection(appId);
 		BasicDBObject searchQuery = new BasicDBObject();
 		searchQuery.append(_ID, id);
-		BasicDBObject projection = getDataProjection();
+		BasicDBObject projection = getDataProjection(getMetadata);
 		DBCursor cursor = coll.find(searchQuery, projection);
 		if (cursor.hasNext()) {
 			return new JSONObject(JSON.serialize(cursor.next()));
@@ -337,4 +365,42 @@ public abstract class ModelAbstract {
 		return false;
 	}
 	
+	
+	// *** METADATA *** //
+
+	protected Map<String, String> getMetadataCreate(String userId, Map<String, String> extraMetadata) {
+		Map<String, String> metadata = new HashMap<String, String>();
+		if (extraMetadata != null) metadata.putAll(extraMetadata);
+		metadata.put(Metadata.CREATE_DATE, (new Date()).toString());
+		metadata.put(Metadata.CREATE_USER, userId);
+		metadata.put(Metadata.LAST_UPDATE_DATE, (new Date()).toString());
+		metadata.put(Metadata.LAST_UPDATE_USER, userId);
+		return metadata;
+	}
+	
+	protected Map<String, String> getMetadataUpdate(String userId, Map<String, String> extraMetadata) {
+		Map<String, String> metadata = new HashMap<String, String>();
+		if (extraMetadata != null) metadata.putAll(extraMetadata);
+		metadata.put(Metadata.LAST_UPDATE_DATE, (new Date()).toString());
+		metadata.put(Metadata.LAST_UPDATE_USER, userId);
+		return metadata;
+	}
+
+	protected Map<String, String> removeLocation(Map<String, String> metadata) {
+		Map<String, String> newMetadata = metadata;
+		if (newMetadata != null && newMetadata.containsKey(Metadata.LOCATION)) {
+			newMetadata = new HashMap<String, String>(metadata);
+			newMetadata.remove(Metadata.LOCATION);
+		}
+		return newMetadata;
+	}
+	
+	protected boolean isMetadataCreate(Map<String, String> metadata) {
+		return metadata != null && metadata.containsKey(Metadata.CREATE_DATE);		
+	}
+
+	protected boolean isMetadataUpdate(Map<String, String> metadata) {
+		return metadata != null && metadata.containsKey(Metadata.LAST_UPDATE_DATE);		
+	}
+
 }

@@ -7,7 +7,6 @@ import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.Result;
 import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.Image;
-import infosistema.openbaas.data.models.Media;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
 import infosistema.openbaas.middleLayer.MediaMiddleLayer;
 import infosistema.openbaas.middleLayer.SessionMiddleLayer;
@@ -67,22 +66,17 @@ public class ImageResource {
 			@FormDataParam(Const.FILE) FormDataContentDisposition fileDetail, @HeaderParam(value = Const.LOCATION) String location) {
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
-		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
-		
 		
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
-			String imageId = mediaMid.createMedia(uploadedInputStream, fileDetail, appId, ModelEnum.image, location);
-			if (imageId == null) { 
-				response = Response.status(Status.BAD_REQUEST).entity(new Error("")).build();
-			} else {
-				Image img = (Image) mediaMid.getMedia(appId, ModelEnum.image, imageId);
-				Metadata meta = mediaMid.createMetadata(appId, null, imageId, userId, ModelEnum.image, location);
-				Result res = new Result(img, meta);
+			Result res = mediaMid.createMedia(uploadedInputStream, fileDetail, appId, userId, ModelEnum.image, location, Metadata.getNewMetadata(location));
+			if (res == null || res.getData() == null)
+				response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
+			else
 				response = Response.status(Status.OK).entity(res).build();
-			}
 		} else if(code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
 		} else if(code == -1)
@@ -113,9 +107,7 @@ public class ImageResource {
 		if (SessionMiddleLayer.getInstance().sessionTokenExists(sessionToken)) {
 			Log.debug("", this, "deleteImage", "***********Deleting Image***********");
 			if (mediaMid.mediaExists(appId, ModelEnum.image, imageId)) {
-				this.mediaMid.deleteMedia(appId, ModelEnum.image, imageId);
-				Boolean meta = mediaMid.deleteMetadata(appId, null, imageId, ModelEnum.image);
-				if(meta)
+				if (this.mediaMid.deleteMedia(appId, ModelEnum.image, imageId))
 					response = Response.status(Status.OK).entity("").build();
 				else
 					response = Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Del Meta")).build();
@@ -186,13 +178,9 @@ public class ImageResource {
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			Log.debug("", this, "getImageMetadata", "********Finding Image Meta**********");
-			Media temp = null;
 			if(AppsMiddleLayer.getInstance().appExists(this.appId)){
 				if(mediaMid.mediaExists(appId, ModelEnum.image, imageId)){
-					temp = (Media)(mediaMid.getMedia(appId, ModelEnum.image, imageId));
-					Metadata meta = mediaMid.getMetadata(appId, null, imageId, ModelEnum.image);
-					Result res = new Result(temp, meta);
-					
+					Result res = mediaMid.getMedia(appId, ModelEnum.image, imageId, true);
 					response = Response.status(Status.OK).entity(res).build();
 				}
 				else{
@@ -224,12 +212,11 @@ public class ImageResource {
 		if (code == 1) {
 			Log.debug("", this, "downloadImage", "*********Downloading Image**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.image, imageId)) {
-				Image image = (Image)(mediaMid.getMedia(appId, ModelEnum.image, imageId));
-				sucess = mediaMid.download(appId, ModelEnum.image, imageId,image.getFileExtension());
+				Image image = (Image)(mediaMid.getMedia(appId, ModelEnum.image, imageId, false).getData());
+				sucess = mediaMid.download(appId, ModelEnum.image, imageId, image.getFileExtension());
 				if (sucess!=null){ 
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+image.getFileName()+"."+image.getFileExtension()).build();
-					//response = Response.status(Status.OK).entity(image).build();
 				}else{
 					response = Response.status(Status.NO_CONTENT).entity(new Error("Error downloading file.")).build();
 				}

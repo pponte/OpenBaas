@@ -167,7 +167,6 @@ public class SessionModel {
 	
 	// *** DELETE *** //
 	
-	
 	// *** GET LIST *** //
 	
 	// *** GET *** //

@@ -6,7 +6,6 @@ import infosistema.openbaas.middleLayer.UsersMiddleLayer;
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
-import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.User;
 import infosistema.openbaas.rest.AppResource.PATCH;
 import infosistema.openbaas.utils.Const;
@@ -46,10 +45,8 @@ public class AccountResource {
 	private AppsMiddleLayer appsMid;
 	private String appId;
 
-
 	@Context
 	UriInfo uriInfo;
-
 
 	public AccountResource(String appId) {
 		this.usersMid = UsersMiddleLayer.getInstance();
@@ -117,9 +114,7 @@ public class AccountResource {
 			if (!usersMid.userEmailExists(appId, email)) {
 				if (uriInfo == null) 
 					uriInfo=ui;
-				User outUser = usersMid.createUserAndLogin(headerParams, ui,appId, userName, email, password, userFile,baseLocationOption, baseLocation);
-				Metadata meta = usersMid.createMetadata(appId, outUser.getUserId(), null, outUser.getUserId(), ModelEnum.users, location);
-				Result res = new Result(outUser, meta);
+				Result res = usersMid.createUserAndLogin(headerParams, ui,appId, userName, email, password, userFile, baseLocationOption, baseLocation, Metadata.getNewMetadata(location));
 				response = Response.status(Status.CREATED).entity(res).build();
 			} else {
 				response = Response.status(Status.FORBIDDEN).entity(new Error("{\"email exists\": "+email+"}")).build();
@@ -179,10 +174,10 @@ public class AccountResource {
 			location = locationList.get(0);
 		if (userAgentList != null)
 			userAgent = userAgentList.get(0);
-		//// String email = usersMid.getEmailUsingUserName(appId, userName);
 		if(email == null && attemptedPassword == null)
 			return Response.status(Status.BAD_REQUEST).entity("Error reading JSON").build();
-		outUser = usersMid.getUserUsingEmail(appId, email);
+		Result res = usersMid.getUserUsingEmail(appId, email);
+		outUser = (User)res.getData();
 		if (outUser.getUserId() != null) {
 			boolean usersConfirmedOption = usersMid.getConfirmUsersEmailOption(appId);
 			// Remember the order of evaluation in java
@@ -191,7 +186,7 @@ public class AccountResource {
 					String sessionToken = Utils.getRandomString(Const.getIdLength());
 					boolean validation = sessionMid.createSession(sessionToken, appId, outUser.getUserId(), attemptedPassword);
 					sessionMid.refreshSession(sessionToken, location, userAgent);
-					lastLocation = usersMid.updateUserLocation(outUser.getUserId(),appId,location);
+					lastLocation = usersMid.updateUserLocation(outUser.getUserId(), appId, location, Metadata.getNewMetadata(location));
 					if(lastLocation==null)
 						lastLocation = outUser.getLastLocation();
 					refreshCode = true;
@@ -204,8 +199,6 @@ public class AccountResource {
 						outUser.setBaseLocation(outUser.getBaseLocation());
 						outUser.setBaseLocationOption(outUser.getBaseLocationOption());
 						outUser.setLastLocation(lastLocation);
-						Metadata meta = usersMid.createMetadata(appId, outUser.getUserId(), null, outUser.getUserId(), ModelEnum.users, location);
-						Result res = new Result(outUser, meta);
 						response = Response.status(Status.OK).entity(res).build();
 					}
 				} else {
@@ -217,8 +210,7 @@ public class AccountResource {
 				boolean validation = sessionMid.createSession(sessionToken, appId, outUser.getUserId(), attemptedPassword);
 				if(validation){
 					sessionMid.refreshSession(sessionToken, location, userAgent);
-					refreshCode = true;
-					lastLocation = usersMid.updateUserLocation(outUser.getUserId(),appId,location);
+					lastLocation = usersMid.updateUserLocation(outUser.getUserId(), appId, location, Metadata.getNewMetadata(location));
 					if (validation && refreshCode) {
 						outUser.setUserID(outUser.getUserId());
 						outUser.setReturnToken(sessionToken);
@@ -228,8 +220,6 @@ public class AccountResource {
 						outUser.setBaseLocation(outUser.getBaseLocation());
 						outUser.setBaseLocationOption(outUser.getBaseLocationOption());
 						outUser.setLastLocation(lastLocation);
-						Metadata meta = usersMid.createMetadata(appId, outUser.getUserId(), null, outUser.getUserId(), ModelEnum.users, location);
-						Result res = new Result(outUser, meta);
 						response = Response.status(Status.OK).entity(res).build();
 					}
 				}else
@@ -253,14 +243,13 @@ public class AccountResource {
 		Response response = null;
 		if (sessionMid.sessionTokenExists(sessionToken)) {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
-			User user = usersMid.getUserInApp(appId, userId);
+			Result res = usersMid.getUserInApp(appId, userId);
+			User user = (User)res.getData(); 
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (location != null) {
-				String lastLocation = usersMid.updateUserLocation(userId, appId, location);
+				String lastLocation = usersMid.updateUserLocation(userId, appId, location, Metadata.getNewMetadata(location));
 				user.setLastLocation(lastLocation);
-				Metadata meta = usersMid.updateMetadata(appId, userId, null, userId, ModelEnum.users, location);
-				Result res = new Result(user, meta);
 				sessionMid.refreshSession(sessionToken, location, userAgent);					
 				response = Response.status(Status.OK).entity(res).build();
 			} // if the device does not have the gps turned on we should not
@@ -298,10 +287,8 @@ public class AccountResource {
 				if(!flagAll){
 					if (!sessionMid.checkAppForToken(sessionToken, appId))
 						return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-					//deletes the sessions user with the token = sessionToken
 					if (sessionMid.deleteUserSession(sessionToken, userId)){
-						Metadata meta = usersMid.updateMetadata(appId, userId, null, userId, ModelEnum.users, null);
-						Result res = new Result("Signout OK", meta);
+						Result res = new Result("Signout OK", null);
 						response = Response.status(Status.OK).entity(res).build();
 					}
 					else{
@@ -314,8 +301,7 @@ public class AccountResource {
 					Log.debug("", this, "deleteSession", "********DELETING ALL SESSIONS FOR THIS USER");
 					boolean sucess = sessionMid.deleteAllUserSessions(userId);
 					if (sucess){
-						Metadata meta = usersMid.updateMetadata(appId, userId, null, userId, ModelEnum.users, null);
-						Result res = new Result("Signout OK", meta);
+						Result res = new Result("Signout OK", null);
 						response = Response.status(Status.OK).entity(res).build();
 					}
 					else
@@ -351,8 +337,7 @@ public class AccountResource {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-			Metadata meta = usersMid.getMetadata(appId, userId, null, ModelEnum.users);
-			Result res = new Result("OK", meta);
+			Result res = new Result(userId, null);
 			response = Response.status(Status.OK).entity(res).build();
 		} else
 			response = Response.status(Status.NOT_FOUND).entity(new Error(sessionToken)).build();
@@ -377,10 +362,9 @@ public class AccountResource {
 			String userId 	= sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-			User outUser = usersMid.getUserInApp(appId, userId);
+			Result res = usersMid.getUserInApp(appId, userId);
+			User outUser = (User)res.getData(); 
 			outUser.setReturnToken(sessionToken);
-			Metadata meta = usersMid.getMetadata(appId, userId, null, ModelEnum.users);
-			Result res = new Result(outUser, meta);
 			response = Response.status(Status.OK).entity(res).build();
 		} else
 			response = Response.status(Status.NOT_FOUND).entity(new Error("Token NOT_FOUND")).build();
@@ -422,7 +406,7 @@ public class AccountResource {
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
 		if(!appsMid.authenticateApp(appId,appKey))
 			return Response.status(Status.UNAUTHORIZED).entity("Wrong App Key").build();
-		boolean opOk = usersMid.recoverUser(appId, userId, email, ui, newPass,hash,salt);
+		boolean opOk = usersMid.recoverUser(appId, userId, email, ui, newPass, hash, salt, Metadata.getNewMetadata(location));
 		if(opOk){
 			Result res = new Result("Email sent with recovery details.", null);
 			response = Response.status(Status.OK).entity(res).build();
@@ -472,7 +456,7 @@ public class AccountResource {
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			Boolean auth = sessionMid.authenticateUser(appId, userId, oldPassword);
 			if(auth){
-				usersMid.updateUserPassword(appId, userId, newPassword);
+				usersMid.updateUserPassword(appId, userId, newPassword, Metadata.getNewMetadata(location));
 				if(location!=null)
 					sessionMid.refreshSession(sessionToken, location, userAgent);
 				response = Response.status(Status.OK).entity("Passoword correctly changed.").build();

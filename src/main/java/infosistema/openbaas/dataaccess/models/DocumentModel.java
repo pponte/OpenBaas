@@ -1,11 +1,12 @@
 package infosistema.openbaas.dataaccess.models;
 
+import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.dataaccess.geolocation.Geolocation;
 import infosistema.openbaas.utils.Log;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -24,7 +25,9 @@ public class DocumentModel extends ModelAbstract {
 	private static final String PARENT_PATH_QUERY_FORMAT = "{\"" + _PARENT_PATH + "\": \"%s\"}";
 	private static final String APP_DATA_COLL_FORMAT = "app%sdata";
 
-	
+	private static BasicDBObject dataProjection = null; 	
+	private static BasicDBObject dataProjectionMetadata = null; 	
+
 	// *** VARIABLES *** //
 	
 	Geolocation geo;
@@ -81,45 +84,60 @@ public class DocumentModel extends ModelAbstract {
 		return retObj;
 	}
 
-	private static BasicDBObject dataProjection = null; 	
-	protected BasicDBObject getDataProjection() {
-		if (dataProjection == null) {
-			dataProjection = super.getDataProjection(new BasicDBObject());
-			dataProjection.append(_KEY, ZERO);
-			dataProjection.append(_USER_ID, ZERO);
-			dataProjection.append(_PARENT_PATH, ZERO);
+	@Override
+	protected BasicDBObject getDataProjection(boolean getMetadata) {
+		if (getMetadata) {
+			if (dataProjectionMetadata == null) {
+				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
+				dataProjectionMetadata.append(_KEY, ZERO);
+				dataProjectionMetadata.append(_USER_ID, ZERO);
+				dataProjectionMetadata.append(_PARENT_PATH, ZERO);
+			}
+			return dataProjectionMetadata;
+		} else {
+			if (dataProjection == null) {
+				dataProjection = super.getDataProjection(new BasicDBObject(), false);
+				dataProjection.append(_KEY, ZERO);
+				dataProjection.append(_USER_ID, ZERO);
+				dataProjection.append(_PARENT_PATH, ZERO);
+			}
+			return dataProjection;
 		}
-		return dataProjection;
 	}
 
 	
 	// *** CREATE *** //
 
-	public Boolean insertDocumentInPath(String appId, String userId, List<String> path, JSONObject data) throws JSONException {
+	public JSONObject insertDocumentInPath(String appId, String userId, List<String> path, JSONObject data, Map<String, String> extraMetadata) throws JSONException {
 		deleteDocumentInPath(appId, userId, path);
-		return insertDocument(appId, userId, path, data) && 
-				updateAscendents(appId, userId, path, data);
+		JSONObject newData = insertDocument(appId, userId, path, data, extraMetadata); 
+		if (updateAscendents(appId, userId, path, data, extraMetadata))
+			return newData;
+		else
+			return null;
 	}
 	
-	private Boolean insertDocument(String appId, String userId, List<String> path, JSONObject data) throws JSONException{
-		try{ 
+	private JSONObject insertDocument(String appId, String userId, List<String> path, JSONObject data, Map<String, String> metadata) throws JSONException{
+		if (!isMetadataCreate(metadata))  metadata = getMetadataCreate(userId, metadata);
+		else metadata.remove(Metadata.LOCATION);
+		try{
 			Iterator<?> it = data.keys();
 			while (it.hasNext()) {
 				String key = (String) it.next();
 				Object value = data.get(key);
 				if (value instanceof JSONObject) {
 					List<String> newPath = addPath(path, key);
-					insertDocument(appId, userId, newPath, (JSONObject)value);
+					insertDocument(appId, userId, newPath, (JSONObject)value, metadata);
 				}
 			}
-			return insert(appId, userId, path, data);
+			return insert(appId, userId, path, data, metadata);
 		} catch (Exception e) {
 			Log.error("", this, "insertDocumentInPath", "An error ocorred.", e);
-			return false;
+			return null;
 		}
 	}
 
-	private Boolean insert(String appId, String userId, List<String> path, JSONObject value) throws JSONException{
+	private JSONObject insert(String appId, String userId, List<String> path, JSONObject value, Map<String, String> metadata) throws JSONException{
 		String id = getDocumentId(userId, path);
 		JSONObject  data = new JSONObject(value.toString());
 		data.put(_KEY, getDocumentKey(path));
@@ -128,61 +146,69 @@ public class DocumentModel extends ModelAbstract {
 		data.put(_USER_ID, userId);
 		data.put(_PARENT_PATH, getDocumentParentPath(path));
 		if(!existsDocument(appId, userId, path) || !getDocumentId(userId, path).equals(userId))
-			return super.insert(appId, data);
-		return true;
+			return super.insert(appId, data, getMetadaJSONObject(metadata));
+		return getDocument(appId, id, true);
 	}
 	
 	// *** UPDATE *** //
 	
-	public Boolean updateDocumentInPath(String appId, String userId, List<String> path, JSONObject data) throws JSONException{
+	public JSONObject updateDocumentInPath(String appId, String userId, List<String> path, JSONObject data, Map<String, String> extraMetadata) throws JSONException{
+		JSONObject newData = null; 
 		try{
 			String id = getDocumentId(userId, path);
-			if (!existsNode(appId, id)) 
-				return insertDocument(appId, userId, path, data) && updateAscendents(appId, userId, path, data);
-			Iterator<?> it = data.keys();
-			while (it.hasNext()) {
-				String key = (String) it.next();
-				Object value = data.get(key);
-				if (value instanceof JSONObject) {
-					List<String> newPath = addPath(path, key);
-					if(existsNode(appId, id+"."+key)){
-						deleteDocument(appId, id+"."+key);
-					}
-					insertDocument(appId, userId, newPath, (JSONObject)value);
-				} 
-				updateDocumentValue(appId, id, key, value);
+			Map<String, String> metadataUpdate = getMetadataUpdate(userId, extraMetadata);
+			if (!existsNode(appId, id)) {
+				newData = insertDocument(appId, userId, path, data, getMetadataCreate(userId, extraMetadata)); 
+				if (!updateAscendents(appId, userId, path, data, extraMetadata)) return null;
 			}
-			JSONObject newData = (JSONObject)getDocumentInPath(appId, userId, path);
-			updateAscendents(appId, userId, path, newData);
+			updateDocumentValues(appId, userId, path, data, true, metadataUpdate);
+			newData = (JSONObject)getDocumentInPath(appId, userId, path, false);
+			updateAscendents(appId, userId, path, newData, metadataUpdate);
 		} catch (Exception e) {
 			Log.error("", this, "updateDocumentInPath", "An error ocorred.", e); 
-			return false;
+			return null;
 		}
-		return true;
+		return newData;
 	}
 	
-	private Boolean updateDocumentValues(String appId, String id, String key, JSONObject value) throws JSONException{
-		Iterator it = value.keys();
+	private Boolean updateDocumentValues(String appId, String userId, List<String> path, JSONObject data, boolean updateChilds, Map<String, String> metadata) throws JSONException{
+		String id = getDocumentId(userId, path); 
+		Iterator<?> it = data.keys();
+		Map<String, String> metadataCreate = null;
 		while (it.hasNext()) {
-			String k = it.next().toString();
-			Object v = value.get(k);
-			updateDocumentValue(appId, id, k, v);
+			String key = it.next().toString();;
+			Object value = data.get(key);
+			if (updateChilds && value instanceof JSONObject) {
+				List<String> newPath = addPath(path, key);
+				if (existsNode(appId, id+"."+key)) {
+					deleteDocument(appId, id+"."+key);
+				}
+				if (metadataCreate == null) {
+					metadataCreate = getMetadataCreate(userId, metadata);
+					metadataCreate.remove(Metadata.LOCATION);
+				}
+				insertDocument(appId, userId, newPath, (JSONObject)value, metadataCreate);
+			}
+			updateDocumentValue(appId, id, key, value);
 		}
+		if (!isMetadataUpdate(metadata)) metadata = getMetadataUpdate(userId, metadata);
+		updateMetadata(appId, id, metadata);
 		return true;
 	}
 	
-	private Boolean updateAscendents(String appId, String userId, List<String> path, JSONObject data) throws JSONException{
+	private Boolean updateAscendents(String appId, String userId, List<String> path, JSONObject data, Map<String, String> metadata) throws JSONException{
 		if (userId == null || "".equals(userId)) userId = DATA; 
+		if (!isMetadataUpdate(metadata)) metadata = getMetadataUpdate(userId, metadata);
 		String key = getDocumentKey(path);
 		path = removeLast(path);
 		String id = getDocumentId(userId, path);
 		if (!existsNode(appId, id))
-			insert(appId, userId, path, new JSONObject());
+			insert(appId, userId, path, new JSONObject(), getMetadataCreate(userId, metadata));
 		if ("".equals(key))
-			return updateDocumentValues(appId, id, key, data);
+			return updateDocumentValues(appId, userId, path, data, false, metadata);
 		else {
 			updateDocumentValue(appId, id, key, data);
-			return updateAscendents(appId, userId, path, (JSONObject)getDocumentInPath(appId, userId, path));
+			return updateAscendents(appId, userId, path, (JSONObject)getDocumentInPath(appId, userId, path, false), metadata);
 		}
 	}
 	
@@ -248,18 +274,18 @@ public class DocumentModel extends ModelAbstract {
 
 	// *** GET *** //
 
-	public Object getDocumentInPath(String appId, String userId, List<String> path) throws JSONException {
+	public Object getDocumentInPath(String appId, String userId, List<String> path, boolean getMetadata) throws JSONException {
 		String id = getDocumentId(userId, path);
 		BasicDBObject searchQuery = new BasicDBObject();
 		searchQuery.append(_ID, id);
 		if (existsNode(appId, id)) {
-			return super.getDocument(appId, id);
+			return super.getDocument(appId, id, getMetadata);
 		} else if (path != null && path.size() > 0) {
 			String key = getDocumentKey(path);
 			path = removeLast(path);
 			id = getDocumentId(userId, path);
 			if (existsNode(appId, id))
-				return (super.getDocument(appId, id).get(key));
+				return super.getDocument(appId, id, false).get(key);
 		}
 		return null;
 	}

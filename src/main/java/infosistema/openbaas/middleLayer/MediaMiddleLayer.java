@@ -7,13 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 
+import infosistema.openbaas.data.Metadata;
+import infosistema.openbaas.data.Result;
 import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.Audio;
 import infosistema.openbaas.data.models.Image;
@@ -22,6 +27,7 @@ import infosistema.openbaas.data.models.Storage;
 import infosistema.openbaas.data.models.Video;
 import infosistema.openbaas.dataaccess.files.FileInterface;
 import infosistema.openbaas.dataaccess.models.MediaModel;
+import infosistema.openbaas.dataaccess.models.ModelAbstract;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
@@ -90,8 +96,8 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	
 	// *** CREATE *** //
 
-	public String createMedia(InputStream stream, FormDataContentDisposition fileDetail, String appId,
-			ModelEnum type, String location) {
+	public Result createMedia(InputStream stream, FormDataContentDisposition fileDetail, String appId, String userId,
+			ModelEnum type, String location, Map<String, String> extraMetadata) {
 
 		String id = createFileId(appId, type);
 		
@@ -125,12 +131,22 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 			String[] splitted = location.split(":");
 			geo.insertObjectInGrid(Double.parseDouble(splitted[0]),	Double.parseDouble(splitted[1]), type, appId, id);
 		}
-
 		
-		if (mediaModel.createMedia(appId, type, id, fields))
-			return id;
-		else 
+		Metadata metadata = null;
+		Object data = null;
+		data = mediaModel.createMedia(appId, userId, type, id, fields, extraMetadata);
+		if (data != null) {
+			try {
+				metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
+			} catch (JSONException e) {
+				Log.error("", this, "createMedia", "Error gettin metadata.", e);
+			}
+			((JSONObject) data).remove(ModelAbstract._METADATA);
+			data = (DBObject)JSON.parse(data.toString());
+			return new Result(data, metadata);
+		} else {
 			return null;
+		}
 	}
 
 
@@ -179,32 +195,41 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	
 	
 	// *** GET *** //
-	public Media getMedia(String appId, ModelEnum type, String id) {
-		Map<String, String> fields = mediaModel.getMedia(appId, type, id);
-		fields.put(Media.ID, id);
+	public Result getMedia(String appId, ModelEnum type, String id, boolean getMetadata) {
+		JSONObject obj = mediaModel.getMedia(appId, type, id, getMetadata);
 
 		Media media = null;
+		Metadata metadata = null;
 		
-		if (type == ModelEnum.audio) {
-			media = new Audio();
-			//((Audio)media).setDefaultBitRate(fields.get(Audio.BITRATE));
-		} else if (type == ModelEnum.image) {
-			media = new Image();
-			//((Image)media).setResolution(fields.get(Image.RESOLUTION));
-		} else if (type == ModelEnum.storage) {
-			media = new Storage();
-		} else if (type == ModelEnum.video) {
-			media = new Video();
-			//((Video)media).setResolution(fields.get(Video.RESOLUTION));
+		try {
+			obj.put(Media.ID, id);
+			if (type == ModelEnum.audio) {
+				media = new Audio();
+				//((Audio)media).setDefaultBitRate(obj.get(Audio.BITRATE));
+			} else if (type == ModelEnum.image) {
+				media = new Image();
+				//((Image)media).setResolution(obj.get(Image.RESOLUTION));
+			} else if (type == ModelEnum.storage) {
+				media = new Storage();
+			} else if (type == ModelEnum.video) {
+				media = new Video();
+				//((Video)media).setResolution(obj.get(Video.RESOLUTION));
+			}
+			media.setId(obj.getString(Media.ID));
+			media.setSize(obj.getLong(Media.SIZE));
+			media.setDir(obj.getString(Media.PATH));
+			media.setFileName(obj.getString(Media.FILENAME));
+			media.setFileExtension(obj.getString(Media.FILEEXTENSION));
+			media.setLocation(obj.getString(Media.LOCATION));
+			if (getMetadata) {
+				metadata = Metadata.getMetadata(obj.getJSONObject(ModelAbstract._METADATA));
+			}
+		} catch (JSONException e) {
+			Log.error("", this, "getMedia", "Error getting Media.", e);
 		}
-		media.setId(fields.get(Media.ID));
-		media.setSize(Long.parseLong(fields.get(Media.SIZE)));
-		media.setDir(fields.get(Media.PATH));
-		media.setFileName(fields.get(Media.FILENAME));
-		media.setFileExtension(fields.get(Media.FILEEXTENSION));
-		media.setLocation(fields.get(Media.LOCATION));
 
-		return media;
+		return new Result(media, metadata);
+
 	}
 
 	

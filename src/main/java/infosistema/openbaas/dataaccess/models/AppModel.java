@@ -44,10 +44,9 @@ public class AppModel {
 	 * @return
 	 * @throws UnsupportedEncodingException 
 	 */
-	public Boolean createApp(String appId, String appKey, byte[] hash, byte[] salt, String appName, String creationDate, 
+	public Application createApp(String appId, String appKey, byte[] hash, byte[] salt, String appName, String creationDate, 
 			Boolean confirmUsersEmail, Boolean AWS, Boolean FTP, Boolean FileSystem) throws UnsupportedEncodingException {
 		Jedis jedis = pool.getResource();
-		Boolean sucess = false;
 		try {
 			if (!jedis.exists("apps:" + appId)) {
 				jedis.hset("apps:" + appId, "creationDate", creationDate);
@@ -61,22 +60,21 @@ public class AppModel {
 				jedis.hset("apps:" + appId, FileMode.aws.toString(), "" + AWS);
 				jedis.hset("apps:" + appId, FileMode.ftp.toString(), "" + FTP);
 				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), "" + FileSystem);
-				sucess = true;
+				return getApplication(appId);
 			}
+		} catch (Exception e) {
 		} finally {
 			pool.returnResource(jedis);
 		}
-		return sucess;
-
+		return null;
 	}
 
 
 	// *** UPDATE *** //
 	
-	public Boolean updateAppFields(String appId, String alive, String newAppName, Boolean confirmUsersEmail,
+	public Application updateAppFields(String appId, String alive, String newAppName, Boolean confirmUsersEmail,
 			Boolean aws, Boolean ftp, Boolean fileSystem) {
 		Jedis jedis = pool.getResource();
-		Boolean res = false;
 		try {
 			if (newAppName != null)
 				jedis.hset("apps:" + appId, "appName", newAppName);
@@ -98,11 +96,10 @@ public class AppModel {
 				jedis.hset("apps:" + appId, FileMode.ftp.toString(), ""+ftp);
 			if (fileSystem != null)
 				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), ""+fileSystem);
-			res = true;
 		} finally {
 			pool.returnResource(jedis);
 		}
-		return res;
+		return getApplication(appId);
 	}
 
 

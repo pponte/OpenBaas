@@ -48,6 +48,7 @@ public class UserModel extends ModelAbstract {
 	}
 
 	private static BasicDBObject dataProjection = null;
+	private static BasicDBObject dataProjectionMetadata = null; 	
 
 	// *** PROTECTED *** //
 
@@ -56,35 +57,50 @@ public class UserModel extends ModelAbstract {
 		return super.getCollection(String.format(APP_DATA_COLL_FORMAT, appId));
 	}
 	
-
-	protected BasicDBObject getDataProjection() {
-		if (dataProjection == null) {
-			dataProjection = super.getDataProjection(new BasicDBObject());
-			dataProjection.append(_USER_ID, ZERO);
-			//Users
-			dataProjection.append(_SN_SOCIALNETWORK_ID, ZERO);
-			dataProjection.append(_BASE_LOCATION_OPTION, ZERO);
-			dataProjection.append(_HASH, ZERO);
-			dataProjection.append(_EMAIL, ZERO);
-			dataProjection.append(_ALIVE, ZERO);
-			dataProjection.append(_SALT, ZERO);
+	@Override
+	protected BasicDBObject getDataProjection(boolean getMetadata) {
+		if (getMetadata) {
+			if (dataProjectionMetadata == null) {
+				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
+				dataProjectionMetadata.append(_USER_ID, ZERO);
+				//Users
+				dataProjectionMetadata.append(_SN_SOCIALNETWORK_ID, ZERO);
+				dataProjectionMetadata.append(_BASE_LOCATION_OPTION, ZERO);
+				dataProjectionMetadata.append(_HASH, ZERO);
+				dataProjectionMetadata.append(_EMAIL, ZERO);
+				dataProjectionMetadata.append(_ALIVE, ZERO);
+				dataProjectionMetadata.append(_SALT, ZERO);
+			}
+			return dataProjectionMetadata;
+		} else {
+			if (dataProjection == null) {
+				dataProjection = super.getDataProjection(new BasicDBObject(), false);
+				dataProjection.append(_USER_ID, ZERO);
+				//Users
+				dataProjection.append(_SN_SOCIALNETWORK_ID, ZERO);
+				dataProjection.append(_BASE_LOCATION_OPTION, ZERO);
+				dataProjection.append(_HASH, ZERO);
+				dataProjection.append(_EMAIL, ZERO);
+				dataProjection.append(_ALIVE, ZERO);
+				dataProjection.append(_SALT, ZERO);
+			}
+			return dataProjection;
 		}
-		return dataProjection;
 	}
 
 	
 	// *** CREATE *** //
 
-	public Boolean createUser(String appId, String userId, Map<String, String> fields) {
+	public JSONObject createUser(String appId, String userId, Map<String, String> userFields, Map<String, String> extraMetadata) {
 		Jedis jedis = pool.getResource();
-		Boolean res = false;
 		try {
 			String userKey = getUserKey(appId, userId);
+			JSONObject metadata = getMetadaJSONObject(getMetadataCreate(userId, extraMetadata));
+			JSONObject obj = new JSONObject();
 			if (!jedis.exists(userKey)) {
-				JSONObject obj = new JSONObject();
-				for (String key : fields.keySet()) {
-					if (fields.get(key) != null) {
-						String value = fields.get(key);
+				for (String key : userFields.keySet()) {
+					if (userFields.get(key) != null) {
+						String value = userFields.get(key);
 						if (User.isIndexedField(key)) {
 							jedis.set(getKey(appId, key, value), userId);
 						}
@@ -94,15 +110,16 @@ public class UserModel extends ModelAbstract {
 				}
 				obj.put(_USER_ID, userId);
 				obj.put(_ID, userId);
-				super.insert(appId, obj);
-				res = true;
+				obj.put(_METADATA, metadata);
+				super.insert(appId, obj, metadata);
 			}
+			return obj;
 		} catch (Exception e) {
 			Log.error("", this, "createUser", "Error creating User", e);
 		} finally {
 			pool.returnResource(jedis);
 		}
-		return res;
+		return null;
 	}
 
 
@@ -121,9 +138,8 @@ public class UserModel extends ModelAbstract {
 	 * @throws UnsupportedEncodingException 
 	 */
 
-	public Boolean updateUser(String appId, String userId, Map<String, String> fields) {
+	public JSONObject updateUser(String appId, String userId, Map<String, String> fields, Map<String, String> extraMetadata) {
 		Jedis jedis = pool.getResource();
-		Boolean res = false;
 		try {
 			String userKey = getUserKey(appId, userId);
 			if (jedis.exists(userKey)) {
@@ -142,13 +158,14 @@ public class UserModel extends ModelAbstract {
 					}
 				}
 			}
-			res = true;
+			updateMetadata(appId, userId, getMetadataUpdate(userId, extraMetadata));
+			return getUser(appId, userId, true);
 		} catch (Exception e) {
 			Log.error("", this, "updateUser", "Error updating User", e);
 		} finally {
 			pool.returnResource(jedis);
 		}
-		return res;
+		return null;
 	}
 	
 
@@ -165,18 +182,22 @@ public class UserModel extends ModelAbstract {
 	 * @param userId
 	 * @return
 	 */
-	public Map<String, String> getUser(String appId, String userId) {
+	public JSONObject getUser(String appId, String userId, boolean getMetadata) {
 		Jedis jedis = pool.getResource();
 		Map<String, String> userFields = null;
 		try {
 			String userKey = getUserKey(appId, userId);
 			userFields = jedis.hgetAll(userKey);
+			if (!getMetadata) userFields.remove(_METADATA);
 			if (userFields == null || userFields.size() <= 0)
 				return null;
+			return getJSonObject(userFields);
+		} catch (Exception e) {
+			Log.error("", this, "getUser", "Error getting user", e);
+			return null;
 		} finally {
 			pool.returnResource(jedis);
 		}
-		return userFields;
 	}
 
 	public String getUserField(String appId, String userId, String field) {

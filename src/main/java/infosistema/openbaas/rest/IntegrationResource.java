@@ -2,15 +2,12 @@ package infosistema.openbaas.rest;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
-import infosistema.openbaas.data.enums.ModelEnum;
-import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.data.models.User;
 //import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
@@ -172,11 +169,9 @@ public class IntegrationResource {
 		}
 		userId = usersMid.getUserIdUsingEmail(appId, email);
 		userSocialId = usersMid.socialUserExists(appId, socialId, socialNetwork);
-		if (userId==null) {
+		if (userId == null) {
 			if (uriInfo == null) uriInfo=ui;
-			outUser = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork);
-			Metadata meta = usersMid.createMetadata(appId, userId, null, userId, ModelEnum.users, location);
-			Result res = new Result(outUser, meta);
+			Result res = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork, Metadata.getNewMetadata(location));
 			response = Response.status(Status.CREATED).entity(res).build();
 		} else {
 			String sessionToken = Utils.getRandomString(Const.getIdLength());
@@ -187,8 +182,7 @@ public class IntegrationResource {
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);
 				outUser.setUserName(userName);
-				Metadata meta = usersMid.createMetadata(appId, userId, null, userId, ModelEnum.users, location);
-				Result res = new Result(outUser, meta);
+				Result res = new Result(outUser, null);
 				response = Response.status(Status.OK).entity(res).build();
 			}
 		}
@@ -274,9 +268,7 @@ public class IntegrationResource {
 		
 		if (userId==null) {
 			if (uriInfo == null) uriInfo=ui;
-			outUser = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork);
-			Metadata meta = usersMid.createMetadata(appId, userId, null, userId, ModelEnum.users, location);
-			Result res = new Result(outUser, meta);
+			Result res = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork, Metadata.getNewMetadata(location));
 			response = Response.status(Status.CREATED).entity(res).build();
 		} else {
 			String sessionToken = Utils.getRandomString(Const.getIdLength());
@@ -287,8 +279,7 @@ public class IntegrationResource {
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);
 				outUser.setUserName(userName);
-				Metadata meta = usersMid.createMetadata(appId, userId, null, userId, ModelEnum.users, location);
-				Result res = new Result(outUser, meta);
+				Result res = new Result(outUser, null);
 				response = Response.status(Status.OK).entity(res).build();
 			}
 		}
