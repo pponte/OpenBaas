@@ -1,5 +1,6 @@
 package infosistema.openbaas.middleLayer;
 
+import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.User;
 import infosistema.openbaas.dataaccess.email.Email;
 import infosistema.openbaas.dataaccess.models.SessionModel;
@@ -9,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
@@ -132,6 +134,11 @@ public class SessionMiddleLayer extends MiddleLayerAbstract {
 	}
 
 	// *** GET LIST *** //
+
+	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
+		return null;
+	}
+
 
 	// *** GET *** //
 	

@@ -184,13 +184,9 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 			query = new JSONObject();
 			JSONObject jAux= new JSONObject();
 			jAux.put("$exists",1);
-			query.put("fileExtension", jAux); 
-			query.put("imageId", jAux);
-			query.put("pixelsSize", jAux);
-			query.put("fileName", jAux); 
+			query.put(Media.FILENAME, jAux); 
 		}
 		return docModel.getDocuments(appId, userId, url, query, orderType);
-		//return mediaModel.getMedia(appId, type, query, orderType);
 	}
 	
 	

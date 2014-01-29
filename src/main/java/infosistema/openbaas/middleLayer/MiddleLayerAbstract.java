@@ -19,7 +19,6 @@ import infosistema.openbaas.data.ListResult;
 import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.FileMode;
 import infosistema.openbaas.data.enums.ModelEnum;
-import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.dataaccess.files.AwsModel;
 import infosistema.openbaas.dataaccess.files.FileInterface;
 import infosistema.openbaas.dataaccess.files.FileSystemModel;
@@ -98,39 +97,7 @@ public abstract class MiddleLayerAbstract {
 				qp.getPageSize(), qp.getType());
 	}
 
-	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
-		if(query!=null){
-			OperatorEnum oper = OperatorEnum.valueOf(query.getString(OperatorEnum.oper.toString())); 
-			if (oper == null)
-				throw new Exception("Error in query."); 
-			else if (oper.equals(OperatorEnum.and)) {
-				List<String> listOper1 = getAllSearchResults(appId, url, userId, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType, type);
-				List<String> listOper2 = getAllSearchResults(appId, url, userId, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType, type);
-				return and(listOper1, listOper2);
-			} else if (oper.equals(OperatorEnum.or)) {
-				List<String> listOper1 = getAllSearchResults(appId, url, userId, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType, type);
-				List<String> listOper2 = getAllSearchResults(appId, url, userId, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType, type);
-				return or(listOper1, listOper2);
-			} else if (oper.equals(OperatorEnum.not)) {
-				return not(appId, url, query, orderType, type);
-			} else {
-				String value = null; 
-				try { value = query.getString(QueryParameters.ATTR_VALUE); } catch (Exception e) {}
-				String attribute = null;
-				try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
-				if (oper.equals(OperatorEnum.contains) || oper.equals(OperatorEnum.equals) ||
-						oper.equals(OperatorEnum.greater) || oper.equals(OperatorEnum.lesser)) {
-					return getOperation(oper, appId, url, attribute, value, type);
-				} else {
-					throw new Exception("Error in query.");
-					
-				}
-			}
-		}
-		else{
-			return getAll(appId,type);
-		}
-	}
+	protected abstract List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception;
 
 	protected List<String> and(List<String> list1, List<String> list2) {
 		List<String> lOrig = list1.size() > list2.size() ? list2 : list1; 
@@ -141,61 +108,6 @@ public abstract class MiddleLayerAbstract {
 				lDest.add(id);
 		}
 		return lDest;
-	}
-	
-	protected List<String> or(List<String> list1, List<String> list2) {
-		List<String> lOrig = list1.size() > list2.size() ? list2 : list1; 
-		List<String> lDest = list1.size() > list2.size() ? list1 : list2;
-		for (String id: lOrig) {
-			if (!lDest.contains(id))
-				lDest.add(id);
-		}
-		return lDest;
-	}
-	
-	protected List<String> not(String appId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
-		OperatorEnum oper = OperatorEnum.valueOf(query.getString(OperatorEnum.oper.toString())); 
-		JSONObject newQuery = new JSONObject(); 
-		if (oper == null)
-			throw new Exception("Error in query."); 
-		else if (oper.equals(OperatorEnum.and)) {
-			newQuery.append(OperatorEnum.oper.toString(), OperatorEnum.not);
-			newQuery.append(OperatorEnum.op1.toString(), query.get(OperatorEnum.op1.toString()));
-			List<String> listOper1 = getAllSearchResults(appId, null, url, newQuery, orderType, type);
-			newQuery.put(OperatorEnum.op1.toString(), query.get(OperatorEnum.op2.toString()));
-			List<String> listOper2 = getAllSearchResults(appId, null, url, newQuery, orderType, type);
-			return or(listOper1, listOper2);
-		} else if (oper.equals(OperatorEnum.or)) {
-			newQuery.append(OperatorEnum.oper.toString(), OperatorEnum.not);
-			newQuery.append(OperatorEnum.op1.toString(), query.get(OperatorEnum.op1.toString()));
-			List<String> listOper1 = getAllSearchResults(appId, null, url, newQuery, orderType, type);
-			newQuery.put(OperatorEnum.op1.toString(), query.get(OperatorEnum.op2.toString()));
-			List<String> listOper2 = getAllSearchResults(appId, null, url, newQuery, orderType, type);
-			return and(listOper1, listOper2);
-		} else if (oper.equals(OperatorEnum.not)) {
-			return getAllSearchResults(appId, null, url, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType, type);
-		} else {
-			String attribute = null; 
-			try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
-			String value = null; 
-			try { value = query.getString(QueryParameters.ATTR_VALUE); } catch (Exception e) {}
-			if (oper.equals(OperatorEnum.contains)) {
-				oper = OperatorEnum.notContains;
-			} else if (oper.equals(OperatorEnum.equals)) {
-				oper = OperatorEnum.diferent;
-			} else if (oper.equals(OperatorEnum.greater)) {
-				oper = OperatorEnum.lesserOrEqual;
-			} else if (oper.equals(OperatorEnum.lesser)) {
-				oper = OperatorEnum.greaterOrEqual;
-			} else {
-				throw new Exception("Error in query.");
-			}
-			return getOperation(oper, appId, url, attribute, value, type);
-		}
-	}
-	
-	protected List<String> getOperation(OperatorEnum oper, String appId, String url, String attribute, String value, ModelEnum type) throws Exception {
-		return new ArrayList<String>();
 	}
 	
 	protected List<String> getAll(String appId, ModelEnum type) throws Exception {

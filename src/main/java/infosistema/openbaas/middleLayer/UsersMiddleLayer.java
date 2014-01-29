@@ -300,12 +300,12 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 
 	@Override
 	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
-		if(query==null){
+		if (query==null) {
 			query = new JSONObject();
 			JSONObject jAux= new JSONObject();
 			jAux.put("$exists",1);
-			query.put("email", jAux); 
-			query.put("hash", jAux);
+			query.put(User.EMAIL, jAux); 
+			query.put(User.HASH, jAux);
 			query.put(User.SALT, jAux); 
 		}
 		return docModel.getDocuments(appId, userId, url, query, orderType);

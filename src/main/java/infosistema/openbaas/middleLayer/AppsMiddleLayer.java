@@ -2,11 +2,15 @@ package infosistema.openbaas.middleLayer;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+
+import org.codehaus.jettison.json.JSONObject;
 
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
 
+import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.dataaccess.files.FileInterface;
 import infosistema.openbaas.dataaccess.models.AppModel;
@@ -92,6 +96,11 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 
 
 	// *** GET LIST *** //
+
+	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
+		return null;
+	}
+
 
 	// *** GET *** //
 	
