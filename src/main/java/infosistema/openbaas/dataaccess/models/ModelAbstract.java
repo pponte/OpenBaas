@@ -34,6 +34,8 @@ public abstract class ModelAbstract {
 	public static final String _METADATA = "_metadata"; 
 	public static final String _GEO = "_geo"; 
 
+	protected static final String DESC = "desc";
+
 	private static final String LATITUDE = "latitude";
 	private static final String LONGITUDE = "longitude";
 	private static final String GRID_LATITUDE = "gridLatitude";
@@ -237,7 +239,7 @@ public abstract class ModelAbstract {
 	
 	// *** GET LIST *** //
 
-	public List<String> getDocuments(String appId, String userId, String path, Double latitude, Double longitude, Double radius, JSONObject query, String orderType) throws Exception {
+	public List<String> getDocuments(String appId, String userId, String path, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy) throws Exception {
 		String strParentPathQuery = getParentPathQueryString(path);
 		String strQueryLocation = getQueryLocationString(latitude, longitude, radius);
 		String strQuery = getQueryString(appId, path, query, orderType);
@@ -252,7 +254,8 @@ public abstract class ModelAbstract {
 		projection.append(_ID, 1);
 		if (strQueryLocation != null)
 			projection.append(_GEO, 1);
-		DBCursor cursor = coll.find(queryObj, projection);
+		DBObject sortQuery = getSortQuery(orderBy, orderType);
+		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<String> retObj = new ArrayList<String>();
 		while (cursor.hasNext()) {
 			DBObject obj = cursor.next();
@@ -296,7 +299,7 @@ public abstract class ModelAbstract {
                 if (obj instanceof String) value = "\"" + obj + "\"";
                 else value = "" + obj;
                 String attribute = null;
-				attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE);
+				attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE).replace("/", ".");
 				return getOperationQueryString(oper, attribute, value);
 			}
 			}else
@@ -324,7 +327,6 @@ public abstract class ModelAbstract {
 		}
 
 	}
-
 	
 	private String getAndQueryString(String oper1, String oper2) {
 		if (oper1 == null || "".equals(oper1) || oper1.contains("null")) return (oper2 == null || "".equals(oper2)) ? "" : oper2;
@@ -371,6 +373,14 @@ public abstract class ModelAbstract {
 		return String.format(USER_ID_QUERY_FORMAT, id);
 	}
 	
+	private DBObject getSortQuery(String orderBy, String orderType) {
+		Integer order = 1;
+		if(orderType.equals(DESC)) order = -1;
+		BasicDBObject sortQuery = new BasicDBObject();
+		sortQuery.put(orderBy.replace("/", "."), order);
+		return sortQuery;
+	}
+
 
 	// *** GET *** //
 

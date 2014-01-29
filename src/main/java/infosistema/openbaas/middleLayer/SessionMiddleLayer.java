@@ -135,7 +135,7 @@ public class SessionMiddleLayer extends MiddleLayerAbstract {
 
 	// *** GET LIST *** //
 
-	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, ModelEnum type) throws Exception {
+	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception {
 		return null;
 	}
 
