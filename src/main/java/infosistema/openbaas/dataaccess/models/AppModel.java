@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -49,14 +48,14 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		try {
 			if (!jedis.exists("apps:" + appId)) {
-				jedis.hset("apps:" + appId, "creationDate", creationDate);
-				jedis.hset("apps:" + appId, "updateDate", creationDate);
-				jedis.hset("apps:" + appId, "alive", "true");
-				jedis.hset("apps:" + appId, "appName", appName);
-				jedis.hset("apps:" + appId, "appKey", appKey);
-				jedis.hset("apps:" + appId, "salt", new String(salt, "ISO-8859-1"));
-				jedis.hset("apps:" + appId, "hash", new String(hash, "ISO-8859-1"));
-				jedis.hset("apps:" + appId, "confirmUsersEmail", ""+confirmUsersEmail);
+				jedis.hset("apps:" + appId, Application.CREATION_DATE, creationDate);
+				jedis.hset("apps:" + appId, Application.CREATION_DATE, creationDate);
+				jedis.hset("apps:" + appId, Application.ALIVE, "true");
+				jedis.hset("apps:" + appId, Application.APP_NAME, appName);
+				jedis.hset("apps:" + appId, Application.APP_KEY, appKey);
+				jedis.hset("apps:" + appId, Application.SALT, new String(salt, "ISO-8859-1"));
+				jedis.hset("apps:" + appId, Application.HASH, new String(hash, "ISO-8859-1"));
+				jedis.hset("apps:" + appId, Application.CONFIRM_USERS_EMAIL, ""+confirmUsersEmail);
 				jedis.hset("apps:" + appId, FileMode.aws.toString(), "" + AWS);
 				jedis.hset("apps:" + appId, FileMode.ftp.toString(), "" + FTP);
 				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), "" + FileSystem);
@@ -77,13 +76,13 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		try {
 			if (newAppName != null)
-				jedis.hset("apps:" + appId, "appName", newAppName);
+				jedis.hset("apps:" + appId, Application.APP_NAME, newAppName);
 			if (alive != null)
-				jedis.hset("apps:" + appId, "alive", alive);
+				jedis.hset("apps:" + appId, Application.ALIVE, alive);
 			if (newAppName != null)
-				jedis.hset("apps:" + appId, "appName", newAppName);
+				jedis.hset("apps:" + appId, Application.APP_NAME, newAppName);
 			if (confirmUsersEmail != null)
-				jedis.hset("apps:" + appId, "confirmUsersEmail", ""+confirmUsersEmail);
+				jedis.hset("apps:" + appId, Application.CONFIRM_USERS_EMAIL, ""+confirmUsersEmail);
 			if (fileSystem != null && fileSystem)
 				aws = ftp = false;
 			if (aws != null && aws)
@@ -125,26 +124,15 @@ public class AppModel {
 				fields = jedis.hgetAll("apps:" + appId);
 			}
 			if (fields != null) {
-				for (Entry<String, String> entry : fields.entrySet()) {
-					if (entry.getKey().equalsIgnoreCase("creationdate"))
-						res.setCreationDate(entry.getValue());
-					else if (entry.getKey().equalsIgnoreCase("alive"))
-						res.setAlive(entry.getValue());
-					else if (entry.getKey().equalsIgnoreCase("appName"))
-						res.setAppName(entry.getValue());
-					else if (entry.getKey().equalsIgnoreCase("confirmUsersEmail"))
-						res.setConfirmUsersEmail(Boolean.parseBoolean(entry.getValue()));
-					else if (entry.getKey().equalsIgnoreCase(FileMode.aws.toString()))
-						res.setAWS(Boolean.parseBoolean(entry.getValue()));
-					else if (entry.getKey().equalsIgnoreCase(FileMode.ftp.toString()))
-						res.setFTP(Boolean.parseBoolean(entry.getValue()));
-					else if (entry.getKey().equalsIgnoreCase(FileMode.filesystem.toString()))
-						res.setFileSystem(Boolean.parseBoolean(entry.getValue()));
-					else if (entry.getKey().equalsIgnoreCase("updateDate"))
-						res.setUpdateDate(entry.getValue());
-					else if (entry.getKey().equalsIgnoreCase("appKey"))
-						res.setAppKey(entry.getValue());
-				}
+				res.setCreationDate(fields.get(Application.CREATION_DATE));
+				res.setAlive(fields.get(Application.ALIVE));
+				res.setAppName(fields.get(Application.APP_NAME));
+				res.setConfirmUsersEmail(Boolean.parseBoolean(fields.get(Application.CONFIRM_USERS_EMAIL)));
+				res.setAWS(Boolean.parseBoolean(fields.get(FileMode.aws.toString())));
+				res.setFTP(Boolean.parseBoolean(fields.get(FileMode.ftp.toString())));
+				res.setFileSystem(Boolean.parseBoolean(fields.get(FileMode.filesystem.toString())));
+				res.setUpdateDate(fields.get(Application.CREATION_DATE));
+				res.setAppKey(fields.get(Application.APP_KEY));
 				res.setAppId(appId);
 			}
 		} finally {
@@ -161,8 +149,8 @@ public class AppModel {
 		HashMap<String, String> fieldsAuth = new HashMap<String, String>();
 		try {
 			if (jedis.exists("apps:" + appId)) {
-				fieldsAuth.put("hash", jedis.hget("apps:"+appId, "hash"));// = jedis.hgetAll("apps:" + appId);
-				fieldsAuth.put("salt", jedis.hget("apps:"+appId, "salt"));
+				fieldsAuth.put(Application.HASH, jedis.hget("apps:"+appId, Application.HASH));
+				fieldsAuth.put(Application.SALT, jedis.hget("apps:"+appId, Application.SALT));
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -174,7 +162,7 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		Boolean confirmUsersEmail = false;
 		try {
-			confirmUsersEmail = Boolean.parseBoolean(jedis.hget("apps:"+appId, "confirmUsersEmail"));
+			confirmUsersEmail = Boolean.parseBoolean(jedis.hget("apps:"+appId, Application.CONFIRM_USERS_EMAIL));
 		}finally {
 			pool.returnResource(jedis);
 		}
@@ -224,7 +212,7 @@ public class AppModel {
 						inactive = true;
 				}
 				if (!inactive) {
-					jedis.hset("apps:" + appId, "alive", "false");
+					jedis.hset("apps:" + appId, Application.ALIVE, "false");
 					jedis.sadd("apps:inactive", appId);
 					sucess = true;
 				}
@@ -255,7 +243,7 @@ public class AppModel {
 	public void reviveApp(String appId) {
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.hset("apps:" + appId, "alive", "true");
+			jedis.hset("apps:" + appId, Application.ALIVE, "true");
 		} finally {
 			pool.returnResource(jedis);
 		}

@@ -1,13 +1,12 @@
 package infosistema.openbaas.rest;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
+import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.data.models.User;
 //import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
@@ -116,34 +115,28 @@ public class IntegrationResource {
 		String name = null;
 		String socialNetwork = null;
 		String socialId = null;
-		String userSocialId = null;
+		//String userSocialId = null;
 		String userName = null;
-		List<String> locationList = null;
-		List<String> userAgentList = null;
 		String userAgent = null;
 		String location = null;
 		String appKey = null;
 		String fbToken = null;
 		User outUser = new User();
 		String userId =null;
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase("user-agent")){
-				userAgentList = entry.getValue();
-			}	
-			if (entry.getKey().equalsIgnoreCase(Const.APP_KEY))
-				appKey = entry.getValue().get(0);
-		}
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
+		try {
+			appKey = headerParams.getFirst(Application.APP_KEY);
+		} catch (Exception e) { }
 		if(appKey==null)
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
 		if(!appsMid.authenticateApp(appId,appKey))
 			return Response.status(Status.UNAUTHORIZED).entity("Wrong App Key").build();
 		
-		if (locationList != null)
-			location = locationList.get(0);
-		if (userAgentList != null)
-			userAgent = userAgentList.get(0);
 		try {
 			fbToken = (String) inputJsonObj.get("fbToken");
 			JSONObject jsonReqFB = getFBInfo(fbToken);
@@ -168,7 +161,7 @@ public class IntegrationResource {
 			
 		}
 		userId = usersMid.getUserIdUsingEmail(appId, email);
-		userSocialId = usersMid.socialUserExists(appId, socialId, socialNetwork);
+		//userSocialId = usersMid.socialUserExists(appId, socialId, socialNetwork);
 		if (userId == null) {
 			if (uriInfo == null) uriInfo=ui;
 			Result res = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork, Metadata.getNewMetadata(location));
@@ -223,29 +216,24 @@ public class IntegrationResource {
 		String socialId = null;
 		String userSocialId = null;
 		String userName = null;
-		List<String> locationList = null;
-		List<String> userAgentList = null;
 		String userAgent = null;
 		String location = null;
 		User outUser = new User();
 		String appKey = null;
 		String userId =null;
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase("user-agent"))
-				userAgentList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase(Const.APP_KEY))
-				appKey = entry.getValue().get(0);
-		}
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
+		try {
+			appKey = headerParams.getFirst(Application.APP_KEY);
+		} catch (Exception e) { }
 		if(appKey==null)
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
 		if(!appsMid.authenticateApp(appId,appKey))
 			return Response.status(Status.UNAUTHORIZED).entity("Wrong App Key").build();
-		if (locationList != null)
-			location = locationList.get(0);
-		if (userAgentList != null)
-			userAgent = userAgentList.get(0);
 		try {
 			email = (String) inputJsonObj.get("email");
 			socialNetwork = "LinkedIn";

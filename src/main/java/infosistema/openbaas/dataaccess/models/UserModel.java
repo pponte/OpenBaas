@@ -28,12 +28,6 @@ public class UserModel extends ModelAbstract {
 
 	// *** PRIVATE *** //
 	
-	private static final String _SN_SOCIALNETWORK_ID = "SN_SocialNetwork_ID";
-	private static final String _BASE_LOCATION_OPTION = "baseLocationOption";
-	private static final String _HASH = "hash";
-	private static final String _EMAIL = "email";
-	private static final String _ALIVE = "alive";
-	private static final String _SALT = "salt";
 	private static final String APP_DATA_COLL_FORMAT = "app%sdata";
 		
 	private static final String USER_FIELD_KEY_FORMAT = "app:%s:user:%s:%s";
@@ -62,27 +56,27 @@ public class UserModel extends ModelAbstract {
 		if (getMetadata) {
 			if (dataProjectionMetadata == null) {
 				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
-				dataProjectionMetadata.append(_USER_ID, ZERO);
+				dataProjectionMetadata.append(_USER_ID, 0);
 				//Users
-				dataProjectionMetadata.append(_SN_SOCIALNETWORK_ID, ZERO);
-				dataProjectionMetadata.append(_BASE_LOCATION_OPTION, ZERO);
-				dataProjectionMetadata.append(_HASH, ZERO);
-				dataProjectionMetadata.append(_EMAIL, ZERO);
-				dataProjectionMetadata.append(_ALIVE, ZERO);
-				dataProjectionMetadata.append(_SALT, ZERO);
+				//TODO ERROR dataProjectionMetadata.append(_SN_SOCIALNETWORK_ID, 0);
+				dataProjectionMetadata.append(User.BASE_LOCATION_OPTION, 0);
+				dataProjectionMetadata.append(User.HASH, 0);
+				dataProjectionMetadata.append(User.EMAIL, 0);
+				dataProjectionMetadata.append(User.ALIVE, 0);
+				dataProjectionMetadata.append(User.SALT, 0);
 			}
 			return dataProjectionMetadata;
 		} else {
 			if (dataProjection == null) {
 				dataProjection = super.getDataProjection(new BasicDBObject(), false);
-				dataProjection.append(_USER_ID, ZERO);
+				dataProjection.append(_USER_ID, 0);
 				//Users
-				dataProjection.append(_SN_SOCIALNETWORK_ID, ZERO);
-				dataProjection.append(_BASE_LOCATION_OPTION, ZERO);
-				dataProjection.append(_HASH, ZERO);
-				dataProjection.append(_EMAIL, ZERO);
-				dataProjection.append(_ALIVE, ZERO);
-				dataProjection.append(_SALT, ZERO);
+				//TODO ERROR dataProjection.append(User.SN_SOCIALNETWORK_ID, 0);
+				dataProjection.append(User.BASE_LOCATION_OPTION, 0);
+				dataProjection.append(User.HASH, 0);
+				dataProjection.append(User.EMAIL, 0);
+				dataProjection.append(User.ALIVE, 0);
+				dataProjection.append(User.SALT, 0);
 			}
 			return dataProjection;
 		}

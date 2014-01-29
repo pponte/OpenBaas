@@ -6,6 +6,7 @@ import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
+import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.data.models.User;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
 import infosistema.openbaas.middleLayer.SessionMiddleLayer;
@@ -17,7 +18,6 @@ import infosistema.openbaas.utils.Utils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.servlet.http.Cookie;
 import javax.ws.rs.DELETE;
@@ -60,7 +60,7 @@ public class UsersResource {
 	// *** UPDATE *** //
 	
 	/**
-	 * Updates the user, optional fields: "email", "password", "alive".
+	 * Updates the user, optional fields: email, password, alive.
 	 * 
 	 * @param userId
 	 * @param inputJsonObj
@@ -69,32 +69,32 @@ public class UsersResource {
 	@Path("{userId}")
 	@PATCH
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response updateUser(@PathParam("userId") String userId, JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh) {
+	public Response updateUser(@PathParam(Const.USER_ID) String userId, JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		String appKey = null;
 		String location = null;
 		
 		String newUserName = null;
 		String userAgent = null;
-		List<String> userAgentList = null;
 		String newUserFile = null;
 		String newEmail = null;
 		Boolean newBaseLocationOption = null;
 		String newBaseLocation = null;
 		
-		List<String> locationList = null;
 		Cookie sessionToken=null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase(Const.APP_KEY))
-				appKey = entry.getValue().get(0);
-			if (entry.getKey().equalsIgnoreCase("user-agent"))
-				userAgentList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase(Const.SESSION_TOKEN))
-				sessionToken = new Cookie(Const.SESSION_TOKEN, entry.getValue().get(0));
-		}
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			appKey = headerParams.getFirst(Application.APP_KEY);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
+		try {
+			sessionToken = new Cookie(Const.SESSION_TOKEN, headerParams.getFirst(Const.SESSION_TOKEN));
+		} catch (Exception e) { }
 		
 		if(appKey==null)
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
@@ -147,7 +147,7 @@ public class UsersResource {
 	@Path("{userId}")
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteUser(@PathParam("userId") String userId,
+	public Response deleteUser(@PathParam(Const.USER_ID) String userId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
@@ -216,7 +216,7 @@ public class UsersResource {
 	@Path("{userId}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response findById(@PathParam("userId") String userId,
+	public Response findById(@PathParam(Const.USER_ID) String userId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
@@ -255,7 +255,7 @@ public class UsersResource {
 	 * @return
 	 */
 	@Path("{userId}/sessions")
-	public SessionsResource sessions(@PathParam("userId") String userId) {
+	public SessionsResource sessions(@PathParam(Const.USER_ID) String userId) {
 		try {
 			return new SessionsResource(appId, userId);
 		} catch (IllegalArgumentException e) {
@@ -265,7 +265,7 @@ public class UsersResource {
 	}
 
 	@Path("{userId}/recovery")
-	public UserRecoveryResource userRecovery(@PathParam("userId") String userId) {
+	public UserRecoveryResource userRecovery(@PathParam(Const.USER_ID) String userId) {
 		try {
 			return new UserRecoveryResource(uriInfo, appId, userId);
 		} catch (IllegalArgumentException e) {
@@ -275,7 +275,7 @@ public class UsersResource {
 	}
 
 	@Path("{userId}/data")
-	public UserDataResource userData(@PathParam("userId") String userId) {
+	public UserDataResource userData(@PathParam(Const.USER_ID) String userId) {
 		try {
 			return new UserDataResource(uriInfo, appId, userId);
 		} catch (IllegalArgumentException e) {
@@ -291,7 +291,7 @@ public class UsersResource {
 	 * @return
 	 */
 	@Path("{userId}/confirmation")
-	public UserConfirmationResource userConfirmation(@PathParam("userId") String userId) {
+	public UserConfirmationResource userConfirmation(@PathParam(Const.USER_ID) String userId) {
 		try {
 			return new UserConfirmationResource(uriInfo, appId, userId);
 		} catch (IllegalArgumentException e) {

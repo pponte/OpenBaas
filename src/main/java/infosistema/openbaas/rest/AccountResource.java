@@ -6,6 +6,7 @@ import infosistema.openbaas.middleLayer.UsersMiddleLayer;
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
+import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.data.models.User;
 import infosistema.openbaas.rest.AppResource.PATCH;
 import infosistema.openbaas.utils.Const;
@@ -16,7 +17,6 @@ import infosistema.openbaas.utils.encryption.PasswordEncryptionService;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
-import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -80,40 +80,34 @@ public class AccountResource {
 		String appKey = null;
 		Boolean readOk = false;
 		String location = null;
-		List<String> locationList = null;
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase(Const.APP_KEY))
-				appKey = entry.getValue().get(0);
-		}
+		try {
+			appKey = headerParams.getFirst(Application.APP_KEY);
+		} catch (Exception e) { }
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
 		if(appKey==null)
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
 		if(!appsMid.authenticateApp(appId,appKey))
 			return Response.status(Status.UNAUTHORIZED).entity("Wrong App Key").build();
-		if (locationList != null)
-			location = locationList.get(0);
+		if(!appsMid.appExists(appId))
+			return Response.status(Status.NOT_FOUND).entity("{\"App\": "+appId+"}").build();
 		try {
 			userName = (String) inputJsonObj.opt("userName");
 			userFile = (String) inputJsonObj.opt("userFile");
 			email = (String) inputJsonObj.get("email");
 			password = (String) inputJsonObj.get("password");
 			baseLocationOption = (Boolean) inputJsonObj.opt("baseLocationOption");
+			if (baseLocationOption == null) baseLocationOption=false;
 			baseLocation = (String) inputJsonObj.opt("baseLocation");
 			readOk = true;
 		} catch (JSONException e) {
 			Log.error("", this, "createUserAndLogin", "Error parsing the JSON.", e); 
 			return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
 		}
-		if (baseLocationOption == null) {
-			baseLocationOption=false;
-		}
-		if(!AppsMiddleLayer.getInstance().appExists(appId))
-			return Response.status(Status.NOT_FOUND).entity("{\"App\": "+appId+"}").build();
 		if (readOk) {
 			if (!usersMid.userEmailExists(appId, email)) {
-				if (uriInfo == null) 
-					uriInfo=ui;
+				if (uriInfo == null) uriInfo = ui;
 				Result res = usersMid.createUserAndLogin(headerParams, ui,appId, userName, email, password, userFile, baseLocationOption, baseLocation, Metadata.getNewMetadata(location));
 				response = Response.status(Status.CREATED).entity(res).build();
 			} else {
@@ -143,8 +137,6 @@ public class AccountResource {
 		String attemptedPassword = null; // user inserted fields
 		Response response = null;
 		User outUser = new User();
-		List<String> locationList = null;
-		List<String> userAgentList = null;
 		String userAgent = null;
 		String location = null;
 		String appKey = null;
@@ -158,27 +150,24 @@ public class AccountResource {
 			Log.error("", this, "createSession", "Error parsing the JSON.", e); 
 			return Response.status(Status.BAD_REQUEST).entity(new Error("Error reading JSON")).build();
 		}
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase("user-agent"))
-				userAgentList = entry.getValue();	
-			if (entry.getKey().equalsIgnoreCase(Const.APP_KEY))
-				appKey = entry.getValue().get(0);
-		}
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
+		try {
+			appKey = headerParams.getFirst(Application.APP_KEY);
+		} catch (Exception e) { }
 		if(appKey==null)
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
 		if(!appsMid.authenticateApp(appId,appKey))
 			return Response.status(Status.UNAUTHORIZED).entity("Wrong App Key").build();
-		if (locationList != null)
-			location = locationList.get(0);
-		if (userAgentList != null)
-			userAgent = userAgentList.get(0);
 		if(email == null && attemptedPassword == null)
 			return Response.status(Status.BAD_REQUEST).entity("Error reading JSON").build();
 		Result res = usersMid.getUserUsingEmail(appId, email);
 		outUser = (User)res.getData();
-		if (outUser.getUserId() != null) {
+		if (outUser != null && outUser.getUserId() != null) {
 			boolean usersConfirmedOption = usersMid.getConfirmUsersEmailOption(appId);
 			// Remember the order of evaluation in java
 			if (usersConfirmedOption) {
@@ -204,8 +193,7 @@ public class AccountResource {
 				} else {
 					response = Response.status(Status.FORBIDDEN).entity(new Error(Const.getEmailConfirmationError())).build();
 				}
-			} else{
-				Log.debug("", this, "createSession", "userId of email: " + email + " is: " + outUser.getUserId());
+			} else {
 				String sessionToken = Utils.getRandomString(Const.getIdLength());
 				boolean validation = sessionMid.createSession(sessionToken, appId, outUser.getUserId(), attemptedPassword);
 				if(validation){
@@ -222,13 +210,14 @@ public class AccountResource {
 						outUser.setLastLocation(lastLocation);
 						response = Response.status(Status.OK).entity(res).build();
 					}
-				}else
-					response = Response.status(Status.UNAUTHORIZED).entity(new Error("")).build();				
+				} else {
+					response = Response.status(Status.UNAUTHORIZED).entity(new Error("")).build();
+				}
 			}
-		} else
+		} else {
 			response = Response.status(Status.NOT_FOUND).entity(new Error("")).build();
+		}
 		return response;
-
 	}
 
 
@@ -238,7 +227,7 @@ public class AccountResource {
 	@Path("/sessions/{sessionToken}")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response patchSession( @HeaderParam("user-agent") String userAgent, @HeaderParam(Const.LOCATION) String location,
+	public Response patchSession( @HeaderParam(Const.USER_AGENT) String userAgent, @HeaderParam(Const.LOCATION) String location,
 			@PathParam(Const.SESSION_TOKEN) String sessionToken) {
 		Response response = null;
 		if (sessionMid.sessionTokenExists(sessionToken)) {
@@ -379,7 +368,7 @@ public class AccountResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response makeRecoveryRequest(JSONObject inputJson, @Context UriInfo ui, @Context HttpHeaders hh,
-			@HeaderParam(value = Const.LOCATION) String location, @HeaderParam(value = Const.APP_KEY) String appKey){
+			@HeaderParam(value = Const.LOCATION) String location, @HeaderParam(value = Application.APP_KEY) String appKey){
 		Response response = null;
 		String email = null;
 		String newPass = Utils.getRandomString(Const.getPasswordLength());
@@ -426,8 +415,6 @@ public class AccountResource {
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		String oldPassword = null;
 		String newPassword = null; 
-		List<String> locationList = null;
-		List<String> userAgentList = null;
 		String userAgent = null;
 		String location = null;
 		try {
@@ -437,18 +424,13 @@ public class AccountResource {
 			Log.error("", this, "createSession", "Error parsing the JSON.", e); 
 			return Response.status(Status.BAD_REQUEST).entity(new Error("Error reading JSON")).build();
 		}
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			if (entry.getKey().equalsIgnoreCase("user-agent")){
-				userAgentList = entry.getValue();
-			}
-		}
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
 
-		if (userAgentList != null)
-			userAgent = userAgentList.get(0);
-		if (locationList != null)
-			location = locationList.get(0);
 		try{
 			String sessionToken = Utils.getSessionToken(hh);
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);

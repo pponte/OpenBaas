@@ -16,7 +16,9 @@ public class Const {
 	public static final String PAGE_SIZE = "pageSize";
 	public static final String ORDER_BY = "orderBy";
 	public static final String ORDER_TYPE = "orderType";
-	public static final String APP_KEY = "appKey";
+	public static final String USER_AGENT = "user-agent";
+	public static final String USER_ID = "userId";
+	public static final String APP_ID = "appId";
 	public static final String QUERY = "query";
 	
 	

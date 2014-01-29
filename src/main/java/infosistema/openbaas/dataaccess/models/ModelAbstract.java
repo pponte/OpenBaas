@@ -28,7 +28,6 @@ public abstract class ModelAbstract {
 
 	// *** CONSTANTS *** //
 
-	protected static final int ZERO = 0; 
 	protected static final String _ID = "_id"; 
 	protected static final String _USER_ID = "_userId";
 	public static final String _METADATA = "_metadata"; 
@@ -67,9 +66,9 @@ public abstract class ModelAbstract {
 	protected abstract BasicDBObject getDataProjection(boolean getMetadata);
 
 	protected BasicDBObject getDataProjection(BasicDBObject dataProjection, boolean getMetadata) {
-		dataProjection.append(_ID, ZERO);
+		dataProjection.append(_ID, 0);
 		if (!getMetadata)
-			dataProjection.append(_METADATA, ZERO);
+			dataProjection.append(_METADATA, 0);
 		return dataProjection;
 	}
 
@@ -233,13 +232,12 @@ public abstract class ModelAbstract {
 				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
 				return getNotQueryString(oper1);
 			} else {
-				String value = null; 
-				try { value = query.getString(QueryParameters.ATTR_VALUE); } catch (Exception e) {}
-				String attribute = null;
-				try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
-				if (attribute == null) {
-					try { attribute = query.getString(QueryParameters.ATTR_PATH); } catch (Exception e) {}
-				}
+				String value = null;
+                Object obj = query.get(QueryParameters.ATTR_VALUE);
+                if (obj instanceof String) value = "\"" + obj + "\"";
+                else value = "" + obj;
+                String attribute = null;
+				attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE);
 				return getOperationQueryString(oper, attribute, value);
 			}
 			}else

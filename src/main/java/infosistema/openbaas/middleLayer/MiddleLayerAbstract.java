@@ -1,7 +1,5 @@
 package infosistema.openbaas.middleLayer;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,7 +16,6 @@ import javax.ws.rs.core.PathSegment;
 import org.codehaus.jettison.json.JSONObject;
 
 import infosistema.openbaas.data.ListResult;
-import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.FileMode;
 import infosistema.openbaas.data.enums.ModelEnum;
@@ -33,6 +30,7 @@ import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.dataaccess.models.MediaModel;
 import infosistema.openbaas.dataaccess.models.SessionModel;
 import infosistema.openbaas.dataaccess.models.UserModel;
+import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
@@ -120,11 +118,9 @@ public abstract class MiddleLayerAbstract {
 				try { value = query.getString(QueryParameters.ATTR_VALUE); } catch (Exception e) {}
 				String attribute = null;
 				try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
-				String path = null;
-				try { path = query.getString(QueryParameters.ATTR_PATH); } catch (Exception e) {}
 				if (oper.equals(OperatorEnum.contains) || oper.equals(OperatorEnum.equals) ||
 						oper.equals(OperatorEnum.greater) || oper.equals(OperatorEnum.lesser)) {
-					return getOperation(oper, appId, url, path, attribute, value, type);
+					return getOperation(oper, appId, url, attribute, value, type);
 				} else {
 					throw new Exception("Error in query.");
 					
@@ -179,8 +175,6 @@ public abstract class MiddleLayerAbstract {
 		} else if (oper.equals(OperatorEnum.not)) {
 			return getAllSearchResults(appId, null, url, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType, type);
 		} else {
-			String path = null;
-			try { path = query.getString(QueryParameters.ATTR_PATH); } catch (Exception e) {}
 			String attribute = null; 
 			try { attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE); } catch (Exception e) {}
 			String value = null; 
@@ -196,11 +190,11 @@ public abstract class MiddleLayerAbstract {
 			} else {
 				throw new Exception("Error in query.");
 			}
-			return getOperation(oper, appId, url, path, attribute, value, type);
+			return getOperation(oper, appId, url, attribute, value, type);
 		}
 	}
 	
-	protected List<String> getOperation(OperatorEnum oper, String appId, String url, String path, String attribute, String value, ModelEnum type) throws Exception {
+	protected List<String> getOperation(OperatorEnum oper, String appId, String url, String attribute, String value, ModelEnum type) throws Exception {
 		return new ArrayList<String>();
 	}
 	
@@ -235,7 +229,7 @@ public abstract class MiddleLayerAbstract {
 			}
 			if(type.compareTo(ModelEnum.users)==0){
 				if(orderBy.equals("_id"))
-					orderBy="userId";
+					orderBy = Const.USER_ID;
 				JSONObject temp = userModel.getUser(appId, key, false);
 				try {
 					value = temp.getString(orderBy);

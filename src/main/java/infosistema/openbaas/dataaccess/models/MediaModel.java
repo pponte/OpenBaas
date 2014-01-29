@@ -40,13 +40,13 @@ public class MediaModel extends ModelAbstract {
 		if (getMetadata) {
 			if (dataProjectionMetadata == null) {
 				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
-				dataProjectionMetadata.append(_TYPE, ZERO);
+				dataProjectionMetadata.append(_TYPE, 0);
 			}
 			return dataProjectionMetadata;
 		} else {
 			if (dataProjection == null) {
 				dataProjection = super.getDataProjection(new BasicDBObject(), false);
-				dataProjection.append(_TYPE, ZERO);
+				dataProjection.append(_TYPE, 0);
 			}
 			return dataProjection;
 		}

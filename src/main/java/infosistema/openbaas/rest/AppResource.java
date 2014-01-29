@@ -2,8 +2,10 @@ package infosistema.openbaas.rest;
 
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Result;
+import infosistema.openbaas.data.enums.FileMode;
 import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
+import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
@@ -46,7 +48,7 @@ public class AppResource {
 	// *** CREATE *** //
 
 	/**
-	 * Create application, fields necessary are: "appName". An unique identifier
+	 * Create application, fields necessary are: appName. An unique identifier
 	 * is generated and returned in the reply.
 	 * 
 	 * This is the time to define the optional parameters of the app such as if the developer wants to confirm the users
@@ -74,14 +76,14 @@ public class AppResource {
 			String appKey = null;
 			boolean readSucess = false;
 			try {
-				appName = (String) inputJsonObj.get("appName");
-				confirmUsersEmail = (boolean) inputJsonObj.optBoolean("confirmUsersEmail", false);
-				AWS = (boolean) inputJsonObj.optBoolean("aws", false);
-				FTP = (boolean) inputJsonObj.optBoolean("ftp", false);
+				appName = (String) inputJsonObj.get(Application.APP_NAME);
+				confirmUsersEmail = (boolean) inputJsonObj.optBoolean(Application.CONFIRM_USERS_EMAIL, false);
+				AWS = (boolean) inputJsonObj.optBoolean(FileMode.aws.toString(), false);
+				FTP = (boolean) inputJsonObj.optBoolean(FileMode.ftp.toString(), false);
 				if(!AWS && !FTP)
-					FileSystem = (boolean) inputJsonObj.optBoolean("filesystem", true);
+					FileSystem = (boolean) inputJsonObj.optBoolean(FileMode.filesystem.toString(), true);
 				else 
-					FileSystem = (boolean) inputJsonObj.optBoolean("filesystem", false);
+					FileSystem = (boolean) inputJsonObj.optBoolean(FileMode.filesystem.toString(), false);
 				if(!AWS && !FTP && !FileSystem)
 					FileSystem = true;
 				readSucess = true;
@@ -113,7 +115,7 @@ public class AppResource {
 	
 	/**
 	 * Updates the application, optional fields: "newAppName" (new application
-	 * name to set), "alive" (true to reactivate a dead app).
+	 * name to set), alive (true to reactivate a dead app).
 	 * 
 	 * @param appId
 	 * @param inputJsonObj
@@ -122,7 +124,7 @@ public class AppResource {
 	@Path("{appId}")
 	@PATCH
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response updateApp(@PathParam("appId") String appId,	JSONObject inputJsonObj,
+	public Response updateApp(@PathParam(Const.APP_ID) String appId,	JSONObject inputJsonObj,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		int code = Utils.treatParametersAdmin(ui, hh);
@@ -134,12 +136,12 @@ public class AppResource {
 			Boolean newFTP;
 			Boolean newFileSystem;
 			Boolean newConfirmUsersEmail;
-			newAlive = inputJsonObj.optString("alive"); //mudar para boolean
-			newAppName = inputJsonObj.optString("appName");
-			newConfirmUsersEmail = (boolean) inputJsonObj.optBoolean("confirmUsersEmail", false);
-			newAWS = (Boolean) inputJsonObj.opt("aws");
-			newFTP = (Boolean) inputJsonObj.opt("ftp");
-			newFileSystem = (Boolean) inputJsonObj.opt("filesystem");
+			newAlive = inputJsonObj.optString(Application.ALIVE); //mudar para boolean
+			newAppName = inputJsonObj.optString(Application.APP_NAME);
+			newConfirmUsersEmail = (boolean) inputJsonObj.optBoolean(Application.CONFIRM_USERS_EMAIL, false);
+			newAWS = (Boolean) inputJsonObj.opt(FileMode.aws.toString());
+			newFTP = (Boolean) inputJsonObj.opt(FileMode.ftp.toString());
+			newFileSystem = (Boolean) inputJsonObj.opt(FileMode.filesystem.toString());
 			Application app = this.appsMid.getApp(appId);
 			
 			
@@ -187,7 +189,7 @@ public class AppResource {
 	@Path("{appId}")
 	@DELETE
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response deleteApp(@PathParam("appId") String appId,
+	public Response deleteApp(@PathParam(Const.APP_ID) String appId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		int code = Utils.treatParametersAdmin(ui, hh);
@@ -219,7 +221,7 @@ public class AppResource {
 	@Path("{appId}")
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response findById(@PathParam("appId") String appId,
+	public Response findById(@PathParam(Const.APP_ID) String appId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		int code = Utils.treatParametersAdmin(ui, hh);
@@ -258,7 +260,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/users")
-	public UsersResource users(@PathParam("appId") String appId) {
+	public UsersResource users(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new UsersResource(uriInfo, appId);
 		} catch (IllegalArgumentException e) {
@@ -274,7 +276,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/media")
-	public MediaResource media(@PathParam("appId") String appId) {
+	public MediaResource media(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new MediaResource(appId) ;
 		} catch (IllegalArgumentException e) {
@@ -290,7 +292,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/data")
-	public AppDataResource data(@PathParam("appId") String appId) {
+	public AppDataResource data(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new AppDataResource(uriInfo, appId);
 		} catch (IllegalArgumentException e) {
@@ -306,7 +308,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/media/audio")
-	public AudioResource audio(@PathParam("appId") String appId) {
+	public AudioResource audio(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new AudioResource(appId);
 		} catch (IllegalArgumentException e) {
@@ -322,7 +324,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/media/video")
-	public VideoResource video(@PathParam("appId") String appId) {
+	public VideoResource video(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new VideoResource(appId);
 		} catch (IllegalArgumentException e) {
@@ -338,7 +340,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/media/images")
-	public ImageResource image(@PathParam("appId") String appId) {
+	public ImageResource image(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new ImageResource(appId);
 		} catch (IllegalArgumentException e) {
@@ -354,7 +356,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/storage")
-	public StorageResource storage(@PathParam("appId") String appId) {
+	public StorageResource storage(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new StorageResource(appId);
 		} catch (IllegalArgumentException e) {
@@ -370,7 +372,7 @@ public class AppResource {
 	 * @return
 	 */
 	@Path("{appId}/account")
-	public AccountResource account(@PathParam("appId") String appId) {
+	public AccountResource account(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new AccountResource(appId);
 		} catch (IllegalArgumentException e) {

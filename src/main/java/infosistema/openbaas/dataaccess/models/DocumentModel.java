@@ -48,7 +48,7 @@ public class DocumentModel extends ModelAbstract {
 		if (path == null) return "";
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < path.size(); i++)
-			if (!"".equals(path.get(i))) sb.append(path.get(i)).append('.');
+			if (!"".equals(path.get(i))) sb.append(path.get(i)).append("/");
 		if (sb.length() > 0) sb.deleteCharAt(sb.length()-1);
 		return sb.toString();
 	}
@@ -57,20 +57,18 @@ public class DocumentModel extends ModelAbstract {
 		if (path == null) return "";
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < path.size() - 1; i++)
-			if (!"".equals(path.get(i))) sb.append(path.get(i)).append('.');
+			if (!"".equals(path.get(i))) sb.append(path.get(i)).append("/");
 		if (sb.length() > 0) sb.deleteCharAt(sb.length()-1);
 		return sb.toString();
 	}
 
 	public String getDocumentId(String userId, List<String> path) {
 		StringBuilder sb = new StringBuilder();
-		if (userId == null)
-			sb.append("data.");
-		else
-			sb.append(userId).append(".");
+		if (userId != null) sb.append(userId).append("/");
+		sb.append("data/");
 		if (path != null) {
 			for(int i = 0; i < path.size(); i++)
-				if (!"".equals(path.get(i))) sb.append(path.get(i)).append('.');
+				if (!"".equals(path.get(i))) sb.append(path.get(i)).append("/");
 		}
 		sb.deleteCharAt(sb.length()-1);
 		return sb.toString();
@@ -89,17 +87,17 @@ public class DocumentModel extends ModelAbstract {
 		if (getMetadata) {
 			if (dataProjectionMetadata == null) {
 				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
-				dataProjectionMetadata.append(_KEY, ZERO);
-				dataProjectionMetadata.append(_USER_ID, ZERO);
-				dataProjectionMetadata.append(_PARENT_PATH, ZERO);
+				dataProjectionMetadata.append(_KEY, 0);
+				dataProjectionMetadata.append(_USER_ID, 0);
+				dataProjectionMetadata.append(_PARENT_PATH, 0);
 			}
 			return dataProjectionMetadata;
 		} else {
 			if (dataProjection == null) {
 				dataProjection = super.getDataProjection(new BasicDBObject(), false);
-				dataProjection.append(_KEY, ZERO);
-				dataProjection.append(_USER_ID, ZERO);
-				dataProjection.append(_PARENT_PATH, ZERO);
+				dataProjection.append(_KEY, 0);
+				dataProjection.append(_USER_ID, 0);
+				dataProjection.append(_PARENT_PATH, 0);
 			}
 			return dataProjection;
 		}
@@ -142,8 +140,8 @@ public class DocumentModel extends ModelAbstract {
 		JSONObject  data = new JSONObject(value.toString());
 		data.put(_KEY, getDocumentKey(path));
 		data.put(_ID, id);
-		if (userId == null)  userId = DATA;
-		data.put(_USER_ID, userId);
+		if (userId != null && !"".equals(userId))
+			data.put(_USER_ID, userId);
 		data.put(_PARENT_PATH, getDocumentParentPath(path));
 		if(!existsDocument(appId, userId, path) || !getDocumentId(userId, path).equals(userId))
 			return super.insert(appId, data, getMetadaJSONObject(metadata));
@@ -180,8 +178,8 @@ public class DocumentModel extends ModelAbstract {
 			Object value = data.get(key);
 			if (updateChilds && value instanceof JSONObject) {
 				List<String> newPath = addPath(path, key);
-				if (existsNode(appId, id+"."+key)) {
-					deleteDocument(appId, id+"."+key);
+				if (existsNode(appId, id + "/" + key)) {
+					deleteDocument(appId, id+"/"+key);
 				}
 				if (metadataCreate == null) {
 					metadataCreate = getMetadataCreate(userId, metadata);
@@ -197,17 +195,17 @@ public class DocumentModel extends ModelAbstract {
 	}
 	
 	private Boolean updateAscendents(String appId, String userId, List<String> path, JSONObject data, Map<String, String> metadata) throws JSONException{
-		if (userId == null || "".equals(userId)) userId = DATA; 
 		if (!isMetadataUpdate(metadata)) metadata = getMetadataUpdate(userId, metadata);
 		String key = getDocumentKey(path);
 		path = removeLast(path);
 		String id = getDocumentId(userId, path);
 		if (!existsNode(appId, id))
 			insert(appId, userId, path, new JSONObject(), getMetadataCreate(userId, metadata));
-		if ("".equals(key))
-			return updateDocumentValues(appId, userId, path, data, false, metadata);
-		else {
-			updateDocumentValue(appId, id, key, data);
+		if ("".equals(key)) {
+			if (userId != null && !"".equals(userId))
+				updateDocumentValue(appId, userId, DATA, (JSONObject)getDocumentInPath(appId, userId, path, false));
+			return true;
+		} else {
 			return updateAscendents(appId, userId, path, (JSONObject)getDocumentInPath(appId, userId, path, false), metadata);
 		}
 	}

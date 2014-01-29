@@ -126,9 +126,9 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 			HashMap<String, String> fieldsAuth = getAuthApp(appId);
 			byte[] salt = null;
 			byte[] hash = null;
-			if(fieldsAuth.containsKey("hash") && fieldsAuth.containsKey("salt")){
-				salt = fieldsAuth.get("salt").getBytes("ISO-8859-1");
-				hash = fieldsAuth.get("hash").getBytes("ISO-8859-1");
+			if(fieldsAuth.containsKey(Application.HASH) && fieldsAuth.containsKey(Application.SALT)){
+				salt = fieldsAuth.get(Application.SALT).getBytes("ISO-8859-1");
+				hash = fieldsAuth.get(Application.HASH).getBytes("ISO-8859-1");
 			}
 			PasswordEncryptionService service = new PasswordEncryptionService();
 			Boolean authenticated = false;

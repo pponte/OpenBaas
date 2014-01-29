@@ -72,7 +72,7 @@ public class AudioResource {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response uploadAudio(@Context HttpServletRequest request, @Context UriInfo ui, @Context HttpHeaders hh,
 			@FormDataParam(Const.FILE) InputStream uploadedInputStream, @FormDataParam(Const.FILE) FormDataContentDisposition fileDetail,
-			@PathParam("appId") String appId, @HeaderParam(value = Const.LOCATION) String location) {
+			@PathParam(Const.APP_ID) String appId, @HeaderParam(value = Const.LOCATION) String location) {
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);

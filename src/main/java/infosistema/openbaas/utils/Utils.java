@@ -3,7 +3,6 @@ package infosistema.openbaas.utils;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
@@ -28,15 +27,12 @@ public class Utils {
 		String userAgent = null;
 		String location = null;
 		Cookie sessionToken = null;
-		// iterate cookies
-		for (Entry<String, Cookie> entry : cookiesParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.SESSION_TOKEN))
-				sessionToken = entry.getValue();
-		}
-		// iterate headers
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.SESSION_TOKEN))
-				sessionToken = new Cookie(Const.SESSION_TOKEN, entry.getValue().get(0));
+		try {
+			sessionToken = new Cookie(Const.SESSION_TOKEN, headerParams.getFirst(Const.SESSION_TOKEN));
+		} catch (Exception e) {
+			try {
+				sessionToken = cookiesParams.get(Const.SESSION_TOKEN);
+			} catch (Exception e2) { }
 		}
 		if (sessionToken != null) {
 			SessionModel sessions = new SessionModel();
@@ -57,15 +53,12 @@ public class Utils {
 		String userAgent = null;
 		String location = null;
 		Cookie sessionToken = null;
-		// iterate cookies
-		for (Entry<String, Cookie> entry : cookiesParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.SESSION_TOKEN))
-				sessionToken = entry.getValue();
-		}
-		// iterate headers
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.SESSION_TOKEN))
-				sessionToken = new Cookie(Const.SESSION_TOKEN, entry.getValue().get(0));
+		try {
+			sessionToken = new Cookie(Const.SESSION_TOKEN, headerParams.getFirst(Const.SESSION_TOKEN));
+		} catch (Exception e) {
+			try {
+				sessionToken = cookiesParams.get(Const.SESSION_TOKEN);
+			} catch (Exception e2) { }
 		}
 		if (sessionToken != null && sessionToken.getValue().equals(Const.getADMIN_TOKEN())) {
 			SessionModel sessions = new SessionModel();

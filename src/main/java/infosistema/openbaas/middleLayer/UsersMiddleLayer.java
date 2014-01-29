@@ -18,7 +18,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -98,8 +97,6 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		
 		if (baseLocationOption == null) baseLocationOption = false;
 		String userId = null;
-		List<String> userAgentList = null;
-		List<String> locationList = null;
 		String userAgent = null;
 		String location = null;
 		String lastLocation =null;
@@ -117,15 +114,12 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		} catch (InvalidKeySpecException e) {
 			Log.error("", this, "createUserAndLogin", "Invalid Key.", e); 
 		}
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			else if (entry.getKey().equalsIgnoreCase("user-agent")){
-				userAgentList = entry.getValue();
-			}	
-		}
-		if (locationList != null)
-			location = locationList.get(0);
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
 		if(baseLocationOption)
 			if(location!=null)
 				location = baseLocation;
@@ -135,8 +129,6 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 					baseLocationOption, baseLocation, location, extraMetadata);
 			String sessionToken = Utils.getRandomString(Const.getIdLength());
 			boolean validation = sessionMid.createSession(sessionToken, appId, userId, password);
-			if (userAgentList != null)
-				userAgent = userAgentList.get(0);
 			
 			Boolean refresh = sessionMid.refreshSession(sessionToken, location, userAgent);
 			lastLocation = updateUserLocation(userId, appId, location, extraMetadata);
@@ -172,8 +164,6 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			String userName, String email, String socialId, String socialNetwork, Map<String, String> extraMetadata) {
 		User outUser = new User();
 		String userId = null;
-		List<String> userAgentList = null;
-		List<String> locationList = null;
 		String userAgent = null;
 		String location = null;
 		Result res = null; 
@@ -197,17 +187,12 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		res = createUser(appId, userId, userName, socialId, socialNetwork, email, salt, hash, null, null, null, false, null, null, extraMetadata);
 		String sessionToken = Utils.getRandomString(Const.getIdLength());
 		boolean validation = sessionMid.createSession(sessionToken, appId, userId, socialId);
-		for (Entry<String, List<String>> entry : headerParams.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(Const.LOCATION))
-				locationList = entry.getValue();
-			else if (entry.getKey().equalsIgnoreCase("user-agent")){
-				userAgentList = entry.getValue();
-			}	
-		}
-		if (locationList != null)
-			location = locationList.get(0);
-		if (userAgentList != null)
-			userAgent = userAgentList.get(0);
+		try {
+			location = headerParams.getFirst(Const.LOCATION);
+		} catch (Exception e) { }
+		try {
+			userAgent = headerParams.getFirst(Const.USER_AGENT);
+		} catch (Exception e) { }
 		
 		sessionMid.refreshSession(sessionToken, location, userAgent);
 

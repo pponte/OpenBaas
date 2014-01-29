@@ -10,7 +10,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -63,7 +62,7 @@ public class SessionModel {
 		Jedis jedis = pool.getResource();
 		try {
 			jedis.sadd("sessions:set", sessionId);
-			jedis.hset("sessions:" + sessionId, "userId", userId);
+			jedis.hset("sessions:" + sessionId, Const.USER_ID, userId);
 			jedis.expire("sessions:" + sessionId, Const.getSessionExpireTime());
 			jedis.sadd("user:sessions:" + userId, sessionId);
 		} finally {
@@ -206,8 +205,8 @@ public class SessionModel {
 		Jedis jedis = pool.getResource();
 		try {
 			jedis.sadd("sessions:set", sessionId);
-			jedis.hset("sessions:" + sessionId, "appId", appId);
-			jedis.hset("sessions:" + sessionId, "userId", userId);
+			jedis.hset("sessions:" + sessionId, Const.APP_ID, appId);
+			jedis.hset("sessions:" + sessionId, Const.USER_ID, userId);
 			jedis.expire("sessions:" + sessionId, Const.getSessionExpireTime());
 			jedis.sadd("user:sessions:" + userId, sessionId);
 		} finally {
@@ -280,16 +279,14 @@ public class SessionModel {
 			while (it.hasNext()) {
 				String id = it.next();
 				Map<String, String> sessionFields = jedis.hgetAll("sessions:" + id);
-				for (Entry<String, String> entry : sessionFields.entrySet()) {
-					if (entry.getKey().equalsIgnoreCase("userId")) {
-						if (entry.getKey().equalsIgnoreCase("userId")) {
-							if (entry.getValue().equalsIgnoreCase(adminId)) {
-								jedis.del("sessions:" + id);
-								jedis.srem("sessions", adminId);
-							}
-						}
+				String stmp = null;
+				try {
+					stmp = sessionFields.get(Const.USER_ID);
+					if (stmp.equalsIgnoreCase(adminId)) {
+						jedis.del("sessions:" + id);
+						jedis.srem("sessions", adminId);
 					}
-				}
+				} catch (Exception e) { }
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -343,11 +340,11 @@ public class SessionModel {
 			while (it.hasNext()) {
 				String id = it.next();
 				Map<String, String> sessionFields = jedis.hgetAll("sessions:" + id);
-				for (Entry<String, String> entry : sessionFields.entrySet()) {
-					if (entry.getKey().equalsIgnoreCase("userId") && jedis.exists("sessions:" + id))
-						if (entry.getValue().equalsIgnoreCase(userId))
-							sessionId = id;
-				}
+				try {
+					String stmp = sessionFields.get(Const.USER_ID);
+					if (stmp.equalsIgnoreCase(userId) && jedis.exists("sessions:" + id))
+						sessionId = id;
+				} catch (Exception e) { }
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -408,7 +405,7 @@ public class SessionModel {
 		Jedis jedis = pool.getResource();
 		String retApp = null;
 		try {
-			retApp = jedis.hget("sessions:"+sessionToken, "appId");
+			retApp = jedis.hget("sessions:"+sessionToken, Const.APP_ID);
 		}finally {
 			pool.returnResource(jedis);
 		}
@@ -420,7 +417,7 @@ public class SessionModel {
 		Jedis jedis = pool.getResource();
 		String res = null;
 		try {
-			res = jedis.hget("sessions:" + sessionToken, "appId");
+			res = jedis.hget("sessions:" + sessionToken, Const.APP_ID);
 		}finally {
 			pool.returnResource(jedis);
 		}
@@ -432,7 +429,7 @@ public class SessionModel {
 		Jedis jedis = pool.getResource();
 		String res = null;
 		try {
-			res = jedis.hget("sessions:" + sessionToken, "userId");
+			res = jedis.hget("sessions:" + sessionToken, Const.USER_ID);
 		}finally {
 			pool.returnResource(jedis);
 		}
