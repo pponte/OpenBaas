@@ -72,7 +72,7 @@ public class AppDataResource {
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (AppsMiddleLayer.getInstance().appExists(appId)) {
-				Result res = docMid.insertDocumentInPath(appId, null, path, inputJson, location, Metadata.getNewMetadata(location));
+				Result res = docMid.insertDocumentInPath(appId, null, path, inputJson, Metadata.getNewMetadata(location));
 				if (res != null)				
 					response = Response.status(Status.OK).entity(res).build();
 				else
@@ -109,7 +109,7 @@ public class AppDataResource {
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (docMid.existsDocumentInPath(appId, userId, path)) {
-				Result res = docMid.updateDocumentInPath(appId, null, path, inputJson, location, Metadata.getNewMetadata(location));
+				Result res = docMid.updateDocumentInPath(appId, null, path, inputJson, Metadata.getNewMetadata(location));
 				if (res != null)
 					response = Response.status(Status.OK).entity(res).build();
 				else

@@ -1,5 +1,6 @@
 package infosistema.openbaas.dataaccess.models;
 
+import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.models.User;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
@@ -7,6 +8,7 @@ import infosistema.openbaas.utils.Log;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import com.mongodb.BasicDBObject;
@@ -90,6 +92,7 @@ public class UserModel extends ModelAbstract {
 		try {
 			String userKey = getUserKey(appId, userId);
 			JSONObject metadata = getMetadaJSONObject(getMetadataCreate(userId, extraMetadata));
+			JSONObject geolocation = getGeolocation(metadata);
 			JSONObject obj = new JSONObject();
 			if (!jedis.exists(userKey)) {
 				for (String key : userFields.keySet()) {
@@ -104,8 +107,9 @@ public class UserModel extends ModelAbstract {
 				}
 				obj.put(_USER_ID, userId);
 				obj.put(_ID, userId);
-				obj.put(_METADATA, metadata);
-				super.insert(appId, obj, metadata);
+				if (metadata != null) obj.put(_METADATA, metadata);
+				if (geolocation != null) obj.put(_GEO, geolocation);
+				super.insert(appId, obj, metadata, geolocation);
 			}
 			return obj;
 		} catch (Exception e) {
@@ -162,6 +166,18 @@ public class UserModel extends ModelAbstract {
 		return null;
 	}
 	
+	public void updateUserLocation(String appId, String userId, String location) {
+		try {
+			if (location != null) {
+				super.updateDocumentValue(appId, userId, Const.LOCATION, location);
+				super.updateMetadata(appId, userId, Metadata.getNewMetadata(location));
+			}
+			JSONObject geolocation = getGeolocation(new JSONObject("{location: \"" + location + "\"}"));
+			if (geolocation != null) super.updateDocumentValue(appId, userId, _GEO, geolocation);
+		} catch (JSONException e) {
+			Log.error("", this, "updateUserLocation", "Error updating user location.", e);
+		}
+	}
 
 	// *** GET LIST *** //
 
@@ -228,13 +244,13 @@ public class UserModel extends ModelAbstract {
 		return null;
 	}
 
-	
+
 	// *** DELETE *** //
 
 
 	// *** EXISTS *** //
 
-	public Boolean userIdExists(String appId, String userId) {
+ 	public Boolean userIdExists(String appId, String userId) {
 		return fieldExists(appId, ALL, userId);
 	}
 	

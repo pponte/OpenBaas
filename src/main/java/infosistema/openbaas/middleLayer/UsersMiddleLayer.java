@@ -299,7 +299,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	@Override
-	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
+	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, ModelEnum type) throws Exception {
 		if (query==null) {
 			query = new JSONObject();
 			JSONObject jAux= new JSONObject();
@@ -308,7 +308,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			query.put(User.HASH, jAux);
 			query.put(User.SALT, jAux); 
 		}
-		return docModel.getDocuments(appId, userId, url, query, orderType);
+		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType);
 	}
 
 	

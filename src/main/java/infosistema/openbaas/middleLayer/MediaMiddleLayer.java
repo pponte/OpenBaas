@@ -127,10 +127,6 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 			Log.error("", this, "upload", "An error ocorred.", e); 
 			return null;
 		}
-		if (location != null){
-			String[] splitted = location.split(":");
-			geo.insertObjectInGrid(Double.parseDouble(splitted[0]),	Double.parseDouble(splitted[1]), type, appId, id);
-		}
 		
 		Metadata metadata = null;
 		Object data = null;
@@ -156,7 +152,6 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	
 	public boolean deleteMedia(String appId, ModelEnum type, String id) {
 		String extension = mediaModel.getMediaField(appId, type, id, Media.FILEEXTENSION);
-		String location = mediaModel.getMediaField(appId, type, id, Media.LOCATION);
 		FileInterface fileModel = getAppFileInterface(appId);
 		Boolean res = false;
 		try{
@@ -167,11 +162,6 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 		}
 		res = mediaModel.deleteMedia(appId, type, id);
 				
-		if (location != null){
-			String[] splitted = location.split(":");
-			geo.deleteObjectFromGrid(Double.parseDouble(splitted[0]),	Double.parseDouble(splitted[1]), type, appId, id);
-		}
-		
 		return res ;
 	}
 
@@ -179,14 +169,14 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	@Override
-	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
+	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, ModelEnum type) throws Exception {
 		if(query==null){
 			query = new JSONObject();
 			JSONObject jAux= new JSONObject();
 			jAux.put("$exists",1);
 			query.put(Media.FILENAME, jAux); 
 		}
-		return docModel.getDocuments(appId, userId, url, query, orderType);
+		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType);
 	}
 	
 	

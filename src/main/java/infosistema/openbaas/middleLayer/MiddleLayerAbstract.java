@@ -23,7 +23,6 @@ import infosistema.openbaas.dataaccess.files.AwsModel;
 import infosistema.openbaas.dataaccess.files.FileInterface;
 import infosistema.openbaas.dataaccess.files.FileSystemModel;
 import infosistema.openbaas.dataaccess.files.FtpModel;
-import infosistema.openbaas.dataaccess.geolocation.Geolocation;
 import infosistema.openbaas.dataaccess.models.AppModel;
 import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.dataaccess.models.MediaModel;
@@ -42,7 +41,6 @@ public abstract class MiddleLayerAbstract {
 	protected DocumentModel docModel;
 	protected SessionModel sessionsModel;
 	protected MediaModel mediaModel;
-	protected Geolocation geo;
 
 	
 	// *** INIT *** //
@@ -53,7 +51,6 @@ public abstract class MiddleLayerAbstract {
 		userModel = new UserModel();
 		sessionsModel = new SessionModel();
 		mediaModel = new MediaModel();
-		geo = Geolocation.getInstance();
 	}
 
 	// *** FILESYSTEM *** //
@@ -83,21 +80,12 @@ public abstract class MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	public ListResult find(QueryParameters qp) throws Exception {
-		List<String> listRes = new ArrayList<String>();
-		List<String> list1 = getAllSearchResults(qp.getAppId(), qp.getUserId(), qp.getUrl(), qp.getQuery(), qp.getOrderType(), qp.getType());
-		List<String> list2 = new ArrayList<String>();
-		if (qp.getLatitude() != null && qp.getLongitude() != null && qp.getRadius()!= null){
-			list2 = geo.getObjectsInDistance(qp.getLatitude(), qp.getLongitude(), qp.getRadius(), qp.getAppId(), qp.getType());
-			listRes = and(list1, list2);
-		}else {
-			listRes = list1;
-		}
-		
+		List<String> listRes = getAllSearchResults(qp.getAppId(), qp.getUserId(), qp.getUrl(), qp.getLatitude(), qp.getLongitude(), qp.getRadius(), qp.getQuery(), qp.getOrderType(), qp.getType());
 		return paginate(qp.getAppId(), listRes, qp.getOrderBy(), qp.getOrderType(), qp.getPageNumber(),
 				qp.getPageSize(), qp.getType());
 	}
 
-	protected abstract List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception;
+	protected abstract List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, ModelEnum type) throws Exception;
 
 	protected List<String> and(List<String> list1, List<String> list2) {
 		List<String> lOrig = list1.size() > list2.size() ? list2 : list1; 

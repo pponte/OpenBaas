@@ -1,9 +1,8 @@
 package infosistema.openbaas.dataaccess.models;
 
-import infosistema.openbaas.data.enums.ModelEnum;
-import infosistema.openbaas.dataaccess.geolocation.Geolocation;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
+import infosistema.openbaas.utils.geolocation.Geo;
 
 import java.io.UnsupportedEncodingException;
 
@@ -27,12 +26,13 @@ public class SessionModel {
 
 	// *** MEMBERS *** //
 
-	private Geolocation geo = Geolocation.getInstance();
-
+	private Geo geo = Geo.getInstance();
+	UserModel userModel;
 	
 	// *** CONSTRUCTOR *** //
 	
 	public SessionModel() {
+		userModel  = new UserModel();
 	}
 	
 	
@@ -73,31 +73,12 @@ public class SessionModel {
 
 	// *** AUX *** //
 
-	private void addLocationToSession(String location, String sessionToken, String userAgent, String appId, String userId) {
+	private void updateLocationToSession(String appId, String userId, String sessionToken, String location) {
 		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
 		Jedis jedis = pool.getResource();
 		try {
 			jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
-			jedis.hset("sessions:" + sessionToken, "userAgent", userAgent);
-			String[] locationArray = location.split(":");
-			
-			double latitude = Double.parseDouble(locationArray[0]);
-			double longitude = Double.parseDouble(locationArray[1]);
-			geo.insertObjectInGrid(latitude, longitude, ModelEnum.users, appId, userId);
-		} finally {
-			pool.returnResource(jedis);
-		}
-		pool.destroy();
-	}
-
-	private void updateLocationToSession(double previousLatitudeValue, double previousLongitudeValue, double currentLatitudeValue, double currentLongitudeValue,
-			String location, String sessionToken, String appId, String userId) {
-		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
-		Jedis jedis = pool.getResource();
-		try {
-			jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
-			geo.updateObjectInGrid(previousLatitudeValue, previousLongitudeValue, currentLatitudeValue,
-					currentLongitudeValue, ModelEnum.users, appId, userId);
+			userModel.updateUserLocation(appId, userId, location);
 		} finally {
 			pool.returnResource(jedis);
 		}
@@ -112,8 +93,6 @@ public class SessionModel {
 	 * after we call refreshSession it will have EXPIRETIME until it is deleted
 	 * (by default 24 hours).
 	 */
-	// P1=(lat1, lon1) and P2=(lat2, lon2)
-	// dist = arccos(sin(lat1) · sin(lat2) + cos(lat1) · cos(lat2) · cos(lon1 - lon2)) · R
 	public boolean refreshSession(String sessionToken, String location, String date, String userAgent) {
 		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
 		Jedis jedis = pool.getResource();
@@ -121,41 +100,39 @@ public class SessionModel {
 			jedis.expire("sessions:" + sessionToken, Const.getSessionExpireTime());
 			jedis.hset("sessions:" + sessionToken, "date", date);
 			
+			boolean locationHasChange = false;
 			if (location != null && !"".equals(location)) {
 				String previousLocation = jedis.hget("sessions:" + sessionToken, Const.LOCATION);
+				if (previousLocation == null)
+					locationHasChange = true;
+
+				String[] previousLocationArray = previousLocation.split(":");
+				String[] currentLocationArray = location.split(":");
+				double previousLatitudeValue, previousLongitudeValue, currentLatitudeValue, currentLongitudeValue;
+				try{
+					previousLatitudeValue = Double.parseDouble(previousLocationArray[0]);
+					previousLongitudeValue = Double.parseDouble(previousLocationArray[1]);
+	
+					currentLatitudeValue = Double.parseDouble(currentLocationArray[0]);
+					currentLongitudeValue = Double.parseDouble(currentLocationArray[1]);
+				}catch (NumberFormatException e){
+					Log.error("", this, "refreshSession", "Wrong number format of " +
+							"previousLocationArray[0]=" + previousLocationArray[0] + " or " +
+							"previousLocationArray[1=]=" + previousLocationArray[1] + " or " +
+							"currentLocationArray[0]=" + currentLocationArray[0] + " or " +
+							"currentLocationArray[1]=" + currentLocationArray[1], e); 
+					return false;
+				}
+				// Test if distance < MAXIMUM DISTANCE Spherical Law of Cosines
+				double dist = geo.distance(previousLatitudeValue, previousLongitudeValue, currentLatitudeValue, currentLongitudeValue);
+				locationHasChange = (dist >= 1);
+			}
+			if (locationHasChange) {
 				String userId = this.getUserIdUsingSessionToken(sessionToken);
 				String appId = this.getAppUsingSessionToken(sessionToken);
-				if (previousLocation == null) { // No previous Location, we simply add it.
-					addLocationToSession(location, sessionToken, userAgent, appId, userId);
-				} else { // Calculate the distances
-					// Split the data previous location
-					String[] previousLocationArray = previousLocation.split(":");
-					String[] currentLocationArray = location.split(":");
-					double previousLatitudeValue, previousLongitudeValue, currentLatitudeValue, currentLongitudeValue;
-					try{
-						previousLatitudeValue = Double.parseDouble(previousLocationArray[0]);
-						previousLongitudeValue = Double.parseDouble(previousLocationArray[1]);
-		
-						currentLatitudeValue = Double.parseDouble(currentLocationArray[0]);
-						currentLongitudeValue = Double.parseDouble(currentLocationArray[1]);
-					}catch (NumberFormatException e){
-						Log.error("", this, "refreshSession", "Wrong number format of " +
-								"previousLocationArray[0]=" + previousLocationArray[0] + " or " +
-								"previousLocationArray[1=]=" + previousLocationArray[1] + " or " +
-								"currentLocationArray[0]=" + currentLocationArray[0] + " or " +
-								"currentLocationArray[1]=" + currentLocationArray[1], e); 
-						return false;
-					}
-					// Test if distance < MAXIMUM DISTANCE Spherical Law of Cosines
-					double dist = geo.distance(previousLatitudeValue, previousLongitudeValue, currentLatitudeValue, currentLongitudeValue);
-					if (dist >= 1) {
-						jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
-						updateLocationToSession(previousLatitudeValue, previousLongitudeValue, currentLatitudeValue, currentLongitudeValue, 
-								location, sessionToken, appId, userId);
-					}
-				}
+				updateLocationToSession(appId, userId, sessionToken, location);
+				jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
 			}
-			
 		} finally {
 			pool.returnResource(jedis);
 		}

@@ -68,7 +68,9 @@ public class MediaModel extends ModelAbstract {
 			JSONObject data = getJSonObject(mediaFields);
 			data.put(_ID, objId);
 			data.put(_TYPE, type.toString());
-			return super.insert(appId, data, getMetadaJSONObject(getMetadataCreate(userId, extraMetadata)));
+			JSONObject metadata = getMetadaJSONObject(getMetadataCreate(userId, extraMetadata));
+			JSONObject geolocation = getGeolocation(metadata);
+			return super.insert(appId, data, metadata, geolocation);
 		} catch (Exception e) {
 			Log.error("", this, "createMedia", "An error ocorred.", e);
 		}
@@ -80,7 +82,7 @@ public class MediaModel extends ModelAbstract {
 
 	// *** GET LIST *** //
 	
-	public List<String> getMedia(String appId, ModelEnum type, JSONObject query, String orderType) throws Exception {
+	public List<String> getMedia(String appId, ModelEnum type, Double latitude, Double longitude, Double radius, JSONObject query, String orderType) throws Exception {
 		JSONObject finalQuery = new JSONObject();
 		if (type != null) {
 			finalQuery.append(OperatorEnum.oper.toString(), OperatorEnum.and.toString());
@@ -89,7 +91,7 @@ public class MediaModel extends ModelAbstract {
 		} else {
 			finalQuery = query;
 		}
-		return super.getDocuments(appId, null, null, finalQuery, orderType);
+		return super.getDocuments(appId, null, null, latitude, longitude, radius, finalQuery, orderType);
 	}
 
 	// *** GET *** //

@@ -55,20 +55,15 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 
 	// *** CREATE *** //
 	
-	public Result insertDocumentInPath(String appId, String userId, List<PathSegment> path, JSONObject document, String location, Map<String, String> extraMetadata) {
+	public Result insertDocumentInPath(String appId, String userId, List<PathSegment> path, JSONObject document, Map<String, String> extraMetadata) {
 		try {
 			Metadata metadata = null;
 			Object data = null;
 			List<String> lPath = convertPath(path);
-			String id = docModel.getDocumentId(userId, lPath);
 			data = docModel.insertDocumentInPath(appId, userId, lPath, document, extraMetadata);
 			metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
 			((JSONObject) data).remove(ModelAbstract._METADATA);
 			data = (DBObject)JSON.parse(data.toString());
-			if (location != null) {
-				String[] splitted = location.split(":");
-				geo.insertObjectInGrid(Double.parseDouble(splitted[0]),	Double.parseDouble(splitted[1]), ModelEnum.data, appId, id);
-			}
 			return new Result(data, metadata);
 		} catch (JSONException e) {
 			Log.error("", this, "insertDocumentInPath", "Error parsing the JSON.", e); 
@@ -81,20 +76,14 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 
 	// *** UPDATE *** //
 	
-	public Result updateDocumentInPath(String appId, String userId, List<PathSegment> path, JSONObject document, String location, Map<String, String> extraMetadata) {
+	public Result updateDocumentInPath(String appId, String userId, List<PathSegment> path, JSONObject document, Map<String, String> extraMetadata) {
 		try {
 			Metadata metadata = null;
 			Object data = null;
-			List<String> lPath = convertPath(path);
-			String id = docModel.getDocumentId(userId, lPath);
-			data = docModel.updateDocumentInPath(appId, userId, lPath, document, extraMetadata);
+			data = docModel.updateDocumentInPath(appId, userId, convertPath(path), document, extraMetadata);
 			metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
 			((JSONObject) data).remove(ModelAbstract._METADATA);
 			data = (DBObject)JSON.parse(data.toString());
-			if (location != null){
-				String[] splitted = location.split(":");
-				geo.insertObjectInGrid(Double.parseDouble(splitted[0]),	Double.parseDouble(splitted[1]), ModelEnum.data, appId, id);
-			}
 			return new Result(data, metadata);
 		} catch (JSONException e) {
 			Log.error("", this, "updateDocumentInPath", "Error parsing the JSON.", e); 
@@ -122,8 +111,8 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	@Override
-	protected List<String> getAllSearchResults(String appId, String userId, String url, JSONObject query, String orderType, ModelEnum type) throws Exception {
-		return docModel.getDocuments(appId, userId, url, query, orderType);
+	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, ModelEnum type) throws Exception {
+		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType);
 	}
 
 	

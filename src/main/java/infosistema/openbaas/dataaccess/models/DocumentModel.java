@@ -1,7 +1,6 @@
 package infosistema.openbaas.dataaccess.models;
 
 import infosistema.openbaas.data.Metadata;
-import infosistema.openbaas.dataaccess.geolocation.Geolocation;
 import infosistema.openbaas.utils.Log;
 
 import java.util.Iterator;
@@ -30,8 +29,6 @@ public class DocumentModel extends ModelAbstract {
 
 	// *** VARIABLES *** //
 	
-	Geolocation geo;
-
 	public DocumentModel() {
 		super();
 	}
@@ -135,7 +132,7 @@ public class DocumentModel extends ModelAbstract {
 		}
 	}
 
-	private JSONObject insert(String appId, String userId, List<String> path, JSONObject value, Map<String, String> metadata) throws JSONException{
+	private JSONObject insert(String appId, String userId, List<String> path, JSONObject value, Map<String, String> metadataFields) throws JSONException{
 		String id = getDocumentId(userId, path);
 		JSONObject  data = new JSONObject(value.toString());
 		data.put(_KEY, getDocumentKey(path));
@@ -143,8 +140,11 @@ public class DocumentModel extends ModelAbstract {
 		if (userId != null && !"".equals(userId))
 			data.put(_USER_ID, userId);
 		data.put(_PARENT_PATH, getDocumentParentPath(path));
-		if(!existsDocument(appId, userId, path) || !getDocumentId(userId, path).equals(userId))
-			return super.insert(appId, data, getMetadaJSONObject(metadata));
+		if(!existsDocument(appId, userId, path) || !getDocumentId(userId, path).equals(userId)) {
+			JSONObject metadata = getMetadaJSONObject(metadataFields);
+			JSONObject geolocation = getGeolocation(metadata);
+			return super.insert(appId, data, metadata, geolocation);
+		}
 		return getDocument(appId, id, true);
 	}
 	

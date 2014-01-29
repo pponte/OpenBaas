@@ -5,6 +5,7 @@ import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
+import infosistema.openbaas.utils.geolocation.Geo;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -31,7 +32,13 @@ public abstract class ModelAbstract {
 	protected static final String _ID = "_id"; 
 	protected static final String _USER_ID = "_userId";
 	public static final String _METADATA = "_metadata"; 
-		
+	public static final String _GEO = "_geo"; 
+
+	private static final String LATITUDE = "latitude";
+	private static final String LONGITUDE = "longitude";
+	private static final String GRID_LATITUDE = "gridLatitude";
+	private static final String GRID_LONGITUDE = "gridLongitude";
+	
 	private static final String AND_QUERY_FORMAT = "{%s, %s}";
 	private static final String OR_QUERY_FORMAT = "{$or: [%s, %s]}";
 	private static final String NOT_QUERY_FORMAT = "{$not: %s}";
@@ -43,18 +50,27 @@ public abstract class ModelAbstract {
 	private static final String ID_QUERY_FORMAT = "{\"" + _ID +"\": \"%s\"}";
 	private static final String USER_ID_QUERY_FORMAT = "{\"" + _USER_ID +"\": \"%s\"}";
 	private static final String CHILD_IDS_TO_REMOVE_QUERY_FORMAT = "{\"" + _ID +"\":  {$regex: \"%s.\"}}";
+	private static final String LOCATION_QUERY_FORMAT = "{\"" + _GEO + "." + GRID_LATITUDE + "\": {$gte: %s}, \"" +
+																_GEO + "." + GRID_LATITUDE + "\": {$lte: %s}, \"" + 
+																_GEO + "." + GRID_LONGITUDE + "\": {$gte: %s}, \"" + 
+																_GEO + "." + GRID_LONGITUDE + "\": {$lte: %s}, }";
+	
+	
 	private static final String METADATA_KEY_FORMAT = _METADATA + ".%s"; 
+	private static final String GEO_FORMAT = "{" + LATITUDE + ": %s, " + LONGITUDE + ": %s, " + GRID_LATITUDE + ": %s, " + GRID_LONGITUDE + ": %s}";
 	
 	
 	// *** VARIABLES *** //
 	
 	private MongoClient mongoClient;
 	private DB db;
+	private Geo geo;
 
 	public ModelAbstract() {
 		try {
 			mongoClient = new MongoClient(Const.getMongoServer(), Const.getMongoPort());
 			db = mongoClient.getDB(Const.getMongoDb());
+			geo = Geo.getInstance();
 		} catch (UnknownHostException e) {
 			Log.error("", this, "DocumentModel", "Unknown Host.", e); 
 		}
@@ -108,25 +124,42 @@ public abstract class ModelAbstract {
 		return String.format(METADATA_KEY_FORMAT, key);
 	}
 	
+	protected JSONObject getGeolocation(JSONObject metadata) {
+		try {
+			String location = metadata.getString(Const.LOCATION);
+			if (location != null && !"".equals(location)) return null;
+			String[] locationArray = location.split(":");
+			Double latitude = Double.parseDouble(locationArray[0]);
+			Double longitude = Double.parseDouble(locationArray[1]);
+			if (latitude == null || longitude == null) return null;
+			Double gridLatitude = geo.getGridLatitude(latitude);
+			Double gridLongitude = geo.getGridLongitude(longitude);
+			return new JSONObject(String.format(GEO_FORMAT, latitude, longitude, gridLatitude, gridLongitude));
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
 	protected JSONObject getMetadaJSONObject(Map<String, String> metadata) {
 		JSONObject obj = new JSONObject();
 		for (String key: metadata.keySet()) {
 			try {
 				obj.append(key, metadata.get(key));
 			} catch (JSONException e) {
-				Log.error("", this, "updateMetadata", "Error updating metadata key: " + key, e);
+				Log.error("", this, "getMetadaJSONObject", "Error getting metadata JSONObject.", e);
 			}
 		}
 		return obj;
 	}
 	
-	
+
 	// *** CREATE *** //
 
- 	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata) throws JSONException{
+ 	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata, JSONObject geolocation) throws JSONException{
 		DBCollection coll = getCollection(appId);
 		JSONObject data = new JSONObject(value.toString());
 		if (metadata != null) data.append(_METADATA, metadata);
+		if (geolocation != null) data.append(_GEO, geolocation);
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
 		return data;
@@ -163,6 +196,14 @@ public abstract class ModelAbstract {
 				Log.error("", this, "updateMetadata", "Error updating metadata key: " + key, e);
 			}
 		}
+		try {
+			JSONObject geolocation = getGeolocation(getJSonObject(metadata));
+			if (geolocation != null) 
+				updateDocumentValue(appId, id, _GEO, geolocation);
+		} catch (JSONException e) {
+			Log.error("", this, "updateMetadata", "Error updatingo Document Geolocation.", e);
+		}
+
 	}
 
 	
@@ -196,20 +237,38 @@ public abstract class ModelAbstract {
 	
 	// *** GET LIST *** //
 
-	public List<String> getDocuments(String appId, String userId, String path, JSONObject query, String orderType) throws Exception {
+	public List<String> getDocuments(String appId, String userId, String path, Double latitude, Double longitude, Double radius, JSONObject query, String orderType) throws Exception {
 		String strParentPathQuery = getParentPathQueryString(path);
+		String strQueryLocation = getQueryLocationString(latitude, longitude, radius);
 		String strQuery = getQueryString(appId, path, query, orderType);
 		String searchQuery = getAndQueryString(strParentPathQuery, strQuery);
+		if (strQueryLocation != null)
+			searchQuery = getAndQueryString(searchQuery, strQueryLocation);
 		if (userId != null && !"".equals(userId))
 			searchQuery = getAndQueryString(searchQuery, getUserIdQueryString(userId));
 		DBCollection coll = getCollection(appId);
 		DBObject queryObj = (DBObject)JSON.parse(searchQuery);
 		BasicDBObject projection = new BasicDBObject();
 		projection.append(_ID, 1);
+		if (strQueryLocation != null)
+			projection.append(_GEO, 1);
 		DBCursor cursor = coll.find(queryObj, projection);
 		List<String> retObj = new ArrayList<String>();
 		while (cursor.hasNext()) {
-			retObj.add(cursor.next().get(_ID).toString());
+			DBObject obj = cursor.next();
+			try {
+				if (strQueryLocation != null) {
+					DBObject _geo = (DBObject)obj.get(_GEO);
+					Double objLatitude = Double.valueOf("" + _geo.get(LATITUDE));
+					Double objLongitude = Double.valueOf("" + _geo.get(LONGITUDE));
+					if (!geo.isWithinDistance(objLatitude, objLongitude, latitude, longitude, radius))
+						continue;
+				}
+			} catch (Exception e) {
+				Log.error("", this, "getDocuments", "Error determining location distance for objectId = " + obj.get(_ID).toString() + " .");
+			}
+				
+			retObj.add(obj.get(_ID).toString());
 		}
 		return retObj;
 	}
@@ -250,6 +309,22 @@ public abstract class ModelAbstract {
 	protected String getParentPathQueryString(String path) {
 		return "";
 	}
+	
+	private String getQueryLocationString(Double latitude, Double longitude, Double radius) {
+		if (latitude == null || longitude == null || radius == null) return null;
+		try {
+			Double latitudeIni = geo.getGridLatitude(latitude - geo.transformMetersInDegreesLat(radius)); 
+			Double latitudeEnd = geo.getGridLongitude(latitude + geo.transformMetersInDegreesLat(radius)); 
+			Double longitudeIni = geo.getGridLatitude(longitude - geo.transformMetersInDegreesLong(radius, latitudeIni)); 
+			Double longitudeEnd = geo.getGridLongitude(longitude + geo.transformMetersInDegreesLong(radius, latitudeEnd));
+			return String.format(LOCATION_QUERY_FORMAT, latitudeIni.toString(), latitudeEnd.toString(), longitudeIni.toString(), longitudeEnd.toString());
+		} catch (Exception e) {
+			Log.error("", this, "getQueryLocationString", "Erros getting location query.", e);
+			return null;
+		}
+
+	}
+
 	
 	private String getAndQueryString(String oper1, String oper2) {
 		if (oper1 == null || "".equals(oper1) || oper1.contains("null")) return (oper2 == null || "".equals(oper2)) ? "" : oper2;
