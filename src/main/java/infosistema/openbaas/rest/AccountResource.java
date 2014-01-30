@@ -110,7 +110,7 @@ public class AccountResource {
 				Result res = usersMid.createUserAndLogin(headerParams, ui,appId, userName, email, password, userFile, baseLocationOption, baseLocation, Metadata.getNewMetadata(location));
 				response = Response.status(Status.CREATED).entity(res).build();
 			} else {
-				response = Response.status(Status.FORBIDDEN).entity(new Error("{\"email exists\": "+email+"}")).build();
+				response = Response.status(Status.FORBIDDEN).entity(new Error("email exists" +email)).build();
 			}
 		} else {
 			response = Response.status(Status.BAD_REQUEST).entity(new Error("")).build();
@@ -196,7 +196,7 @@ public class AccountResource {
 				String sessionToken = Utils.getRandomString(Const.getIdLength());
 				boolean validation = sessionMid.createSession(sessionToken, appId, outUser.getUserId(), attemptedPassword);
 				if(validation){
-					sessionMid.refreshSession(sessionToken, location, userAgent);
+					refreshCode = sessionMid.refreshSession(sessionToken, location, userAgent);
 					lastLocation = usersMid.updateUserLocation(outUser.getUserId(), appId, location, Metadata.getNewMetadata(location));
 					if (validation && refreshCode) {
 						outUser.setUserID(outUser.getUserId());

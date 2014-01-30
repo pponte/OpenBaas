@@ -133,7 +133,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 		data = mediaModel.createMedia(appId, userId, type, id, fields, extraMetadata);
 		if (data != null) {
 			try {
-				metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
+				metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
 			} catch (JSONException e) {
 				Log.error("", this, "createMedia", "Error gettin metadata.", e);
 			}
@@ -208,7 +208,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 			media.setFileExtension(obj.getString(Media.FILEEXTENSION));
 			media.setLocation(obj.getString(Media.LOCATION));
 			if (getMetadata) {
-				metadata = Metadata.getMetadata(obj.getJSONObject(ModelAbstract._METADATA));
+				metadata = Metadata.getMetadata(new JSONObject(obj.getString(ModelAbstract._METADATA)));
 			}
 		} catch (JSONException e) {
 			Log.error("", this, "getMedia", "Error getting Media.", e);

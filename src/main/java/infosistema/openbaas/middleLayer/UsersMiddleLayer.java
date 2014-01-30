@@ -156,7 +156,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			outUser.setBaseLocationOption(baseLocationOption.toString());
 			outUser.setLastLocation(location);
 		}
-		return res;
+		return new Result(outUser,res.getMetadata());
 		
 	}
 	
@@ -226,8 +226,9 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			Object data = null;
 			Map<String, String> fields = getUserFields(userName, socialId, socialNetwork, email, userFile, salt, hash, emailConfirmed,
 					baseLocationOption, baseLocation, true, location);
-			data = userModel.createUser(appId, userId, fields, extraMetadata);
-			metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
+			data = userModel.createUser(appId, userId, fields, extraMetadata);			
+			metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
+			
 			((JSONObject) data).remove(ModelAbstract._METADATA);
 			data = (DBObject)JSON.parse(data.toString());
 			String ref = Utils.getRandomString(Const.getIdLength());
@@ -250,7 +251,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		try {
 			Map<String, String> fields = getUserFields(userName, null, null, email, userFile, null, null, null, baseLocationOption, baseLocation, true, location);
 			data = userModel.updateUser(appId, userId, fields, extraMetadata);
-			metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
+			metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
 			((JSONObject) data).remove(ModelAbstract._METADATA);
 			data = (DBObject)JSON.parse(data.toString());
 		} catch (Exception e) {
@@ -272,7 +273,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 				Object data = null;
 				Map<String, String> fields = getUserFields(null, null, null, null, null, salt, hash, null, null, null, null, null);
 				data = userModel.updateUser(appId, userId, fields, extraMetadata);
-				metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
+				metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
 				((JSONObject) data).remove(ModelAbstract._METADATA);
 				data = (DBObject)JSON.parse(data.toString());
 				return new Result(data, metadata);
@@ -319,15 +320,23 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		if (user == null) return null;
 		User data = new User(userId);
 		try {
-			data.setUserName(user.getString(User.USER_NAME));
-			data.setUserFile(user.getString(User.USER_FILE));
-			data.setEmail(user.getString(User.EMAIL));
-			data.setAlive(user.getString(User.ALIVE));
-			data.setEmailConfirmed(user.getString(User.EMAIL_CONFIRMED));
-			data.setBaseLocationOption(user.getString(User.BASE_LOCATION_OPTION));
-			data.setBaseLocation(user.getString(User.BASE_LOCATION));
-			data.setLastLocation(user.getString(User.LOCATION));
-			Metadata metadata = Metadata.getMetadata(((JSONObject)user.getJSONObject("_metadata")).getJSONObject(ModelAbstract._METADATA));
+			if(user.has(User.USER_NAME))
+				data.setUserName(user.getString(User.USER_NAME));
+			if(user.has(User.USER_FILE))
+				data.setUserFile(user.getString(User.USER_FILE));
+			if(user.has(User.EMAIL))
+				data.setEmail(user.getString(User.EMAIL));
+			if(user.has(User.ALIVE))
+				data.setAlive(user.getString(User.ALIVE));
+			if(user.has(User.EMAIL_CONFIRMED))
+				data.setEmailConfirmed(user.getString(User.EMAIL_CONFIRMED));
+			if(user.has(User.BASE_LOCATION_OPTION))
+				data.setBaseLocationOption(user.getString(User.BASE_LOCATION_OPTION));
+			if(user.has(User.BASE_LOCATION))
+				data.setBaseLocation(user.getString(User.BASE_LOCATION));
+			if(user.has(User.LOCATION))
+				data.setLastLocation(user.getString(User.LOCATION));
+			Metadata metadata = Metadata.getMetadata(new JSONObject(user.getString(ModelAbstract._METADATA)));
 			return new Result(data, metadata);
 		} catch (JSONException e) {
 		}

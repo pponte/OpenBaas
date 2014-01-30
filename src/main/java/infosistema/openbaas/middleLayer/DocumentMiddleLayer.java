@@ -61,8 +61,10 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 			Object data = null;
 			List<String> lPath = convertPath(path);
 			data = docModel.insertDocumentInPath(appId, userId, lPath, document, extraMetadata);
-			metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
-			((JSONObject) data).remove(ModelAbstract._METADATA);
+			if(((JSONObject) data).has(ModelAbstract._METADATA)){
+				metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
+				((JSONObject) data).remove(ModelAbstract._METADATA);
+			}
 			data = (DBObject)JSON.parse(data.toString());
 			return new Result(data, metadata);
 		} catch (JSONException e) {
@@ -81,8 +83,10 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 			Metadata metadata = null;
 			Object data = null;
 			data = docModel.updateDocumentInPath(appId, userId, convertPath(path), document, extraMetadata);
-			metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
-			((JSONObject) data).remove(ModelAbstract._METADATA);
+			if(((JSONObject) data).has(ModelAbstract._METADATA)){
+				metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
+				((JSONObject) data).remove(ModelAbstract._METADATA);
+			}
 			data = (DBObject)JSON.parse(data.toString());
 			return new Result(data, metadata);
 		} catch (JSONException e) {
@@ -125,8 +129,10 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 			data = docModel.getDocumentInPath(appId, userId, convertPath(path), getMetadata);
 			if (data instanceof JSONObject) {
 				if (getMetadata) {
-					metadata = Metadata.getMetadata(((JSONObject) data).getJSONObject(ModelAbstract._METADATA));
-					((JSONObject) data).remove(ModelAbstract._METADATA);
+					if(((JSONObject) data).has(ModelAbstract._METADATA)){
+						metadata = Metadata.getMetadata(new JSONObject(((JSONObject) data).getString(ModelAbstract._METADATA)));
+						((JSONObject) data).remove(ModelAbstract._METADATA);
+					}
 					data = (DBObject)JSON.parse(data.toString());
 				}
 			}

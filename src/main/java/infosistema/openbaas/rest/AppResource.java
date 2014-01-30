@@ -36,7 +36,7 @@ import org.codehaus.jettison.json.JSONObject;
 public class AppResource {
 
 	private AppsMiddleLayer appsMid;
-	private static final int IDLENGTH = 3;
+	
 
 	public AppResource() {
 		appsMid = AppsMiddleLayer.getInstance();
@@ -92,8 +92,8 @@ public class AppResource {
 				return Response.status(Status.BAD_REQUEST).entity(new Error("Error parsing the JSON.")).build();
 			}
 			if (readSucess) {
-				appId = Utils.getRandomString(IDLENGTH);
-				appKey = Utils.getRandomString(IDLENGTH);
+				appId = Utils.getRandomString(Const.getIdLength());
+				appKey = Utils.getRandomString(Const.getIdLength());
 				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem);
 			}
 			if (temp != null) {

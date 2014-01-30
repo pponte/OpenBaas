@@ -103,8 +103,10 @@ public class SessionModel {
 			boolean locationHasChange = false;
 			if (location != null && !"".equals(location)) {
 				String previousLocation = jedis.hget("sessions:" + sessionToken, Const.LOCATION);
-				if (previousLocation == null)
+				if (previousLocation == null){
 					locationHasChange = true;
+					previousLocation = "0:0";
+				}
 
 				String[] previousLocationArray = previousLocation.split(":");
 				String[] currentLocationArray = location.split(":");
@@ -133,6 +135,8 @@ public class SessionModel {
 				updateLocationToSession(appId, userId, sessionToken, location);
 				jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
 			}
+		}catch(Exception e){
+			Log.error("", "refreshSession", "refreshSession", e.toString());
 		} finally {
 			pool.returnResource(jedis);
 		}

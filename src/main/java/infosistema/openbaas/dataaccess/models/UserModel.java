@@ -107,9 +107,15 @@ public class UserModel extends ModelAbstract {
 				}
 				obj.put(_USER_ID, userId);
 				obj.put(_ID, userId);
-				if (metadata != null) obj.put(_METADATA, metadata);
-				if (geolocation != null) obj.put(_GEO, geolocation);
-				super.insert(appId, obj, metadata, geolocation);
+				if (metadata != null){ 
+					obj.put(_METADATA, metadata.toString());
+					jedis.hset(userKey, _METADATA, metadata.toString());
+				}
+				if (geolocation != null){ 
+					obj.put(_GEO, geolocation.toString());
+					jedis.hset(userKey, _GEO, geolocation.toString());
+				}
+				super.insert(appId, obj, metadata, geolocation);				
 			}
 			return obj;
 		} catch (Exception e) {

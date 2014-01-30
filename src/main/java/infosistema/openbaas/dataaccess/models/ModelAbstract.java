@@ -146,7 +146,7 @@ public abstract class ModelAbstract {
 		JSONObject obj = new JSONObject();
 		for (String key: metadata.keySet()) {
 			try {
-				obj.append(key, metadata.get(key));
+				obj.put(key, metadata.get(key));
 			} catch (JSONException e) {
 				Log.error("", this, "getMetadaJSONObject", "Error getting metadata JSONObject.", e);
 			}
@@ -160,8 +160,8 @@ public abstract class ModelAbstract {
  	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata, JSONObject geolocation) throws JSONException{
 		DBCollection coll = getCollection(appId);
 		JSONObject data = new JSONObject(value.toString());
-		if (metadata != null) data.append(_METADATA, metadata);
-		if (geolocation != null) data.append(_GEO, geolocation);
+		//if (metadata != null) data.append(_METADATA, metadata);
+		//if (geolocation != null) data.append(_GEO, geolocation);
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
 		return data;
