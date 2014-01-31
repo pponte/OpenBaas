@@ -206,6 +206,7 @@ public class DocumentModel extends ModelAbstract {
 				updateDocumentValue(appId, userId, DATA, (JSONObject)getDocumentInPath(appId, userId, path, false));
 			return true;
 		} else {
+			updateDocumentValue(appId, id, key, data);
 			return updateAscendents(appId, userId, path, (JSONObject)getDocumentInPath(appId, userId, path, false), metadata);
 		}
 	}

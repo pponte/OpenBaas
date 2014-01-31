@@ -340,7 +340,9 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 				data.setBaseLocation(user.getString(User.BASE_LOCATION));
 			if(user.has(User.LOCATION))
 				data.setLastLocation(user.getString(User.LOCATION));
-			Metadata metadata = Metadata.getMetadata(new JSONObject(user.getString(ModelAbstract._METADATA)));
+			Metadata metadata = null;
+			if (user.has(ModelAbstract._METADATA))
+				metadata = Metadata.getMetadata(new JSONObject(user.getString(ModelAbstract._METADATA)));
 			return new Result(data, metadata);
 		} catch (JSONException e) {
 		}
