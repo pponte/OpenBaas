@@ -166,6 +166,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		String userId = null;
 		String userAgent = null;
 		String location = null;
+		String lastLocation =null;
 		Result res = null; 
 		
 		userId = Utils.getRandomString(Const.getIdLength());
@@ -195,16 +196,19 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		} catch (Exception e) { }
 		
 		sessionMid.refreshSession(sessionToken, location, userAgent);
+		lastLocation = updateUserLocation(userId, appId, location, extraMetadata);
+		if(lastLocation==null)
+			lastLocation = outUser.getLastLocation();
 
 		if (validation) {
 			outUser.setUserID(userId);
-			outUser.setReturnToken(sessionToken);
 			outUser.setEmail(email);
 			outUser.setUserName(userName);
+			outUser.setBaseLocationOption("false");
+			outUser.setLastLocation(lastLocation);
+			outUser.setReturnToken(sessionToken);
 		}
-		
-		return res;
-		
+		return new Result(outUser,res.getMetadata());
 	}
 
 	/**

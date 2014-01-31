@@ -1,6 +1,7 @@
 package infosistema.openbaas.rest;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import infosistema.openbaas.data.Error;
@@ -121,6 +122,7 @@ public class IntegrationResource {
 		String location = null;
 		String appKey = null;
 		String fbToken = null;
+		String lastLocation = null;
 		User outUser = new User();
 		String userId =null;
 		try {
@@ -171,11 +173,25 @@ public class IntegrationResource {
 			boolean validation = sessionMid.createSession(sessionToken, appId, userId, socialId);
 			if(validation){
 				sessionMid.refreshSession(sessionToken, location, userAgent);
+				Result data = usersMid.getUserInApp(appId, userId);
+				User user = (User) data.getData();
+				outUser.setBaseLocation(user.getBaseLocation());
+				outUser.setBaseLocationOption(user.getBaseLocationOption());
+				if(location!=null){
+					if(user.getBaseLocationOption().equals("true")){
+						lastLocation = user.getBaseLocation();
+					}
+					else
+						lastLocation = location;
+					usersMid.updateUserLocation(userId, appId, lastLocation, Metadata.getNewMetadata(lastLocation));
+				}else
+					lastLocation = user.getLastLocation();
+				outUser.setLastLocation(lastLocation);
 				outUser.setUserID(userId);
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);
 				outUser.setUserName(userName);
-				Result res = new Result(outUser, null);
+				Result res = new Result(outUser, data.getMetadata());
 				response = Response.status(Status.OK).entity(res).build();
 			}
 		}
