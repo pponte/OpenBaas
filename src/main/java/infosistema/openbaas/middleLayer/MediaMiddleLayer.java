@@ -138,8 +138,37 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 				Log.error("", this, "createMedia", "Error gettin metadata.", e);
 			}
 			((JSONObject) data).remove(ModelAbstract._METADATA);
-			data = (DBObject)JSON.parse(data.toString());
-			return new Result(data, metadata);
+			
+			((JSONObject) data).remove(ModelAbstract._TYPE);
+			
+			Media media = null;
+			if (type == ModelEnum.audio) {
+				media = new Audio();
+				//((Audio)media).setDefaultBitRate(obj.get(Audio.BITRATE));
+			} else if (type == ModelEnum.image) {
+				media = new Image();
+				//((Image)media).setResolution(obj.get(Image.RESOLUTION));
+			} else if (type == ModelEnum.storage) {
+				media = new Storage();
+			} else if (type == ModelEnum.video) {
+				media = new Video();
+				//((Video)media).setResolution(obj.get(Video.RESOLUTION));
+			}
+			
+			try {
+				media.setId(((JSONObject) data).getString(ModelAbstract._ID));
+				((JSONObject) data).remove(ModelAbstract._ID);
+				media.setSize(((JSONObject) data).getLong(Media.SIZE));
+				media.setDir(((JSONObject) data).getString(Media.PATH));
+				media.setFileName(((JSONObject) data).getString(Media.FILENAME));
+				media.setFileExtension(((JSONObject) data).getString(Media.FILEEXTENSION));
+				media.setLocation(((JSONObject) data).getString(Media.LOCATION));
+				//data = (DBObject)JSON.parse(data.toString());
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return new Result(media, metadata);
 		} else {
 			return null;
 		}

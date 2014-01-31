@@ -10,6 +10,8 @@ import java.util.Map;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import redis.clients.jedis.Jedis;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 
@@ -70,6 +72,14 @@ public class MediaModel extends ModelAbstract {
 			data.put(_TYPE, type.toString());
 			JSONObject metadata = getMetadaJSONObject(getMetadataCreate(userId, extraMetadata));
 			JSONObject geolocation = getGeolocation(metadata);
+			if(metadata!=null){
+				data.put(_METADATA, metadata.toString());
+				//jedis.hset(userKey, _METADATA, metadata.toString());
+			}
+			if(geolocation!=null){
+				data.put(_GEO, geolocation.toString());
+				//jedis.hset(userKey, _METADATA, metadata.toString());
+			}
 			return super.insert(appId, data, metadata, geolocation);
 		} catch (Exception e) {
 			Log.error("", this, "createMedia", "An error ocorred.", e);

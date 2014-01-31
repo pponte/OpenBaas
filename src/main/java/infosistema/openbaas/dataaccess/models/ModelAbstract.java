@@ -29,9 +29,10 @@ public abstract class ModelAbstract {
 
 	// *** CONSTANTS *** //
 
-	protected static final String _ID = "_id"; 
+	public static final String _ID = "_id"; 
 	protected static final String _USER_ID = "_userId";
-	public static final String _METADATA = "_metadata"; 
+	public static final String _METADATA = "_metadata";
+	public static final String _TYPE = "_type";
 	public static final String _GEO = "_geo"; 
 
 	protected static final String DESC = "desc";
