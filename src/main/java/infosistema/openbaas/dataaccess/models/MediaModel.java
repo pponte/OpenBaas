@@ -4,9 +4,12 @@ import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.utils.Log;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -18,7 +21,7 @@ import com.mongodb.DBCollection;
 public class MediaModel extends ModelAbstract {
 
 	// request types
-	public static final String APP_MEDIA_COLL_FORMAT = "app%smedia";
+	public static final String APP_MEDIA_COLL_FORMAT = "app%sdata";
 	protected static final String _TYPE = "_type";
 	private static final String TYPE_QUERY_FORMAT = "{" + _TYPE + ": \"%s\"";
 
@@ -72,12 +75,14 @@ public class MediaModel extends ModelAbstract {
 			data.put(_TYPE, type.toString());
 			JSONObject metadata = getMetadaJSONObject(getMetadataCreate(userId, extraMetadata));
 			JSONObject geolocation = getGeolocation(metadata);
+			Map metaMap = convertJsonToMap(metadata);
+			Map metaGeo = convertJsonToMap(geolocation);
 			if(metadata!=null){
-				data.put(_METADATA, metadata.toString());
+				data.put(_METADATA, metaMap);
 				//jedis.hset(userKey, _METADATA, metadata.toString());
 			}
 			if(geolocation!=null){
-				data.put(_GEO, geolocation.toString());
+				data.put(_GEO, metaGeo);
 				//jedis.hset(userKey, _METADATA, metadata.toString());
 			}
 			return super.insert(appId, data, metadata, geolocation);
@@ -92,6 +97,18 @@ public class MediaModel extends ModelAbstract {
 
 	// *** GET LIST *** //
 	
+	private Map convertJsonToMap(JSONObject json) {
+		Map<String,Object> map = new HashMap<String,Object>();
+		ObjectMapper mapper = new ObjectMapper();
+	 
+		try {
+			map = mapper.readValue(json.toString(), new TypeReference<HashMap<String,Object>>(){});	 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return map;
+	}
+
 	public List<String> getMedia(String appId, ModelEnum type, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy) throws Exception {
 		JSONObject finalQuery = new JSONObject();
 		if (type != null) {

@@ -114,7 +114,7 @@ public class UserDataResource {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-			if (docMid.existsDocumentInPath(appId, null, path)) {
+			if (docMid.existsDocumentInPath(appId, userId, path)) {
 				Result res = docMid.updateDocumentInPath(appId, userId, path, inputJson, Metadata.getNewMetadata(location));
 				if (res != null)
 					response = Response.status(Status.OK).entity(res).build();

@@ -140,12 +140,12 @@ public class DocumentModel extends ModelAbstract {
 		if (userId != null && !"".equals(userId))
 			data.put(_USER_ID, userId);
 		data.put(_PARENT_PATH, getDocumentParentPath(path));
-		if(!existsDocument(appId, userId, path) || !getDocumentId(userId, path).equals(userId)) {
+		if(!existsDocument(appId, userId, path) || !id.equals(userId)) {
 			JSONObject metadata = getMetadaJSONObject(metadataFields);
 			JSONObject geolocation = getGeolocation(metadata);
-			return super.insert(appId, data, metadata, geolocation);
+			super.insert(appId, data, metadata, geolocation);
 		}
-		return getDocument(appId, id, true);
+		return getDocument(appId, id, true);//<-- este true diz que é para devolver o metadata
 	}
 	
 	// *** UPDATE *** //

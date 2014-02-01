@@ -88,6 +88,7 @@ public abstract class ModelAbstract {
 		dataProjection.append(_ID, 0);
 		if (!getMetadata)
 			dataProjection.append(_METADATA, 0);
+		dataProjection.append(_GEO, 0);
 		return dataProjection;
 	}
 
@@ -130,7 +131,7 @@ public abstract class ModelAbstract {
 	protected JSONObject getGeolocation(JSONObject metadata) {
 		try {
 			String location = metadata.getString(Const.LOCATION);
-			if (location != null && !"".equals(location)) return null;
+			if (location == null || "".equals(location)) return null;
 			String[] locationArray = location.split(":");
 			Double latitude = Double.parseDouble(locationArray[0]);
 			Double longitude = Double.parseDouble(locationArray[1]);
@@ -161,8 +162,8 @@ public abstract class ModelAbstract {
  	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata, JSONObject geolocation) throws JSONException{
 		DBCollection coll = getCollection(appId);
 		JSONObject data = new JSONObject(value.toString());
-		//if (metadata != null) data.append(_METADATA, metadata);
-		//if (geolocation != null) data.append(_GEO, geolocation);
+		if (metadata != null) data.put(_METADATA, metadata);
+		if (geolocation != null) data.put(_GEO, geolocation);
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
 		return data;
@@ -256,6 +257,8 @@ public abstract class ModelAbstract {
 		if (strQueryLocation != null)
 			projection.append(_GEO, 1);
 		DBObject sortQuery = getSortQuery(orderBy, orderType);
+		Log.info(userId, "", "getDocuments", "Query: "+query.toString());
+		Log.info(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<String> retObj = new ArrayList<String>();
 		while (cursor.hasNext()) {
@@ -271,8 +274,9 @@ public abstract class ModelAbstract {
 			} catch (Exception e) {
 				Log.error("", this, "getDocuments", "Error determining location distance for objectId = " + obj.get(_ID).toString() + " .");
 			}
-				
-			retObj.add(obj.get(_ID).toString());
+			String idRes =obj.get(_ID).toString();
+			String[] splitArray = idRes.split("/");
+			retObj.add(splitArray[splitArray.length-1]);
 		}
 		return retObj;
 	}
