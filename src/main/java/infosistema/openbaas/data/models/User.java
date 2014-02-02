@@ -31,6 +31,7 @@ public class User {
 	public static final String BASE_LOCATION_OPTION = "baseLocationOption";
 	public static final String BASE_LOCATION = "baseLocation";
 	public static final String LOCATION = "location";
+	public static final String ONLINE = "online";
 	private static final String SN_PREFIXO = "SN_";
 	private static final String SN_SUFIXO = "_ID";
 	private static final String SOCIAL_NETWORK_ID_FORMAT = SN_PREFIXO +"%s" + SN_SUFIXO;
@@ -49,6 +50,7 @@ public class User {
 	private String baseLocationOption;
 	private String baseLocation;
 	private String lastLocation;
+	private String online;
 
 	public User(String userId){
 		this.userId = userId;
@@ -165,6 +167,12 @@ public class User {
 	
 	public static boolean isIndexedField(String key) {
 		return key!=null && (key.equals(EMAIL) || key.equals(USER_NAME) || (key.startsWith(SN_PREFIXO) && key.endsWith(SN_SUFIXO))); 
+	}
+	public String getOnline() {
+		return online;
+	}
+	public void setOnline(String online) {
+		this.online = online;
 	}
 
 }

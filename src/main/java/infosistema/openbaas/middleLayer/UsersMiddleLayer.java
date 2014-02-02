@@ -340,6 +340,8 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 				data.setBaseLocation(user.getString(User.BASE_LOCATION));
 			if(user.has(User.LOCATION))
 				data.setLastLocation(user.getString(User.LOCATION));
+			if(user.has(User.ONLINE))
+				data.setOnline(user.getString(User.ONLINE));
 			Metadata metadata = null;
 			if (user.has(ModelAbstract._METADATA))
 				metadata = Metadata.getMetadata(new JSONObject(user.getString(ModelAbstract._METADATA)));

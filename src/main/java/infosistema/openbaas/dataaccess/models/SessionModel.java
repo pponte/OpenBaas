@@ -381,6 +381,26 @@ public class SessionModel {
 		return exists;
 	}
 	
+	public boolean isUserOnline(String userId) {
+		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
+		Jedis jedis = pool.getResource();
+		boolean exists = false;
+		try {
+			Set<String> sessionIds = jedis.smembers("user:sessions:" + userId);
+			Iterator<String> it = sessionIds.iterator();
+			while (it.hasNext()){
+				String sessionName = it.next();
+				Long userTime = jedis.ttl("sessions:"+sessionName);
+				if (userTime != -1)
+					exists = true;
+			}
+		} finally {
+			pool.returnResource(jedis);
+		}
+		pool.destroy();
+		return exists;
+	}
+	
 	public String getAppIdForSessionToken(String sessionToken) {
 		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
 		Jedis jedis = pool.getResource();

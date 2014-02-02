@@ -199,11 +199,14 @@ public class UserModel extends ModelAbstract {
 	 * @return
 	 */
 	public JSONObject getUser(String appId, String userId, boolean getMetadata) {
+		SessionModel sessionModel = new SessionModel();
 		Jedis jedis = pool.getResource();
 		Map<String, String> userFields = null;
 		try {
 			String userKey = getUserKey(appId, userId);
 			userFields = jedis.hgetAll(userKey);
+			Boolean online = sessionModel.isUserOnline(userId);
+			userFields.put("online", online.toString());
 			if (!getMetadata) userFields.remove(_METADATA);
 			if (userFields == null || userFields.size() <= 0)
 				return null;
