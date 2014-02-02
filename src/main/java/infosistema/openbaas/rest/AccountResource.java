@@ -268,7 +268,8 @@ public class AccountResource {
 		String sessionToken = null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		sessionToken = headerParams.getFirst(Const.SESSION_TOKEN);
-		Boolean flagAll = (Boolean) inputJsonObj.opt("all");
+		  
+		Boolean flagAll = (Boolean) inputJsonObj.optBoolean("all",false);
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		if(userId!=null){
 			if (sessionMid.sessionTokenExists(sessionToken)) {

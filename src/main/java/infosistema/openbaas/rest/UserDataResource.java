@@ -44,6 +44,7 @@ public class UserDataResource {
 	private UsersMiddleLayer usersMid;
 	private String appId;
 	private SessionMiddleLayer sessionMid;
+	private String userId;
 
 	public UserDataResource(UriInfo uriInfo, String appId, String userId) {
 		this.appsMid = AppsMiddleLayer.getInstance();
@@ -52,6 +53,7 @@ public class UserDataResource {
 		this.sessionMid = SessionMiddleLayer.getInstance();
 		this.appId = appId;
 		this.uriInfo = uriInfo;
+		this.userId = userId;
 	}
 
 	// *** CREATE *** //
@@ -194,7 +196,7 @@ public class UserDataResource {
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_BY) String orderTypeStr) {
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
-		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+		//String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
@@ -218,7 +220,7 @@ public class UserDataResource {
 				else
 					response = Response.status(Status.OK).entity(res).build();
 			} else {
-				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
+				response = Response.status(Status.NOT_FOUND).entity(new Error("data not exists for userId: "+userId)).build();
 			}
 		} else if (code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
