@@ -9,6 +9,7 @@ import infosistema.openbaas.utils.geolocation.Geo;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import com.mongodb.util.JSON;
 
 public abstract class ModelAbstract {
@@ -71,7 +74,13 @@ public abstract class ModelAbstract {
 
 	public ModelAbstract() {
 		try {
-			mongoClient = new MongoClient(Const.getMongoServer(), Const.getMongoPort());
+			if(Const.getMongoAuth()){
+				MongoCredential credential = MongoCredential.createMongoCRCredential(Const.getMongoUser(), Const.getMongoDb(), Const.getMongoPass().toCharArray());
+				ServerAddress server = new ServerAddress(Const.getMongoServer(), Const.getMongoPort());
+				mongoClient = new MongoClient(server, Arrays.asList(credential));
+			}else{
+				mongoClient = new MongoClient(Const.getMongoServer(), Const.getMongoPort());
+			}
 			db = mongoClient.getDB(Const.getMongoDb());
 			geo = Geo.getInstance();
 		} catch (UnknownHostException e) {
@@ -166,7 +175,7 @@ public abstract class ModelAbstract {
 		if (geolocation != null) data.put(_GEO, geolocation);
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
-		return data;
+		return data;		
 	}
 	
  	
@@ -235,7 +244,7 @@ public abstract class ModelAbstract {
 		BasicDBObject dbQuery = new BasicDBObject();
 		dbQuery.append(_ID, id); 		
 		coll.update(dbQuery, dbRemove);
-		return true;
+		return true;	
 	}
 	
 	

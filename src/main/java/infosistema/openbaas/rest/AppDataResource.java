@@ -142,7 +142,7 @@ public class AppDataResource {
 				else
 					response = Response.status(Status.BAD_REQUEST).entity(new Error(path.toString())).build();
 			} else {
-				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
+				response = Response.status(Status.OK).entity(new Error("not exists")).build();
 			}
 		} else if (code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();

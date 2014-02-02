@@ -29,6 +29,9 @@ public class Const {
 	public static String DEFAULT_ORDER_BY = "_id";
 	public static String DEFAULT_ORDER_TYPE = "desc";
 
+	private static String REDIS_USER = "openbaas";
+	private static String REDIS_PASS = "redisdbpwd";
+	
 	private static String REDIS_GENERAL_SERVER = "localhost";
 	private static Integer REDIS_GENERAL_PORT = 6382;
 
@@ -41,10 +44,16 @@ public class Const {
 	private static Integer REDIS_METADATA_PORT = 6383;
 	private static String REDIS_METADATA_SERVER = "localhost";
 
+	
 	private static String MONGO_SERVER = "localhost";
 	private static Integer MONGO_PORT = 27017;
 	private static String MONGO_DB = "openbaas";
-
+	private static String MONGO_USER = null;
+	private static String MONGO_PASS = null;
+	
+	
+	
+	
 	private static String EMAIL_CONFIRMATION_ERROR = "Please confirm your email first.";
 	private static String EMAIL_CONFIRMATION_SENDED = "Email sent with recovery details.";
 
@@ -128,6 +137,12 @@ public class Const {
 				REDIS_METADATA_PORT = Integer.parseInt(props.getProperty("REDIS_METADATA_PORT"));
 			} catch (Exception e) {}
 
+			stmp = props.getProperty("REDIS_USER");
+			if (stmp != null) REDIS_USER = stmp;
+			
+			stmp = props.getProperty("REDIS_PASS");
+			if (stmp != null) REDIS_PASS = stmp;
+			
 			stmp = props.getProperty("MONGO_SERVER");
 			if (stmp != null) MONGO_SERVER = stmp;
 
@@ -137,6 +152,12 @@ public class Const {
 
 			stmp = props.getProperty("MONGO_DB");
 			if (stmp != null) MONGO_DB = stmp;
+			
+			stmp = props.getProperty("MONGO_USER");
+			if (stmp != null) MONGO_USER = stmp;
+			
+			stmp = props.getProperty("MONGO_PASS");
+			if (stmp != null) MONGO_PASS = stmp;
 
 			stmp = props.getProperty("EMAIL_CONFIRMATION_ERROR");
 			if (stmp != null) EMAIL_CONFIRMATION_ERROR = stmp;
@@ -275,6 +296,36 @@ public class Const {
 
 	public static String getMongoDb() {
 		return MONGO_DB;
+	}
+	
+	public static String getMongoUser() {
+		return MONGO_USER;
+	}
+	
+	public static String getMongoPass() {
+		return MONGO_PASS;
+	}
+	
+	public static String getRedisUser() {
+		return REDIS_USER;
+	}
+	
+	public static String getRedisPass() {
+		return REDIS_PASS;
+	}
+	
+	public static Boolean getMongoAuth() {
+		if(getMongoPass()!=null && getMongoUser() != null)
+			return true;
+		else
+			return false;
+	}
+	
+	public static Boolean getRedisAuth() {
+		if(getRedisPass()!=null && getRedisUser() != null)
+			return true;
+		else
+			return false;
 	}
 
 	public static String getEmailConfirmationError() {
