@@ -107,10 +107,9 @@ public class AppDataResource {
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
-			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-			if (docMid.existsDocumentInPath(appId, userId, path)) {
+			if (docMid.existsDocumentInPath(appId, null, path)) {
 				Result res = docMid.updateDocumentInPath(appId, null, path, inputJson, Metadata.getNewMetadata(location));
 				if (res != null)
 					response = Response.status(Status.OK).entity(res).build();
