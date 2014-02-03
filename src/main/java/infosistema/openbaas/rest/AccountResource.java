@@ -188,6 +188,7 @@ public class AccountResource {
 						outUser.setBaseLocation(outUser.getBaseLocation());
 						outUser.setBaseLocationOption(outUser.getBaseLocationOption());
 						outUser.setLastLocation(lastLocation);
+						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
 					}
 				} else {
@@ -208,6 +209,7 @@ public class AccountResource {
 						outUser.setBaseLocation(outUser.getBaseLocation());
 						outUser.setBaseLocationOption(outUser.getBaseLocationOption());
 						outUser.setLastLocation(lastLocation);
+						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
 					}
 				} else {

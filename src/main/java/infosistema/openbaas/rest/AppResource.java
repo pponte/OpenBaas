@@ -1,10 +1,14 @@
 package infosistema.openbaas.rest;
 
 import infosistema.openbaas.data.Error;
+import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
 import infosistema.openbaas.data.enums.FileMode;
 import infosistema.openbaas.data.models.Application;
+import infosistema.openbaas.data.models.User;
+import infosistema.openbaas.data.models.UsersState;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
+import infosistema.openbaas.middleLayer.UsersMiddleLayer;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
@@ -13,6 +17,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -36,10 +44,12 @@ import org.codehaus.jettison.json.JSONObject;
 public class AppResource {
 
 	private AppsMiddleLayer appsMid;
+	private UsersMiddleLayer usersMid;
 	
 
 	public AppResource() {
 		appsMid = AppsMiddleLayer.getInstance();
+		usersMid = UsersMiddleLayer.getInstance();
 	}
 
 	@Context
@@ -111,7 +121,54 @@ public class AppResource {
 		return response;
 	}
 
-	
+	@Path("{appId}/usersstate")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getUserState(@PathParam(Const.APP_ID) String appId, JSONObject inputJsonObj, 
+			@Context UriInfo ui, @Context HttpHeaders hh) {
+		Response response = null;
+		List<UsersState> listRes = new ArrayList<UsersState>();
+		Log.debug("", this, "post getUserState ", "********post getUserState  ************");
+		int code = Utils.treatParameters(ui, hh);
+		if (code == 1) {
+			try {
+				JSONArray inputJsonArray = inputJsonObj.getJSONArray(Application.USERS);
+				Boolean includeNulls = (Boolean) inputJsonObj.optBoolean(Application.INCLUDEMISSES, false);
+				if(inputJsonArray.length()>0){
+					for(int i = 0; i < inputJsonArray.length(); i++){
+						Object pos = inputJsonArray.get(i);
+						if(pos instanceof String){
+							String userId = (String) pos;
+							Result res = usersMid.getUserInApp(appId, userId);
+							User usr = (User)res.getData();
+							Metadata meta = (Metadata)res.getMetadata();
+							if(usr!=null && meta!=null){
+								Boolean online  = Boolean.parseBoolean(usr.getOnline());
+								UsersState userState = new UsersState(userId, online, meta.getLastUpdateDate());
+								listRes.add(userState);
+							}else{
+								if(includeNulls)
+									listRes.add(null);
+							}
+						}else{
+							if(includeNulls)
+								listRes.add(null);
+						}
+					}
+					return Response.status(Status.OK).entity(listRes).build();
+				}else{
+					return  Response.status(Status.NOT_FOUND).entity(new Error("UserIds Array empty")).build();
+				}
+			} catch (Exception e) {
+				Log.error("", this, "getUserState", "Error in getUserState.", e); 
+				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Error in getUserState.")).build();
+			}
+		} else if(code == -2){
+			 return Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
+		 }else if(code == -1)
+			 return Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
+		return response;		
+	}
  	// *** UPDATE *** //
 	
 	/**

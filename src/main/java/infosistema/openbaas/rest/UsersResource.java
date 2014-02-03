@@ -16,7 +16,6 @@ import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.Cookie;

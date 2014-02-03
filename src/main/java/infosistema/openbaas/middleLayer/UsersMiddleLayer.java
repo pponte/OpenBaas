@@ -143,6 +143,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 				outUser.setBaseLocation(baseLocation);
 				outUser.setBaseLocationOption(baseLocationOption.toString());
 				outUser.setLastLocation(lastLocation);
+				outUser.setOnline("true");
 			}
 		} else if (getConfirmUsersEmailOption(appId)) {
 			boolean emailConfirmed = false;
@@ -155,6 +156,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			outUser.setBaseLocation(baseLocation);
 			outUser.setBaseLocationOption(baseLocationOption.toString());
 			outUser.setLastLocation(location);
+			outUser.setOnline("true");
 		}
 		return new Result(outUser,res.getMetadata());
 		
@@ -207,6 +209,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			outUser.setBaseLocationOption("false");
 			outUser.setLastLocation(lastLocation);
 			outUser.setReturnToken(sessionToken);
+			outUser.setOnline("true");
 		}
 		return new Result(outUser,res.getMetadata());
 	}

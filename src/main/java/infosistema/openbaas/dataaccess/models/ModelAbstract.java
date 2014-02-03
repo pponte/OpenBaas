@@ -287,8 +287,8 @@ public abstract class ModelAbstract {
 		if (strQueryLocation != null)
 			projection.append(_GEO, 1);
 		DBObject sortQuery = getSortQuery(orderBy, orderType);
-		Log.info(userId, "", "getDocuments", "Query: "+query.toString());
-		Log.info(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
+		Log.debug(userId, "", "getDocuments", "Query: "+query.toString());
+		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<String> retObj = new ArrayList<String>();
 		while (cursor.hasNext()) {

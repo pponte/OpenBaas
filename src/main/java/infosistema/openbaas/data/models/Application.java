@@ -16,6 +16,9 @@ public class Application {
 	public final static String SALT = "salt";
 	public final static String HASH = "hash";
 	
+	public final static String INCLUDEMISSES = "includeMisses";
+	public final static String USERS = "users";
+	 
 	private String createdAt;
 	private String updatedAt;
 	private String appId;
