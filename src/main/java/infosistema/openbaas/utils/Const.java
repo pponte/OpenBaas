@@ -29,18 +29,23 @@ public class Const {
 	public static String DEFAULT_ORDER_BY = "_id";
 	public static String DEFAULT_ORDER_TYPE = "desc";
 
-	private static String REDIS_USER = "openbaas";
-	private static String REDIS_PASS = "redisdbpwd";
-	
+	private static String REDIS_GENERAL_USER = "openbaas";
+	private static String REDIS_GENERAL_PASS = "redisdbpwd";
 	private static String REDIS_GENERAL_SERVER = "localhost";
 	private static Integer REDIS_GENERAL_PORT = 6382;
 
+	private static String REDIS_SESSION_USER = "openbaas";
+	private static String REDIS_SESSION_PASS = "redisdbpwd";
 	private static Integer REDIS_SESSION_PORT = 6380;
 	private static String REDIS_SESSION_SERVER = "localhost";
 
+	private static String REDIS_GEO_USER = "openbaas";
+	private static String REDIS_GEO_PASS = "redisdbpwd";
 	private static String REDIS_GEO_SERVER = "localhost";
 	private static Integer REDIS_GEO_PORT = 6381;
 
+	private static String REDIS_METADATA_USER = "openbaas";
+	private static String REDIS_METADATA_PASS = "redisdbpwd";
 	private static Integer REDIS_METADATA_PORT = 6383;
 	private static String REDIS_METADATA_SERVER = "localhost";
 
@@ -137,11 +142,29 @@ public class Const {
 				REDIS_METADATA_PORT = Integer.parseInt(props.getProperty("REDIS_METADATA_PORT"));
 			} catch (Exception e) {}
 
-			stmp = props.getProperty("REDIS_USER");
-			if (stmp != null) REDIS_USER = stmp;
+			stmp = props.getProperty("REDIS_GENERAL_USER");
+			if (stmp != null) REDIS_GENERAL_USER = stmp;
 			
-			stmp = props.getProperty("REDIS_PASS");
-			if (stmp != null) REDIS_PASS = stmp;
+			stmp = props.getProperty("REDIS_GENERAL_PASS");
+			if (stmp != null) REDIS_GENERAL_PASS = stmp;
+			
+			stmp = props.getProperty("REDIS_GEO_USER");
+			if (stmp != null) REDIS_GEO_USER = stmp;
+			
+			stmp = props.getProperty("REDIS_GEO_PASS");
+			if (stmp != null) REDIS_GEO_PASS = stmp;
+			
+			stmp = props.getProperty("REDIS_SESSIONS_USER");
+			if (stmp != null) REDIS_SESSION_USER = stmp;
+			
+			stmp = props.getProperty("REDIS_SESSIONS_PASS");
+			if (stmp != null) REDIS_SESSION_PASS = stmp;
+			
+			stmp = props.getProperty("REDIS_METADATA_USER");
+			if (stmp != null) REDIS_METADATA_USER = stmp;
+			
+			stmp = props.getProperty("REDIS_METADATA_PASS");
+			if (stmp != null) REDIS_METADATA_PASS = stmp;
 			
 			stmp = props.getProperty("MONGO_SERVER");
 			if (stmp != null) MONGO_SERVER = stmp;
@@ -306,12 +329,34 @@ public class Const {
 		return MONGO_PASS;
 	}
 	
-	public static String getRedisUser() {
-		return REDIS_USER;
+	public static String getRedisMetadataUser() {
+		return REDIS_METADATA_USER;
 	}
 	
-	public static String getRedisPass() {
-		return REDIS_PASS;
+	public static String getRedisMetadataPass() {
+		return REDIS_METADATA_PASS;
+	}
+	
+	public static String getRedisSessionUser() {
+		return REDIS_SESSION_USER;
+	}
+	
+	public static String getRedisSessionPass() {
+		return REDIS_SESSION_PASS;
+	}
+	public static String getRedisGeoUser() {
+		return REDIS_GEO_USER;
+	}
+	
+	public static String getRedisGEOPass() {
+		return REDIS_GEO_PASS;
+	}
+	public static String getRedisGeneralUser() {
+		return REDIS_GENERAL_USER;
+	}
+	
+	public static String getRedisGeneralPass() {
+		return REDIS_GENERAL_PASS;
 	}
 	
 	public static Boolean getMongoAuth() {
@@ -321,8 +366,15 @@ public class Const {
 			return false;
 	}
 	
-	public static Boolean getRedisAuth() {
-		if(getRedisPass()!=null && getRedisUser() != null)
+	public static Boolean getRedisGeneralAuth() {
+		if(getRedisGeneralPass() !=null && getRedisGeneralUser() != null)
+			return true;
+		else
+			return false;
+	}
+	
+	public static Boolean getRedisSessionAuth() {
+		if(getRedisSessionPass() !=null && getRedisSessionUser() != null)
 			return true;
 		else
 			return false;

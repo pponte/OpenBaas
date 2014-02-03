@@ -13,7 +13,7 @@ import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-import redis.clients.jedis.Jedis;
+
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;

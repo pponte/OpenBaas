@@ -162,7 +162,8 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 				media.setDir(((JSONObject) data).getString(Media.PATH));
 				media.setFileName(((JSONObject) data).getString(Media.FILENAME));
 				media.setFileExtension(((JSONObject) data).getString(Media.FILEEXTENSION));
-				media.setLocation(((JSONObject) data).getString(Media.LOCATION));
+				if(((JSONObject) data).has(Media.LOCATION))
+					media.setLocation(((JSONObject) data).getString(Media.LOCATION));
 				//data = (DBObject)JSON.parse(data.toString());
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
@@ -235,7 +236,8 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 			media.setDir(obj.getString(Media.PATH));
 			media.setFileName(obj.getString(Media.FILENAME));
 			media.setFileExtension(obj.getString(Media.FILEEXTENSION));
-			media.setLocation(obj.getString(Media.LOCATION));
+			if(obj.has(Media.LOCATION))
+				media.setLocation(obj.getString(Media.LOCATION));
 			if (getMetadata) {
 				metadata = Metadata.getMetadata(new JSONObject(obj.getString(ModelAbstract._METADATA)));
 			}
