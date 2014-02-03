@@ -7,6 +7,7 @@ import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.middleLayer.MediaMiddleLayer;
 import infosistema.openbaas.middleLayer.SessionMiddleLayer;
 import infosistema.openbaas.utils.Const;
+import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
 import javax.ws.rs.GET;
@@ -64,6 +65,7 @@ public class MediaResource {
 		QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
 				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.media);
 		Response response = null;
+		Log.debug("", this, "get media", "********get media ************");
 		String sessionToken = Utils.getSessionToken(hh);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();

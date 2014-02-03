@@ -254,7 +254,12 @@ public class DocumentModel extends ModelAbstract {
 	}
 	
 	public Boolean removeKeyFromAscendents(String appId, String userId, String key, List<String> path) throws JSONException {
-		if (path == null || path.size() <= 0) return true;
+		if (path == null || path.size() <= 0) {
+			if (userId != null && !"".equals(userId)) {
+				super.removeKeyFromDocument(appId, userId, "data." + key);
+			}
+			return true;
+		}
 		String auxKey = getDocumentKey(path);
 		key = auxKey + ((key == null || "".equals(key)) ? "" : "." + key);
 		path = removeLast(path);

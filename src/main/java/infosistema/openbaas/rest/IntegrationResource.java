@@ -165,10 +165,12 @@ public class IntegrationResource {
 		userId = usersMid.getUserIdUsingEmail(appId, email);
 		//userSocialId = usersMid.socialUserExists(appId, socialId, socialNetwork);
 		if (userId == null) {
+			Log.debug("", this, "signup with FB", "********signup with FB ************");
 			if (uriInfo == null) uriInfo=ui;
 			Result res = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork, Metadata.getNewMetadata(location));
 			response = Response.status(Status.CREATED).entity(res).build();
 		} else {
+			Log.debug("", this, "signin with FB", "********signin with FB ************");
 			String sessionToken = Utils.getRandomString(Const.getIdLength());
 			boolean validation = sessionMid.createSession(sessionToken, appId, userId, socialId);
 			if(validation){

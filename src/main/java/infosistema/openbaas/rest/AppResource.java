@@ -63,6 +63,7 @@ public class AppResource {
 	public Response createApp(JSONObject inputJsonObj,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
+		Log.debug("", this, "post app ", "********post app  ************");
 		int code = Utils.treatParametersAdmin(ui, hh);
 		if (code == 1) {
 			long start = System.currentTimeMillis();
@@ -127,6 +128,7 @@ public class AppResource {
 	public Response updateApp(@PathParam(Const.APP_ID) String appId,	JSONObject inputJsonObj,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
+		Log.debug("", this, "patch app ", "********patch app  ************");
 		int code = Utils.treatParametersAdmin(ui, hh);
 		if (code == 1) {
 			String newAlive = null;
@@ -192,6 +194,7 @@ public class AppResource {
 	public Response deleteApp(@PathParam(Const.APP_ID) String appId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
+		Log.debug("", this, "del app ", "********del app  ************");
 		int code = Utils.treatParametersAdmin(ui, hh);
 		if (code == 1) {
 			Log.debug("", this, "deleteApp", "*Deleting App (setting as inactive)*");

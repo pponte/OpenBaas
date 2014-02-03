@@ -90,9 +90,10 @@ public class Metadata {
 					metadata.setLastUpdateDate(df.parse(obj.getString(Metadata.LAST_UPDATE_DATE)));
 				} catch (Exception e) { }
 				metadata.setLastUpdateUser(obj.getString(Metadata.LAST_UPDATE_USER));
-				metadata.setLocation(obj.getString(Metadata.LOCATION));
+				if(obj.has(Metadata.LOCATION))
+					metadata.setLocation(obj.getString(Metadata.LOCATION));
 			} catch (Exception e) {
-				Log.error("", "Metadata", "getMetadata", "Error serializing Metadata.");
+				Log.error("", "Metadata", "getMetadata", "Error serializing Metadata.", e);
 				metadata = null;
 			}
 		}

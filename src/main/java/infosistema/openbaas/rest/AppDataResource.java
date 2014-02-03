@@ -67,6 +67,7 @@ public class AppDataResource {
 			@Context UriInfo ui,@Context HttpHeaders hh, @HeaderParam(value = Const.LOCATION)String location) {
 		Response response = null;
 		int code = Utils.treatParameters(ui, hh);
+		Log.debug("", this, "put app data", "********put app data ************");
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -102,6 +103,7 @@ public class AppDataResource {
 	public Response patchDataInElement( @PathParam("pathId") List<PathSegment> path, JSONObject inputJson,
 			@Context UriInfo ui, @Context HttpHeaders hh, @HeaderParam(value = Const.LOCATION) String location) {
 		Response response = null;
+		Log.debug("", this, "patch app data", "********patch app data ************");
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
@@ -130,7 +132,7 @@ public class AppDataResource {
 			@Context HttpHeaders hh) {
 		Response response = null;
 		
-		
+		Log.debug("", this, "del app data", "********del app data ************");
 		int code = Utils.treatParameters(ui, hh);
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
@@ -185,7 +187,7 @@ public class AppDataResource {
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
 		Response response = null;
-
+		Log.debug("", this, "get app data", "********get app data ************");
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);

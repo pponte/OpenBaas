@@ -346,7 +346,8 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			if (user.has(ModelAbstract._METADATA))
 				metadata = Metadata.getMetadata(new JSONObject(user.getString(ModelAbstract._METADATA)));
 			return new Result(data, metadata);
-		} catch (JSONException e) {
+		} catch (Exception e) {
+			Log.error("", this, "getUserInApp", "An error ocorred.", e);
 		}
 
 		return null;

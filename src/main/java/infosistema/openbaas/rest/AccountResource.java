@@ -79,6 +79,7 @@ public class AccountResource {
 		String appKey = null;
 		Boolean readOk = false;
 		String location = null;
+		Log.debug("", this, "signup", "********signup User ************");
 		try {
 			appKey = headerParams.getFirst(Application.APP_KEY);
 		} catch (Exception e) { }
@@ -141,7 +142,7 @@ public class AccountResource {
 		String appKey = null;
 		Boolean refreshCode = false;
 		String lastLocation =null;
-
+		Log.debug("", this, "signin", "********signin User ************");
 		try {
 			email = (String) inputJsonObj.get("email");
 			attemptedPassword = (String) inputJsonObj.get("password");
@@ -229,6 +230,7 @@ public class AccountResource {
 	public Response patchSession( @HeaderParam(Const.USER_AGENT) String userAgent, @HeaderParam(Const.LOCATION) String location,
 			@PathParam(Const.SESSION_TOKEN) String sessionToken) {
 		Response response = null;
+		Log.debug("", this, "patch account", "********patch session token ************");
 		if (sessionMid.sessionTokenExists(sessionToken)) {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			Result res = usersMid.getUserInApp(appId, userId);
@@ -268,7 +270,7 @@ public class AccountResource {
 		String sessionToken = null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		sessionToken = headerParams.getFirst(Const.SESSION_TOKEN);
-		  
+		Log.debug("", this, "signout", "********signout User ************");  
 		Boolean flagAll = (Boolean) inputJsonObj.optBoolean("all",false);
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		if(userId!=null){
@@ -322,6 +324,7 @@ public class AccountResource {
 	public Response getUserIdWithSession(
 			@PathParam(Const.SESSION_TOKEN) String sessionToken) {
 		Response response = null;
+		Log.debug("", this, "get session token", "********get session token id ************");
 		if (sessionMid.sessionTokenExists(sessionToken)) {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -347,6 +350,7 @@ public class AccountResource {
 		String sessionToken = null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		sessionToken = headerParams.getFirst(Const.SESSION_TOKEN);
+		Log.debug("", this, "get all session token", "********get all sessions ************");
 		if (sessionMid.sessionTokenExists(sessionToken)) {
 			String userId 	= sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -379,6 +383,7 @@ public class AccountResource {
 		} catch (JSONException e) {
 			Log.error("", this, "makeRecoveryRequest", "Error parsing the JSON.", e); 
 		}
+		Log.debug("", this, "recovery pass", "********recovery user pass ************");
 		PasswordEncryptionService service = new PasswordEncryptionService();
 		try {
 			salt = service.generateSalt();
@@ -417,6 +422,7 @@ public class AccountResource {
 		String newPassword = null; 
 		String userAgent = null;
 		String location = null;
+		Log.debug("", this, "change pass", "********change user pass ************");
 		try {
 			newPassword = (String) inputJsonObj.get("newPassword");
 			oldPassword = (String) inputJsonObj.get("oldPassword");

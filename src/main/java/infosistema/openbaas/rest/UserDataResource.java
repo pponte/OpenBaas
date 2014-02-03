@@ -73,6 +73,7 @@ public class UserDataResource {
 	public Response createOrReplaceDocument(JSONObject inputJson,  @PathParam("pathId") List<PathSegment> path,
 			@Context UriInfo ui, @Context HttpHeaders hh, @HeaderParam(value = Const.LOCATION) String location) {
 		Response response = null;
+		Log.debug("", this, "put user data", "********put user data ************");
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
@@ -110,6 +111,7 @@ public class UserDataResource {
 	public Response patchDataInElement(JSONObject inputJson, @PathParam("pathId") List<PathSegment> path,
 			@Context UriInfo ui, @Context HttpHeaders hh, @HeaderParam(value = Const.LOCATION) String location) {
 		Response response = null;
+		Log.debug("", this, "patch user data", "********patch user data ************");
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
@@ -137,6 +139,7 @@ public class UserDataResource {
 	public Response deleteDataInElement(@PathParam("pathId") List<PathSegment> path, @Context UriInfo ui,
 			@Context HttpHeaders hh) {
 		Response response = null;
+		Log.debug("", this, "del user data", "********del user data ************");
 		String sessionToken = Utils.getSessionToken(hh);
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParameters(ui, hh);
@@ -195,6 +198,7 @@ public class UserDataResource {
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
 		Response response = null;
+		Log.debug("", this, "get user data", "********get user data ************");
 		String sessionToken = Utils.getSessionToken(hh);
 		//String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))

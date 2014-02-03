@@ -66,7 +66,7 @@ public class ImageResource {
 			@FormDataParam(Const.FILE) FormDataContentDisposition fileDetail, @HeaderParam(value = Const.LOCATION) String location) {
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
-		
+		Log.debug("", this, "upload image", "********upload image ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
@@ -102,6 +102,7 @@ public class ImageResource {
 	public Response deleteImage(@Context HttpHeaders hh, @PathParam("imageId") String imageId) {
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
+		Log.debug("", this, "del image", "********del image ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		if (SessionMiddleLayer.getInstance().sessionTokenExists(sessionToken)) {
@@ -136,6 +137,7 @@ public class ImageResource {
 		QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
 				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.image);
 		Response response = null;
+		Log.debug("", this, "get images list", "********get images list ************");
 		if(pageNumberStr==null) pageNumberStr = "1";
 		String sessionToken = Utils.getSessionToken(hh);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -209,6 +211,7 @@ public class ImageResource {
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
+		Log.debug("", this, "download image", "******** download image ************");
 		if (code == 1) {
 			Log.debug("", this, "downloadImage", "*********Downloading Image**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.image, imageId)) {

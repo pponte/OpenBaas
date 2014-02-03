@@ -80,7 +80,7 @@ public class UsersResource {
 		String newEmail = null;
 		Boolean newBaseLocationOption = null;
 		String newBaseLocation = null;
-		
+		Log.debug("", this, "find", "********Update User ************");
 		Cookie sessionToken=null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		try {
@@ -186,6 +186,7 @@ public class UsersResource {
 				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.users);
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
+		Log.debug("", this, "find", "********Finding Users ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 
