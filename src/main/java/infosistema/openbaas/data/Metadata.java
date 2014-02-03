@@ -83,13 +83,17 @@ public class Metadata {
 				metadata = new Metadata();
 				DateFormat df = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
 				try { 
-					metadata.setCreateDate(df.parse(obj.getString(Metadata.CREATE_DATE)));
+					if(obj.has(Metadata.CREATE_DATE))
+						metadata.setCreateDate(df.parse(obj.getString(Metadata.CREATE_DATE)));
 				} catch (Exception e) { }
-				metadata.setCreateUser(obj.getString(Metadata.CREATE_USER));
+				if(obj.has(Metadata.CREATE_USER))
+					metadata.setCreateUser(obj.getString(Metadata.CREATE_USER));
 				try { 
-					metadata.setLastUpdateDate(df.parse(obj.getString(Metadata.LAST_UPDATE_DATE)));
+					if(obj.has(Metadata.LAST_UPDATE_DATE))
+						metadata.setLastUpdateDate(df.parse(obj.getString(Metadata.LAST_UPDATE_DATE)));
 				} catch (Exception e) { }
-				metadata.setLastUpdateUser(obj.getString(Metadata.LAST_UPDATE_USER));
+				if(obj.has(Metadata.LAST_UPDATE_USER))
+					metadata.setLastUpdateUser(obj.getString(Metadata.LAST_UPDATE_USER));
 				if(obj.has(Metadata.LOCATION))
 					metadata.setLocation(obj.getString(Metadata.LOCATION));
 			} catch (Exception e) {

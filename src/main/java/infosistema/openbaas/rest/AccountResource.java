@@ -240,6 +240,8 @@ public class AccountResource {
 			if (location != null) {
 				String lastLocation = usersMid.updateUserLocation(userId, appId, location, Metadata.getNewMetadata(location));
 				user.setLastLocation(lastLocation);
+				Metadata meta = (Metadata)res.getMetadata();
+				meta.setLocation(lastLocation);
 				sessionMid.refreshSession(sessionToken, location, userAgent);					
 				response = Response.status(Status.OK).entity(res).build();
 			} // if the device does not have the gps turned on we should not

@@ -118,15 +118,13 @@ public class UserDataResource {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-			if (docMid.existsDocumentInPath(appId, userId, path)) {
-				Result res = docMid.updateDocumentInPath(appId, userId, path, inputJson, Metadata.getNewMetadata(location));
-				if (res != null)
-					response = Response.status(Status.OK).entity(res).build();
-				else
-					response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
-			} else {
-				response = Response.status(Status.NOT_FOUND).entity(new Error(appId)).build();
-			}
+			
+			Result res = docMid.updateDocumentInPath(appId, userId, path, inputJson, Metadata.getNewMetadata(location));
+			if (res != null)
+				response = Response.status(Status.OK).entity(res).build();
+			else
+				response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
+		
 		} else if (code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
 		} else if (code == -1)

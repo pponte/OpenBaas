@@ -97,18 +97,6 @@ public class MediaModel extends ModelAbstract {
 
 	// *** GET LIST *** //
 	
-	private Map convertJsonToMap(JSONObject json) {
-		Map<String,Object> map = new HashMap<String,Object>();
-		ObjectMapper mapper = new ObjectMapper();
-	 
-		try {
-			map = mapper.readValue(json.toString(), new TypeReference<HashMap<String,Object>>(){});	 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return map;
-	}
-
 	public List<String> getMedia(String appId, ModelEnum type, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy) throws Exception {
 		JSONObject finalQuery = new JSONObject();
 		if (type != null) {
@@ -121,6 +109,7 @@ public class MediaModel extends ModelAbstract {
 		return super.getDocuments(appId, null, null, latitude, longitude, radius, finalQuery, orderType, orderBy);
 	}
 
+	
 	// *** GET *** //
 
 	public JSONObject getMedia(String appId, ModelEnum type, String objId, boolean getMetadata) {

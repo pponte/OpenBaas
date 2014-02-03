@@ -108,11 +108,13 @@ public class UserModel extends ModelAbstract {
 				obj.put(_USER_ID, userId);
 				obj.put(_ID, userId);
 				if (metadata != null){ 
-					obj.put(_METADATA, metadata.toString());
+					Map metaMap = convertJsonToMap(metadata);
+					obj.put(_METADATA, metaMap);
 					jedis.hset(userKey, _METADATA, metadata.toString());
 				}
 				if (geolocation != null){ 
-					obj.put(_GEO, geolocation.toString());
+					Map metaGeo = convertJsonToMap(geolocation);
+					obj.put(_GEO, metaGeo);
 					jedis.hset(userKey, _GEO, geolocation.toString());
 				}
 				super.insert(appId, obj, metadata, geolocation);				
@@ -171,6 +173,33 @@ public class UserModel extends ModelAbstract {
 		}
 		return null;
 	}
+
+	@Override
+	protected void updateMetadata(String appId, String userId, Map<String, String> metadata) {
+		JSONObject geolocation = getGeolocation(getMetadaJSONObject(metadata));
+		String userKey = getUserKey(appId, userId);
+		if (metadata != null){
+			String str = jedis.hget(userKey, _METADATA);
+			Map<String, Object> m = null;
+			if(str!=null){
+				try {
+					JSONObject json = new JSONObject(str);
+					m = convertJsonToMap(json);
+					m.putAll(metadata);
+				} catch (JSONException e) {
+				}
+			}
+			if (m!=null)
+				jedis.hset(userKey, _METADATA, new JSONObject(m).toString());
+			else 
+				jedis.hset(userKey, _METADATA, new JSONObject(metadata).toString());
+		}
+		if (geolocation != null){ 
+			jedis.hset(userKey, _GEO, geolocation.toString());
+		}
+		super.updateMetadata(appId, userId, metadata);
+	}
+
 	
 	public void updateUserLocation(String appId, String userId, String location) {
 		try {

@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -165,14 +167,33 @@ public abstract class ModelAbstract {
 		return obj;
 	}
 	
+	protected Map<String, Object> convertJsonToMap(JSONObject json) {
+		Map<String,Object> map = new HashMap<String,Object>();
+		ObjectMapper mapper = new ObjectMapper();
+	 
+		try {
+			map = mapper.readValue(json.toString(), new TypeReference<HashMap<String,Object>>(){});	 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return map;
+	}
 
 	// *** CREATE *** //
 
  	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata, JSONObject geolocation) throws JSONException{
 		DBCollection coll = getCollection(appId);
 		JSONObject data = new JSONObject(value.toString());
-		if (metadata != null) data.put(_METADATA, metadata);
-		if (geolocation != null) data.put(_GEO, geolocation);
+		
+		
+		if (metadata != null){
+			Map<String, Object> metaMap = convertJsonToMap(metadata);
+			data.put(_METADATA, metaMap);
+		}
+		if (geolocation != null){
+			Map<String, Object> metaGeo = convertJsonToMap(geolocation);
+			data.put(_GEO, metaGeo);
+		}
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
 		return data;		
