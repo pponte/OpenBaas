@@ -10,10 +10,16 @@ import infosistema.openbaas.utils.geolocation.Geo;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -41,6 +47,7 @@ public abstract class ModelAbstract {
 	public static final String _GEO = "_geo"; 
 
 	protected static final String DESC = "desc";
+	protected static final String DIST = "dist";
 
 	private static final String LATITUDE = "latitude";
 	private static final String LONGITUDE = "longitude";
@@ -296,6 +303,7 @@ public abstract class ModelAbstract {
 		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<String> retObj = new ArrayList<String>();
+		HashMap<String, String> lstIdDists = new HashMap<String, String>();
 		while (cursor.hasNext()) {
 			DBObject obj = cursor.next();
 			try {
@@ -305,6 +313,10 @@ public abstract class ModelAbstract {
 					Double objLongitude = Double.valueOf("" + _geo.get(LONGITUDE));
 					if (!geo.isWithinDistance(objLatitude, objLongitude, latitude, longitude, radius))
 						continue;
+					else if (orderBy.equals(DIST)){
+						Double dist = geo.getDistanceFromLatLonInKm(latitude, longitude, objLatitude, objLongitude);
+						lstIdDists.put((String)obj.get(_ID),dist.toString());
+					}
 				}
 			} catch (Exception e) {
 				Log.error("", this, "getDocuments", "Error determining location distance for objectId = " + obj.get(_ID).toString() + " .");
@@ -313,8 +325,42 @@ public abstract class ModelAbstract {
 			String[] splitArray = idRes.split("/");
 			retObj.add(splitArray[splitArray.length-1]);
 		}
+		if (orderBy.equals(DIST)){
+			retObj = sortByValues(lstIdDists, orderType);
+		}
 		return retObj;
 	}
+	
+	private static List<String> sortByValues(Map<String, String> map, String orderType){
+		List<String> retObj = new ArrayList<String>();
+		List<Map.Entry<String, String>> entries = new LinkedList<Map.Entry<String, String>>(map.entrySet());
+        
+        Collections.sort(entries, new Comparator<Map.Entry<String, String>>() {
+            @Override
+            public int compare(Entry<String, String> o1, Entry<String, String> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+     
+        //LinkedHashMap will keep the keys in the order they are inserted
+        //which is currently sorted on natural ordering
+        Map<String, String> sortedMap = new LinkedHashMap<String, String>();
+     
+        for(Map.Entry<String, String> entry: entries){
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+     
+        Iterator<Entry<String,String>> entries2 = sortedMap.entrySet().iterator();
+		while (entries2.hasNext()) {
+		  Entry<String,String> thisEntry = entries2.next();
+		  String key = thisEntry.getKey();
+		  retObj.add(key);
+		}
+		if(orderType.equals("desc")){
+			Collections.reverse(retObj);
+		}
+        return retObj;
+    }
 	
 	protected String getQueryString(String appId, String path, JSONObject query, String orderType) throws Exception {
 		if (query!=null) {
@@ -414,6 +460,7 @@ public abstract class ModelAbstract {
 	}
 	
 	private DBObject getSortQuery(String orderBy, String orderType) {
+		if(orderBy.equals(DIST)) orderBy=_ID;
 		Integer order = 1;
 		if(orderType.equals(DESC)) order = -1;
 		BasicDBObject sortQuery = new BasicDBObject();

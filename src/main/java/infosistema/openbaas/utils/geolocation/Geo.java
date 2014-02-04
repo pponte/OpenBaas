@@ -39,7 +39,7 @@ public class Geo {
 		return Math.abs((meters/1000)/(111.320*Math.cos(currentLat)));
 	}
 
-	private double getDistanceFromLatLonInKm(double lat1,double lon1,double lat2,double lon2) {
+	public double getDistanceFromLatLonInKm(double lat1,double lon1,double lat2,double lon2) {
 		double R = 6371; // Radius of the earth in km
 		  double dLat = deg2rad(lat2-lat1);  // deg2rad below
 		  double dLon = deg2rad(lon2-lon1); 

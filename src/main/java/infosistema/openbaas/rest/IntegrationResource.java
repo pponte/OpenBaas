@@ -77,12 +77,12 @@ public class IntegrationResource {
 		*/
 		//Serve para apagar coisas do redis
 		
-		//JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
-		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(),Const.getRedisSessionPort());
+		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
+		//JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(),Const.getRedisSessionPort());
 		
 		Jedis jedis = pool.getResource();
 		try {
-			Set<String> a = jedis.keys("sessions*");
+			Set<String> a = jedis.keys("app:2be9*");
 			Iterator<String> it =  a.iterator();
 			while(it.hasNext()){
 				String s = it.next();
