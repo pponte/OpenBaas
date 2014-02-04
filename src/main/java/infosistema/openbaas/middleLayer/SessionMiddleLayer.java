@@ -47,7 +47,6 @@ public class SessionMiddleLayer extends MiddleLayerAbstract {
 		try{
 			sucess = authenticateUser(appId, userId, attemptedPassword);
 			sessions.createSession(sessionId, appId, userId);
-			sucess = true;
 		}catch (Exception e1){
 			sucess = false;
 		}

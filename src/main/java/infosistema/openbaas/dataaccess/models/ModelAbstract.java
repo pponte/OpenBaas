@@ -257,14 +257,19 @@ public abstract class ModelAbstract {
 	}
 	
 	public Boolean removeKeyFromDocument(String appId, String id, String key) throws JSONException {
-		DBCollection coll = getCollection(appId);
-		BasicDBObject ob = new BasicDBObject();
-		BasicDBObject dbRemove = new BasicDBObject();
-		ob.append(key, "");
-		dbRemove.append("$unset", ob);
-		BasicDBObject dbQuery = new BasicDBObject();
-		dbQuery.append(_ID, id); 		
-		coll.update(dbQuery, dbRemove);
+		try{
+			DBCollection coll = getCollection(appId);
+			BasicDBObject ob = new BasicDBObject();
+			BasicDBObject dbRemove = new BasicDBObject();
+			ob.append(key, "");
+			dbRemove.append("$unset", ob);
+			BasicDBObject dbQuery = new BasicDBObject();
+			dbQuery.append(_ID, id); 		
+			coll.update(dbQuery, dbRemove);
+		}
+		catch(Exception e){
+			return false;
+		}
 		return true;	
 	}
 	

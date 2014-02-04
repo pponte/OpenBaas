@@ -77,7 +77,6 @@ public class UserDataResource {
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
-			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (appsMid.appExists(appId) && usersMid.userIdExists(appId, userId)) {
@@ -115,7 +114,6 @@ public class UserDataResource {
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
-			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			
@@ -138,8 +136,6 @@ public class UserDataResource {
 			@Context HttpHeaders hh) {
 		Response response = null;
 		Log.debug("", this, "del user data", "********del user data ************");
-		String sessionToken = Utils.getSessionToken(hh);
-		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParameters(ui, hh);
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
@@ -198,7 +194,6 @@ public class UserDataResource {
 		Response response = null;
 		Log.debug("", this, "get user data", "********get user data ************");
 		String sessionToken = Utils.getSessionToken(hh);
-		//String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);

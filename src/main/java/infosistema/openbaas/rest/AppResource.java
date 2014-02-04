@@ -133,7 +133,7 @@ public class AppResource {
 		if (code == 1) {
 			try {
 				JSONArray inputJsonArray = inputJsonObj.getJSONArray(Application.USERS);
-				Boolean includeNulls = (Boolean) inputJsonObj.optBoolean(Application.INCLUDEMISSES, false);
+				Boolean includeNulls = inputJsonObj.optBoolean(Application.INCLUDEMISSES, false);
 				if(inputJsonArray.length()>0){
 					for(int i = 0; i < inputJsonArray.length(); i++){
 						Object pos = inputJsonArray.get(i);
