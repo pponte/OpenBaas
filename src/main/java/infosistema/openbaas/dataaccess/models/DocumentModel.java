@@ -3,6 +3,7 @@ package infosistema.openbaas.dataaccess.models;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.utils.Log;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +81,27 @@ public class DocumentModel extends ModelAbstract {
 	}
 
 	@Override
-	protected BasicDBObject getDataProjection(boolean getMetadata) {
-		if (getMetadata) {
+	protected BasicDBObject getDataProjection(boolean getMetadata, List<String> toShow, List<String> toHide) {
+		if (toShow != null) {
+			BasicDBObject projection = new BasicDBObject();
+			//Ciclo por string a 1 na projection
+			Iterator<String> it = toShow.iterator();
+			while(it.hasNext()){
+				projection.append(it.next(), 1);
+			}
+			return projection;
+		} else if (toHide != null) {
+			BasicDBObject projection = super.getDataProjection(new BasicDBObject(), getMetadata);
+			projection.append(_KEY, 0);
+			projection.append(_USER_ID, 0);
+			projection.append(_PARENT_PATH, 0);
+			//Ciclo por string a 0 na projection
+			Iterator<String> it = toHide.iterator();
+			while(it.hasNext()){
+				projection.append(it.next(), 0);
+			}
+			return projection;
+		} else if (getMetadata) {
 			if (dataProjectionMetadata == null) {
 				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
 				dataProjectionMetadata.append(_KEY, 0);
@@ -103,7 +123,7 @@ public class DocumentModel extends ModelAbstract {
 	
 	// *** CREATE *** //
 
-	public JSONObject insertDocumentInPath(String appId, String userId, List<String> path, JSONObject data, Map<String, String> extraMetadata) throws JSONException {
+	public synchronized JSONObject insertDocumentInPath(String appId, String userId, List<String> path, JSONObject data, Map<String, String> extraMetadata) throws JSONException {
 		deleteDocumentInPath(appId, userId, path);
 		JSONObject newData = insertDocument(appId, userId, path, data, extraMetadata); 
 		if (updateAscendents(appId, userId, path, data, extraMetadata))
@@ -145,12 +165,12 @@ public class DocumentModel extends ModelAbstract {
 			JSONObject geolocation = getGeolocation(metadata);
 			super.insert(appId, data, metadata, geolocation);
 		}
-		return getDocument(appId, id, true);//<-- este true diz que é para devolver o metadata
+		return getDocument(appId, id, true, null, null);//<-- este true diz que é para devolver o metadata
 	}
 	
 	// *** UPDATE *** //
 	
-	public JSONObject updateDocumentInPath(String appId, String userId, List<String> path, JSONObject data, Map<String, String> extraMetadata) throws JSONException{
+	public synchronized JSONObject updateDocumentInPath(String appId, String userId, List<String> path, JSONObject data, Map<String, String> extraMetadata) throws JSONException{
 		JSONObject newData = null; 
 		try{
 			String id = getDocumentId(userId, path);
@@ -160,7 +180,7 @@ public class DocumentModel extends ModelAbstract {
 				if (!updateAscendents(appId, userId, path, data, extraMetadata)) return null;
 			}
 			updateDocumentValues(appId, userId, path, data, true, metadataUpdate);
-			newData = (JSONObject)getDocumentInPath(appId, userId, path, false);
+			newData = (JSONObject)getDocumentInPath(appId, userId, path, false, null, null);
 			updateAscendents(appId, userId, path, newData, metadataUpdate);
 		} catch (Exception e) {
 			Log.error("", this, "updateDocumentInPath", "An error ocorred.", e); 
@@ -203,11 +223,11 @@ public class DocumentModel extends ModelAbstract {
 			insert(appId, userId, path, new JSONObject(), getMetadataCreate(userId, metadata));
 		if ("".equals(key)) {
 			if (userId != null && !"".equals(userId))
-				updateDocumentValue(appId, userId, DATA, (JSONObject)getDocumentInPath(appId, userId, path, false));
+				updateDocumentValue(appId, userId, DATA, (JSONObject)getDocumentInPath(appId, userId, path, false, null, null));
 			return true;
 		} else {
 			updateDocumentValue(appId, id, key, data);
-			return updateAscendents(appId, userId, path, (JSONObject)getDocumentInPath(appId, userId, path, false), metadata);
+			return updateAscendents(appId, userId, path, (JSONObject)getDocumentInPath(appId, userId, path, false, null, null), metadata);
 		}
 	}
 	
@@ -278,18 +298,21 @@ public class DocumentModel extends ModelAbstract {
 
 	// *** GET *** //
 
-	public Object getDocumentInPath(String appId, String userId, List<String> path, boolean getMetadata) throws JSONException {
+	public Object getDocumentInPath(String appId, String userId, List<String> path, boolean getMetadata, List<String> toShow, List<String> toHide) throws JSONException {
 		String id = getDocumentId(userId, path);
 		BasicDBObject searchQuery = new BasicDBObject();
 		searchQuery.append(_ID, id);
 		if (existsNode(appId, id)) {
-			return super.getDocument(appId, id, getMetadata);
+			return super.getDocument(appId, id, getMetadata, toShow, toHide);
 		} else if (path != null && path.size() > 0) {
 			String key = getDocumentKey(path);
 			path = removeLast(path);
 			id = getDocumentId(userId, path);
-			if (existsNode(appId, id))
-				return super.getDocument(appId, id, false).get(key);
+			if (existsNode(appId, id)) {
+				List<String> lst = new ArrayList<String>();
+				lst.add(key);
+				return super.getDocument(appId, id, false, lst, null).get(key);
+			}
 		}
 		return null;
 	}

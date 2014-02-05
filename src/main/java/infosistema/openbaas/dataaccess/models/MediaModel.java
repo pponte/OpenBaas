@@ -4,12 +4,9 @@ import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.utils.Log;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -41,7 +38,7 @@ public class MediaModel extends ModelAbstract {
 	}
 	
 	@Override
-	protected BasicDBObject getDataProjection(boolean getMetadata) {
+	protected BasicDBObject getDataProjection(boolean getMetadata, List<String> toShow, List<String> toHide) {
 		if (getMetadata) {
 			if (dataProjectionMetadata == null) {
 				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
@@ -75,8 +72,8 @@ public class MediaModel extends ModelAbstract {
 			data.put(_TYPE, type.toString());
 			JSONObject metadata = getMetadaJSONObject(getMetadataCreate(userId, extraMetadata));
 			JSONObject geolocation = getGeolocation(metadata);
-			Map metaMap = convertJsonToMap(metadata);
-			Map metaGeo = convertJsonToMap(geolocation);
+			Map<?, ?> metaMap = convertJsonToMap(metadata);
+			Map<?, ?>  metaGeo = convertJsonToMap(geolocation);
 			if(metadata!=null){
 				data.put(_METADATA, metaMap);
 				//jedis.hset(userKey, _METADATA, metadata.toString());
@@ -115,7 +112,7 @@ public class MediaModel extends ModelAbstract {
 	public JSONObject getMedia(String appId, ModelEnum type, String objId, boolean getMetadata) {
 		//CACHE
 		try {
-			return super.getDocument(appId, objId, getMetadata);
+			return super.getDocument(appId, objId, getMetadata, null, null);
 		} catch (JSONException e) {
 			Log.error("", this, "getMedia", "Error getting Media.", e);
 		}

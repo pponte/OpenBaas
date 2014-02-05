@@ -23,7 +23,7 @@ public class AppModel {
 	
 	public AppModel() {
 		pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
-		jedis = pool.getResource();
+		//jedis = pool.getResource();
 		
 		//jedis = new Jedis(Const.getRedisGeneralServer(), Const.getRedisGeneralPort());
 	}
@@ -48,7 +48,7 @@ public class AppModel {
 	 */
 	public Application createApp(String appId, String appKey, byte[] hash, byte[] salt, String appName, String creationDate, 
 			Boolean confirmUsersEmail, Boolean AWS, Boolean FTP, Boolean FileSystem) throws UnsupportedEncodingException {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		try {
 			if (!jedis.exists("apps:" + appId)) {
 				jedis.hset("apps:" + appId, Application.CREATION_DATE, creationDate);
@@ -76,7 +76,7 @@ public class AppModel {
 	
 	public Application updateAppFields(String appId, String alive, String newAppName, Boolean confirmUsersEmail,
 			Boolean aws, Boolean ftp, Boolean fileSystem) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		try {
 			if (newAppName != null)
 				jedis.hset("apps:" + appId, Application.APP_NAME, newAppName);
@@ -119,7 +119,7 @@ public class AppModel {
 	 * Returns the fields of the corresponding application
 	 */
 	public Application getApplication(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		Application res = new Application();
 		Map<String, String> fields = null;
 		try {
@@ -148,7 +148,7 @@ public class AppModel {
 	 * Returns the auth fields 
 	 */
 	public HashMap<String, String> getApplicationAuth(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		HashMap<String, String> fieldsAuth = new HashMap<String, String>();
 		try {
 			if (jedis.exists("apps:" + appId)) {
@@ -162,7 +162,7 @@ public class AppModel {
 	}
 	
 	public Boolean getConfirmUsersEmail(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		Boolean confirmUsersEmail = false;
 		try {
 			confirmUsersEmail = Boolean.parseBoolean(jedis.hget("apps:"+appId, Application.CONFIRM_USERS_EMAIL));
@@ -173,7 +173,7 @@ public class AppModel {
 	}
 
 	public FileMode getApplicationFileMode(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		boolean aws = false;
 		boolean ftp = false;
 		try {
@@ -203,7 +203,7 @@ public class AppModel {
 	 * 
 	 */
 	public Boolean deleteApp(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		Boolean sucess = false;
 		try {
 			if (jedis.exists("apps:" + appId)) {
@@ -230,7 +230,7 @@ public class AppModel {
 	// *** EXISTS *** //
 
 	public Boolean appExists(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		Boolean op;
 		try {
 			op = jedis.exists("apps:" + appId);
@@ -244,7 +244,7 @@ public class AppModel {
 	// *** OTHERS *** //
 
 	public void reviveApp(String appId) {
-		//Jedis jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		try {
 			jedis.hset("apps:" + appId, Application.ALIVE, "true");
 		} finally {

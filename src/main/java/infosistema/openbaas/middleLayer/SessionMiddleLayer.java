@@ -164,7 +164,7 @@ public class SessionMiddleLayer extends MiddleLayerAbstract {
 				sessionAppId = sessions.getAppIdForSessionToken(sessionToken);
 			return appId != null && appId.equals(sessionAppId);
 		} catch (Exception e) {
-			Log.error("", this, "checkAppForToken", "Error checking App dor Session.", e);
+			Log.error("", this, "checkAppForToken", "Error checking App for Session.", e);
 			return false;
 		}
 	}

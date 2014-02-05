@@ -47,7 +47,7 @@ public abstract class ModelAbstract {
 	public static final String _GEO = "_geo"; 
 
 	protected static final String DESC = "desc";
-	protected static final String DIST = "dist";
+	protected static final String _DIST = "_dist";
 
 	private static final String LATITUDE = "latitude";
 	private static final String LONGITUDE = "longitude";
@@ -100,7 +100,7 @@ public abstract class ModelAbstract {
 	
 	// *** PROTECTED *** //
 
-	protected abstract BasicDBObject getDataProjection(boolean getMetadata);
+	protected abstract BasicDBObject getDataProjection(boolean getMetadata, List<String> toShow, List<String> toHide);
 
 	protected BasicDBObject getDataProjection(BasicDBObject dataProjection, boolean getMetadata) {
 		dataProjection.append(_ID, 0);
@@ -225,7 +225,7 @@ public abstract class ModelAbstract {
 			Log.error("", this, "updateDocument", "An error ocorred.", e); 
 			return null;
 		}
-		return getDocument(appId, id, true);
+		return getDocument(appId, id, true, null, null);
 	}
 
 	protected void updateMetadata(String appId, String id, Map<String, String> metadata) {
@@ -313,7 +313,7 @@ public abstract class ModelAbstract {
 					Double objLongitude = Double.valueOf("" + _geo.get(LONGITUDE));
 					if (!geo.isWithinDistance(objLatitude, objLongitude, latitude, longitude, radius))
 						continue;
-					else if (orderBy.equals(DIST)){
+					else if (orderBy.equals(_DIST)){
 						Double dist = geo.getDistanceFromLatLonInKm(latitude, longitude, objLatitude, objLongitude);
 						lstIdDists.put((String)obj.get(_ID),dist.toString());
 					}
@@ -325,7 +325,7 @@ public abstract class ModelAbstract {
 			String[] splitArray = idRes.split("/");
 			retObj.add(splitArray[splitArray.length-1]);
 		}
-		if (orderBy.equals(DIST)){
+		if (orderBy.equals(_DIST)){
 			retObj = sortByValues(lstIdDists, orderType);
 		}
 		return retObj;
@@ -460,7 +460,7 @@ public abstract class ModelAbstract {
 	}
 	
 	private DBObject getSortQuery(String orderBy, String orderType) {
-		if(orderBy.equals(DIST)) orderBy=_ID;
+		if(orderBy.equals(_DIST)) orderBy=_ID;
 		Integer order = 1;
 		if(orderType.equals(DESC)) order = -1;
 		BasicDBObject sortQuery = new BasicDBObject();
@@ -471,11 +471,11 @@ public abstract class ModelAbstract {
 
 	// *** GET *** //
 
-	protected JSONObject getDocument(String appId, String id, boolean getMetadata) throws JSONException {
+	protected JSONObject getDocument(String appId, String id, boolean getMetadata, List<String> toShow, List<String> toHide) throws JSONException {
 		DBCollection coll = getCollection(appId);
 		BasicDBObject searchQuery = new BasicDBObject();
 		searchQuery.append(_ID, id);
-		BasicDBObject projection = getDataProjection(getMetadata);
+		BasicDBObject projection = getDataProjection(getMetadata, toShow, toHide);
 		DBCursor cursor = coll.find(searchQuery, projection);
 		if (cursor.hasNext()) {
 			return new JSONObject(JSON.serialize(cursor.next()));

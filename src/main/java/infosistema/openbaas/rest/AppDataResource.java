@@ -31,6 +31,8 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
 public class AppDataResource {
@@ -160,12 +162,12 @@ public class AppDataResource {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response find(@Context UriInfo ui, @Context HttpHeaders hh,
-			@QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
+	public Response find(@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
+			@QueryParam("hide") JSONArray arrayHide, @QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
-		return findDocument(null, ui, hh, query, radiusStr, latitudeStr, longitudeStr, pageNumberStr, pageSizeStr, orderByStr, orderTypeStr);
+		return findDocument(null, ui, hh, arrayShow, arrayHide, query, radiusStr, latitudeStr, longitudeStr, pageNumberStr, pageSizeStr, orderByStr, orderTypeStr);
 	}
 	
 	/**
@@ -178,8 +180,8 @@ public class AppDataResource {
 	@Path("/{pathId:.+}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response findDocument(@PathParam("pathId") List<PathSegment> path, 
-			@Context UriInfo ui, @Context HttpHeaders hh,
-			@QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
+			@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
+			@QueryParam("hide") JSONArray arrayHide, @QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
@@ -202,7 +204,7 @@ public class AppDataResource {
 				}
 				return response;
 			} else if (docMid.existsDocumentInPath(appId, null, path)) {
-				Result res = docMid.getDocumentInPath(appId, null, path, true);
+				Result res = docMid.getDocumentInPath(appId, null, path, true,arrayShow,arrayHide);
 				if (res == null || res.getData() == null)
 					response = Response.status(Status.BAD_REQUEST).entity(new Error(appId)).build();
 				else

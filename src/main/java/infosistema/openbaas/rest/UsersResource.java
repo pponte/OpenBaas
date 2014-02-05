@@ -185,9 +185,9 @@ public class UsersResource {
 				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.users);
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
-		Log.debug("", this, "find", "********Finding Users ************");
-		if (!sessionMid.checkAppForToken(sessionToken, appId))
+		if (!sessionMid.checkAppForToken(sessionToken, appId)) {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		}
 
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
@@ -195,12 +195,14 @@ public class UsersResource {
 				ListResult res = usersMid.find(qp);
 				response = Response.status(Status.OK).entity(res).build();
 			} catch (Exception e) {
+				Log.error("", this, "find", "********Find Users info************", e);
 				response = Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
 			}
 		} else if (code == -2) {
 			response = Response.status(Status.FORBIDDEN).entity("Invalid Session Token.").build();
-		} else if (code == -1)
+		} else if (code == -1) {
 			response = Response.status(Status.BAD_REQUEST).entity("Error handling the request.").build();
+		}
 		return response;
 	}
 
@@ -223,7 +225,7 @@ public class UsersResource {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
-			Log.debug("", this, "findById", "********Finding User info************");
+			Log.debug("", this, "findById", "********Finding User info************ ");
 			if (AppsMiddleLayer.getInstance().appExists(appId)) {
 				Result res = usersMid.getUserInApp(appId, userId);
 				if (res != null) {

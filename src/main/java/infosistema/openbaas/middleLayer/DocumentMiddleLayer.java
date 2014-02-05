@@ -7,11 +7,13 @@ import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.dataaccess.models.ModelAbstract;
 import infosistema.openbaas.utils.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.PathSegment;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
@@ -122,11 +124,15 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 	
 	// *** GET *** //
 	
-	public Result getDocumentInPath(String appId, String userId, List<PathSegment> path, boolean getMetadata) {
+	public Result getDocumentInPath(String appId, String userId, List<PathSegment> path, boolean getMetadata, JSONArray arrayToShow, JSONArray arrayToHide) {
 		Metadata metadata = null;
 		Object data = null;
+		List<String> toShow = new ArrayList<String>();
+		List<String> toHide = new ArrayList<String>();
 		try {
-			data = docModel.getDocumentInPath(appId, userId, convertPath(path), getMetadata);
+			toShow = convertJsonArray2ListString(arrayToShow);
+			toHide = convertJsonArray2ListString(arrayToHide);
+			data = docModel.getDocumentInPath(appId, userId, convertPath(path), getMetadata, toShow, toHide);
 			if (data instanceof JSONObject) {
 				if (getMetadata) {
 					if(((JSONObject) data).has(ModelAbstract._METADATA)){
@@ -145,6 +151,8 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 	
 	// *** EXISTS *** //
 
+	
+
 	public boolean existsDocumentInPath(String appId, String userId, List<PathSegment> path) {
 		try {
 			return docModel.existsDocument(appId, userId, convertPath(path));
@@ -156,5 +164,22 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 
 	
 	// *** OTHERS *** //
-	
+	private List<String> convertJsonArray2ListString(JSONArray arrayTo) {
+		List<String> res = new ArrayList<String>();
+		try{
+			if(arrayTo.length()>0){
+				for(int i=0; i<arrayTo.length();i++){
+					Object pos = arrayTo.get(i);
+					if(pos instanceof String){
+						String aux = (String)pos;
+						aux.replace("/", ".");
+						res.add(aux);
+					}
+				}
+			}
+		}catch(Exception e){
+			Log.error("", this, "convertJsonArray2ListString", "An error ocorred.", e);
+		}
+		return res;
+	}
 }

@@ -6,6 +6,7 @@ import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONException;
@@ -54,7 +55,7 @@ public class UserModel extends ModelAbstract {
 	}
 	
 	@Override
-	protected BasicDBObject getDataProjection(boolean getMetadata) {
+	protected BasicDBObject getDataProjection(boolean getMetadata, List<String> toShow, List<String> toHide) {
 		if (getMetadata) {
 			if (dataProjectionMetadata == null) {
 				dataProjectionMetadata = super.getDataProjection(new BasicDBObject(), true);
@@ -179,6 +180,8 @@ public class UserModel extends ModelAbstract {
 		JSONObject geolocation = getGeolocation(getMetadaJSONObject(metadata));
 		String userKey = getUserKey(appId, userId);
 		if (metadata != null){
+			//TODO JM to remove log
+			Log.debug("", this, "findById", "********update metadata************hget("+userKey+","+_METADATA+")");
 			String str = jedis.hget(userKey, _METADATA);
 			Map<String, Object> m = null;
 			if(str!=null){
