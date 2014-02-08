@@ -1,7 +1,6 @@
 package infosistema.openbaas.rest;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import infosistema.openbaas.data.Error;
@@ -65,16 +64,7 @@ public class IntegrationResource {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response test(JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh) {
-		/*DocumentModel m = new DocumentModel();
-		List<String> contains = m.getOperation(null, OperatorEnum.contains, null, "restaurante.nome", null, "es");
-		List<String> notContains = m.getOperation(null, OperatorEnum.notContains, null, "restaurante.idade", null, "11");
-		List<String> equals = m.getOperation(null, OperatorEnum.equals, null, "restaurante.nome", null, "rest2");
-		List<String> diferent = m.getOperation(null, OperatorEnum.diferent, null, "restaurante.nome", null, "rest1");
-		List<String> greater = m.getOperation(null, OperatorEnum.greater, null, "restaurante.idade", null, "16");
-		List<String> greaterOrEqual = m.getOperation(null, OperatorEnum.greaterOrEqual, null, "restaurante.idade", null, "18");
-		List<String> lesser = m.getOperation(null, OperatorEnum.lesser, null, "restaurante.idade", null, "19");
-		List<String> lesserOrEqual = m.getOperation(null, OperatorEnum.lesserOrEqual, null, "restaurante.idade", null, "11");
-		*/
+		/*
 		//Serve para apagar coisas do redis
 		
 		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
@@ -91,7 +81,11 @@ public class IntegrationResource {
 			}
 		} finally {
 			pool.returnResource(jedis);
-		}		
+		}
+		*/
+		
+		
+		
 		return Response.status(Status.OK).entity("DEL OK").build();
 	}
 	
@@ -165,12 +159,12 @@ public class IntegrationResource {
 		userId = usersMid.getUserIdUsingEmail(appId, email);
 		//userSocialId = usersMid.socialUserExists(appId, socialId, socialNetwork);
 		if (userId == null) {
-			Log.debug("", this, "signup with FB", "********signup with FB ************");
+			Log.debug("", this, "signup with FB", "********signup with FB ************ email: "+email);
 			if (uriInfo == null) uriInfo=ui;
 			Result res = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork, Metadata.getNewMetadata(location));
 			response = Response.status(Status.CREATED).entity(res).build();
 		} else {
-			Log.debug("", this, "signin with FB", "********signin with FB ************");
+			Log.debug("", this, "signin with FB", "********signin with FB ************ email: "+email);
 			String sessionToken = Utils.getRandomString(Const.getIdLength());
 			boolean validation = sessionMid.createSession(sessionToken, appId, userId, socialId);
 			if(validation){

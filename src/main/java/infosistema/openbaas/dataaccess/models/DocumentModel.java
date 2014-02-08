@@ -82,7 +82,7 @@ public class DocumentModel extends ModelAbstract {
 
 	@Override
 	protected BasicDBObject getDataProjection(boolean getMetadata, List<String> toShow, List<String> toHide) {
-		if (toShow != null) {
+		if (toShow != null && toShow.size()>0) {
 			BasicDBObject projection = new BasicDBObject();
 			//Ciclo por string a 1 na projection
 			Iterator<String> it = toShow.iterator();
@@ -90,7 +90,7 @@ public class DocumentModel extends ModelAbstract {
 				projection.append(it.next(), 1);
 			}
 			return projection;
-		} else if (toHide != null) {
+		} else if (toHide != null && toHide.size()>0) {
 			BasicDBObject projection = super.getDataProjection(new BasicDBObject(), getMetadata);
 			projection.append(_KEY, 0);
 			projection.append(_USER_ID, 0);

@@ -167,16 +167,18 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 	private List<String> convertJsonArray2ListString(JSONArray arrayTo) {
 		List<String> res = new ArrayList<String>();
 		try{
-			if(arrayTo.length()>0){
-				for(int i=0; i<arrayTo.length();i++){
-					Object pos = arrayTo.get(i);
-					if(pos instanceof String){
-						String aux = (String)pos;
-						aux.replace("/", ".");
-						res.add(aux);
+			if(arrayTo!=null){
+				if(arrayTo.length()>0){
+					for(int i=0; i<arrayTo.length();i++){
+						Object pos = arrayTo.get(i);
+						if(pos instanceof String){
+							String aux = (String)pos;
+							aux.replace("/", ".");
+							res.add(aux);
+						}
 					}
 				}
-			}
+			}			
 		}catch(Exception e){
 			Log.error("", this, "convertJsonArray2ListString", "An error ocorred.", e);
 		}

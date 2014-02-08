@@ -79,7 +79,7 @@ public class AccountResource {
 		String appKey = null;
 		Boolean readOk = false;
 		String location = null;
-		Log.debug("", this, "signup", "********signup User ************");
+		
 		try {
 			appKey = headerParams.getFirst(Application.APP_KEY);
 		} catch (Exception e) { }
@@ -105,6 +105,7 @@ public class AccountResource {
 			Log.error("", this, "createUserAndLogin", "Error parsing the JSON.", e); 
 			return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
 		}
+		Log.debug("", this, "signup", "********signup User ************email: "+email);
 		if (readOk) {
 			if (!usersMid.userEmailExists(appId, email)) {
 				if (uriInfo == null) uriInfo = ui;
@@ -142,7 +143,7 @@ public class AccountResource {
 		String appKey = null;
 		Boolean refreshCode = false;
 		String lastLocation =null;
-		Log.debug("", this, "signin", "********signin User ************");
+		
 		try {
 			email = (String) inputJsonObj.get("email");
 			attemptedPassword = (String) inputJsonObj.get("password");
@@ -150,6 +151,7 @@ public class AccountResource {
 			Log.error("", this, "createSession", "Error parsing the JSON.", e); 
 			return Response.status(Status.BAD_REQUEST).entity(new Error("Error reading JSON")).build();
 		}
+		Log.debug("", this, "signin", "********signin User ************ email: "+email);
 		try {
 			location = headerParams.getFirst(Const.LOCATION);
 		} catch (Exception e) { }
@@ -232,9 +234,9 @@ public class AccountResource {
 	public Response patchSession( @HeaderParam(Const.USER_AGENT) String userAgent, @HeaderParam(Const.LOCATION) String location,
 			@PathParam(Const.SESSION_TOKEN) String sessionToken) {
 		Response response = null;
-		Log.debug("", this, "patch account", "********patch session token ************");
 		if (sessionMid.sessionTokenExists(sessionToken)) {
 			String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+			Log.debug("", this, "patch account", "********patch session token ************ userId: "+userId);
 			Result res = usersMid.getUserInApp(appId, userId);
 			User user = (User)res.getData(); 
 			if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -250,7 +252,7 @@ public class AccountResource {
 			// refresh the session.
 			// only refresh it when an action is performed.
 
-			Response.status(Status.NOT_FOUND).entity(new Error("SessionToken: "+sessionToken)).build();
+			response = Response.status(Status.OK).entity(("SessionToken: "+sessionToken)).build();
 		} else
 			response = Response.status(Status.FORBIDDEN).entity(new Error("You do not have permission to access.")).build();
 		return response;
@@ -274,9 +276,10 @@ public class AccountResource {
 		String sessionToken = null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		sessionToken = headerParams.getFirst(Const.SESSION_TOKEN);
-		Log.debug("", this, "signout", "********signout User ************");  
+		
 		Boolean flagAll = (Boolean) inputJsonObj.optBoolean("all",false);
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+		Log.debug("", this, "signout", "********signout User ************ userId: "+userId);  
 		if(userId!=null){
 			if (sessionMid.sessionTokenExists(sessionToken)) {
 				if(!flagAll){

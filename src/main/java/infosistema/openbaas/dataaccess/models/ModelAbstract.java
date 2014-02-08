@@ -77,26 +77,29 @@ public abstract class ModelAbstract {
 	
 	// *** VARIABLES *** //
 	
-	private MongoClient mongoClient;
+	private static MongoClient mongoClient = null;
 	private DB db;
-	private Geo geo;
+	private static Geo geo;
 
 	public ModelAbstract() {
+		
 		try {
-			if(Const.getMongoAuth()){
-				MongoCredential credential = MongoCredential.createMongoCRCredential(Const.getMongoUser(), Const.getMongoDb(), Const.getMongoPass().toCharArray());
-				ServerAddress server = new ServerAddress(Const.getMongoServer(), Const.getMongoPort());
-				mongoClient = new MongoClient(server, Arrays.asList(credential));
-			}else{
-				mongoClient = new MongoClient(Const.getMongoServer(), Const.getMongoPort());
+			if(mongoClient == null){
+				if(Const.getMongoAuth()){
+					MongoCredential credential = MongoCredential.createMongoCRCredential(Const.getMongoUser(), Const.getMongoDb(), Const.getMongoPass().toCharArray());
+					ServerAddress server = new ServerAddress(Const.getMongoServer(), Const.getMongoPort());
+					mongoClient = new MongoClient(server, Arrays.asList(credential));
+				}else{
+					mongoClient = new MongoClient(Const.getMongoServer(), Const.getMongoPort());
+				}
 			}
-			db = mongoClient.getDB(Const.getMongoDb());
 			geo = Geo.getInstance();
 		} catch (UnknownHostException e) {
 			Log.error("", this, "DocumentModel", "Unknown Host.", e); 
 		}
 	}
-
+	
+	
 	
 	// *** PROTECTED *** //
 
@@ -111,8 +114,11 @@ public abstract class ModelAbstract {
 	}
 
 	protected DBCollection getCollection(String collStr) {
-		return db.getCollection(collStr);
+		db = mongoClient.getDB(Const.getMongoDb());
+		return db.getCollection(collStr); 
 	}
+	
+	
 
 	protected JSONObject getJSonObject(Map<String, String> fields) throws JSONException  {
 		JSONObject obj = new JSONObject();
@@ -177,9 +183,21 @@ public abstract class ModelAbstract {
 	protected Map<String, Object> convertJsonToMap(JSONObject json) {
 		Map<String,Object> map = new HashMap<String,Object>();
 		ObjectMapper mapper = new ObjectMapper();
+		try {
+			if(json!=null)
+				map = mapper.readValue(json.toString(), new TypeReference<HashMap<String,Object>>(){});	 
+		} catch (Exception e) {
+			Log.error("", this, "convertJsonToMap", "Error trasnforming JSONObject to map.", e);
+		}
+		return map;
+	}
+	
+	protected Map<String, String> convertJsonToMap2(JSONObject json) {
+		Map<String,String> map = new HashMap<String,String>();
+		ObjectMapper mapper = new ObjectMapper();
 	 
 		try {
-			map = mapper.readValue(json.toString(), new TypeReference<HashMap<String,Object>>(){});	 
+			map = mapper.readValue(json.toString(), new TypeReference<HashMap<String,String>>(){});	 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -203,6 +221,8 @@ public abstract class ModelAbstract {
 		}
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
+		
+		//mongoClient.close();
 		return data;		
 	}
 	
@@ -225,6 +245,7 @@ public abstract class ModelAbstract {
 			Log.error("", this, "updateDocument", "An error ocorred.", e); 
 			return null;
 		}
+		//mongoClient.close();
 		return getDocument(appId, id, true, null, null);
 	}
 
@@ -260,6 +281,7 @@ public abstract class ModelAbstract {
 			Log.error("", this, "deleteDocument", "An error ocorred.", e); 
 			return false;
 		}
+		//mongoClient.close();
 		return true;		
 	}
 	
@@ -277,6 +299,7 @@ public abstract class ModelAbstract {
 		catch(Exception e){
 			return false;
 		}
+		//mongoClient.close();
 		return true;	
 	}
 	
@@ -294,6 +317,11 @@ public abstract class ModelAbstract {
 			searchQuery = getAndQueryString(searchQuery, getUserIdQueryString(userId));
 		DBCollection coll = getCollection(appId);
 		DBObject queryObj = (DBObject)JSON.parse(searchQuery);
+		
+/*
+{"_parentPath": "specials/precincts", , "_geo.gridLatitude": {$gte: 70.0}, "_geo.gridLatitude": {$lte: 270.0}, 
+"_geo.gridLongitude": {$gte: -110.0}, "_geo.gridLongitude": {$lte: 110.0}, }
+ */
 		BasicDBObject projection = new BasicDBObject();
 		projection.append(_ID, 1);
 		if (strQueryLocation != null)
@@ -328,14 +356,14 @@ public abstract class ModelAbstract {
 		if (orderBy.equals(_DIST)){
 			retObj = sortByValues(lstIdDists, orderType);
 		}
+		//mongoClient.close();
 		return retObj;
 	}
 	
 	private static List<String> sortByValues(Map<String, String> map, String orderType){
 		List<String> retObj = new ArrayList<String>();
 		List<Map.Entry<String, String>> entries = new LinkedList<Map.Entry<String, String>>(map.entrySet());
-        
-        Collections.sort(entries, new Comparator<Map.Entry<String, String>>() {
+		Collections.sort(entries, new Comparator<Map.Entry<String, String>>() {
             @Override
             public int compare(Entry<String, String> o1, Entry<String, String> o2) {
                 return o1.getValue().compareTo(o2.getValue());
@@ -345,16 +373,16 @@ public abstract class ModelAbstract {
         //LinkedHashMap will keep the keys in the order they are inserted
         //which is currently sorted on natural ordering
         Map<String, String> sortedMap = new LinkedHashMap<String, String>();
-     
         for(Map.Entry<String, String> entry: entries){
             sortedMap.put(entry.getKey(), entry.getValue());
         }
      
         Iterator<Entry<String,String>> entries2 = sortedMap.entrySet().iterator();
-		while (entries2.hasNext()) {
+		while (entries2.hasNext()) { 
 		  Entry<String,String> thisEntry = entries2.next();
 		  String key = thisEntry.getKey();
-		  retObj.add(key);
+		  String[] splitArray = key.split("/");
+		  retObj.add(splitArray[splitArray.length-1]);
 		}
 		if(orderType.equals("desc")){
 			Collections.reverse(retObj);
@@ -365,31 +393,32 @@ public abstract class ModelAbstract {
 	protected String getQueryString(String appId, String path, JSONObject query, String orderType) throws Exception {
 		if (query!=null) {
 			if(query.has(OperatorEnum.oper.toString())){
-			OperatorEnum oper = OperatorEnum.valueOf(query.getString(OperatorEnum.oper.toString())); 
-			if (oper == null)
-				throw new Exception("Error in query."); 
-			else if (oper.equals(OperatorEnum.and)) {
-				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
-				String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
-				return getAndQueryString(oper1, oper2);
-			} else if (oper.equals(OperatorEnum.or)) {
-				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
-				String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
-				return getOrQueryString(oper1, oper2);
-			} else if (oper.equals(OperatorEnum.not)) {
-				String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
-				return getNotQueryString(oper1);
+				OperatorEnum oper = OperatorEnum.valueOf(query.getString(OperatorEnum.oper.toString())); 
+				if (oper == null)
+					throw new Exception("Error in query."); 
+				else if (oper.equals(OperatorEnum.and)) {
+					String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
+					String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
+					return getAndQueryString(oper1, oper2);
+				} else if (oper.equals(OperatorEnum.or)) {
+					String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
+					String oper2 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op2.toString())), orderType);
+					return getOrQueryString(oper1, oper2);
+				} else if (oper.equals(OperatorEnum.not)) {
+					String oper1 = getQueryString(appId, path, (JSONObject)(query.get(OperatorEnum.op1.toString())), orderType);
+					return getNotQueryString(oper1);
+				} else {
+					String value = null;
+	                Object obj = query.get(QueryParameters.ATTR_VALUE);
+	                if (obj instanceof String) value = "\"" + obj + "\"";
+	                else value = "" + obj;
+	                String attribute = null;
+					attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE).replace("/", ".");
+					return getOperationQueryString(oper, attribute, value);
+				}
 			} else {
-				String value = null;
-                Object obj = query.get(QueryParameters.ATTR_VALUE);
-                if (obj instanceof String) value = "\"" + obj + "\"";
-                else value = "" + obj;
-                String attribute = null;
-				attribute = query.getString(QueryParameters.ATTR_ATTRIBUTE).replace("/", ".");
-				return getOperationQueryString(oper, attribute, value);
-			}
-			}else
 				return query.toString();
+			}
 		} else {
 			return null;
 		}
@@ -421,6 +450,8 @@ public abstract class ModelAbstract {
 		if (oper1.endsWith("}")) oper1 = oper1.substring(0, oper1.length() - 1);
 		if (oper2.startsWith("{")) oper2 = oper2.substring(1);
 		if (oper2.endsWith("}")) oper2 = oper2.substring(0, oper2.length() - 1);
+		if ("".equals(oper1.trim())) return "{" + oper2 + "}";
+		if ("".equals(oper2.trim())) return "{" + oper1 + "}";
 		return String.format(AND_QUERY_FORMAT, oper1, oper2);
 	}
 	
@@ -478,8 +509,10 @@ public abstract class ModelAbstract {
 		BasicDBObject projection = getDataProjection(getMetadata, toShow, toHide);
 		DBCursor cursor = coll.find(searchQuery, projection);
 		if (cursor.hasNext()) {
+			//mongoClient.close();
 			return new JSONObject(JSON.serialize(cursor.next()));
 		}
+		//mongoClient.close();
 		return null;
 	}
 	
@@ -493,6 +526,7 @@ public abstract class ModelAbstract {
 			projection.append(_ID, 1);
 			DBCursor cursor = coll.find(regexQuery, projection);
 			res = cursor.toArray();
+			//mongoClient.close();
 		}catch (Exception e) {
 			Log.error("", this, "getDocumentAndChilds", "Error quering mongoDB.", e);
 		}
@@ -516,6 +550,8 @@ public abstract class ModelAbstract {
 				return false;
 		} catch (Exception e) {
 			Log.error("", this, "existsDocument", "An error ocorred.", e); 
+		} finally {
+			//mongoClient.close();
 		}
 		return false;
 	}
@@ -531,6 +567,9 @@ public abstract class ModelAbstract {
 			return cursor.hasNext();
 		} catch (Exception e) {
 			Log.error("", this, "existsDocument", "An error ocorred.", e); 
+		}
+		finally {
+			//mongoClient.close();
 		}
 		return false;
 	}

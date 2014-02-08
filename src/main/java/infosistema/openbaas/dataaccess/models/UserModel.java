@@ -176,26 +176,33 @@ public class UserModel extends ModelAbstract {
 	}
 
 	@Override
-	protected void updateMetadata(String appId, String userId, Map<String, String> metadata) {
+	protected synchronized void updateMetadata(String appId, String userId, Map<String, String> metadata) {
 		JSONObject geolocation = getGeolocation(getMetadaJSONObject(metadata));
 		String userKey = getUserKey(appId, userId);
-		if (metadata != null){
-			//TODO JM to remove log
-			Log.debug("", this, "findById", "********update metadata************hget("+userKey+","+_METADATA+")");
-			String str = jedis.hget(userKey, _METADATA);
-			Map<String, Object> m = null;
-			if(str!=null){
+		try {
+			if (metadata != null){
+				String str = null;
 				try {
-					JSONObject json = new JSONObject(str);
-					m = convertJsonToMap(json);
-					m.putAll(metadata);
-				} catch (JSONException e) {
+					str = jedis.hget(userKey, _METADATA);
+				} catch (Exception e) {
+					Log.error("", this, "erro", "********erro no hget************hget("+userKey+" "+_METADATA+")",e);
+				}
+				Map<String, String> m = null;
+				if(str!=null){
+					
+						JSONObject json = new JSONObject(str);
+						m = convertJsonToMap2(json);
+						m.putAll(metadata);
+				}
+				if (m!=null){
+					jedis.hset(userKey, _METADATA, new JSONObject(m).toString());
+				}
+				else {
+					jedis.hset(userKey, _METADATA, new JSONObject(metadata).toString());
 				}
 			}
-			if (m!=null)
-				jedis.hset(userKey, _METADATA, new JSONObject(m).toString());
-			else 
-				jedis.hset(userKey, _METADATA, new JSONObject(metadata).toString());
+		} catch (Exception e) {
+			Log.error("", this, "err", "********update metadata************",e);
 		}
 		if (geolocation != null){ 
 			jedis.hset(userKey, _GEO, geolocation.toString());
