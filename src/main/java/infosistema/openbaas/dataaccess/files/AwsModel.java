@@ -163,7 +163,7 @@ public class AwsModel implements FileInterface {
 	 * @throws IOException
 	 */
 	@Override
-	public byte[] download(String appId, ModelEnum type, String id, String extension) throws IOException {
+	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality) throws IOException {
 		OutputStream soutputStream=null;
 		byte[] byteArray = null;
 		try{

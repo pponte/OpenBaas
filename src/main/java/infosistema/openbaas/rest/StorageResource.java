@@ -175,7 +175,7 @@ public class StorageResource {
 	@GET
 	@Path("{storageId}")
 	@Produces("application/octet-stream")
-	public Response downloadStorageUsingId(@PathParam("storageId") final String storageId,
+	public Response downloadStorageUsingId(@PathParam("storageId") final String storageId, @PathParam("quality") String quality,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		ResponseBuilder builder = Response.status(Status.OK);
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
@@ -201,7 +201,7 @@ public class StorageResource {
 			File file = new File(url);
 			extension = FilenameUtils.getExtension(url);
 			if (!file.exists()) {
-				found = mediaMid.download(appId, ModelEnum.storage, storageId, null);
+				found = mediaMid.download(appId, ModelEnum.storage, storageId, null,quality);
 			} else if(file.exists()){
 				FileInputStream fis = new FileInputStream(file);
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();

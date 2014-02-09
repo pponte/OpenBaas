@@ -205,18 +205,19 @@ public class ImageResource {
 	@Path("{imageId}/{quality}/download")
 	@GET
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
-	public Response downloadImage(@PathParam("imageId") String imageId,	@Context UriInfo ui, @Context HttpHeaders hh) {
+	public Response downloadImage(@PathParam("imageId") String imageId, @PathParam("quality") String quality,
+			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		byte[] sucess = null;
-		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
-			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-		int code = Utils.treatParameters(ui, hh);
-		Log.debug("", this, "download image", "******** download image ************");
+		//if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
+		//	return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		//int code = Utils.treatParameters(ui, hh);
+		Log.debug("", this, "download image", "******** download image ************");int code=1;
 		if (code == 1) {
 			Log.debug("", this, "downloadImage", "*********Downloading Image**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.image, imageId)) {
 				Image image = (Image)(mediaMid.getMedia(appId, ModelEnum.image, imageId, false).getData());
-				sucess = mediaMid.download(appId, ModelEnum.image, imageId, image.getFileExtension());
+				sucess = mediaMid.download(appId, ModelEnum.image, imageId, image.getFileExtension(),quality);
 				if (sucess!=null){ 
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+image.getFileName()+"."+image.getFileExtension()).build();

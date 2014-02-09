@@ -196,7 +196,7 @@ public class VideoResource {
 	@Path("{videoId}/{quality}/download")
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response downloadVideo(@PathParam("videoId") String videoId,
+	public Response downloadVideo(@PathParam("videoId") String videoId, @PathParam("quality") String quality,
 			@HeaderParam(value = Const.SESSION_TOKEN) String sessionToken) {
 		Response response = null;
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -206,7 +206,7 @@ public class VideoResource {
 			Log.debug("", this, "updateUser", "*********Downloading Video**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.video, videoId)) {
 				Video video = (Video)(mediaMid.getMedia(appId, ModelEnum.video, videoId, false).getData());
-				sucess = mediaMid.download(appId, ModelEnum.video, videoId, video.getFileExtension());
+				sucess = mediaMid.download(appId, ModelEnum.video, videoId, video.getFileExtension(),quality);
 				if (sucess!=null)
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+video.getFileName()+"."+video.getFileExtension()).build();

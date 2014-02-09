@@ -214,7 +214,7 @@ public class AudioResource {
 	@Path("{audioId}/{quality}/download")
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response downloadAudio(@PathParam("audioId") String audioId,
+	public Response downloadAudio(@PathParam("audioId") String audioId, @PathParam("quality") String quality,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Response response = null;
 		byte[] sucess = null;
@@ -225,7 +225,7 @@ public class AudioResource {
 			Log.debug("", this, "downloadAudio", "*********Downloading Audio**********");
 			if (this.mediaMid.mediaExists(appId, ModelEnum.audio, audioId)) {
 				Audio audio = (Audio)(mediaMid.getMedia(appId, ModelEnum.audio, audioId, false).getData());
-				sucess = mediaMid.download(appId, ModelEnum.audio, audioId,audio.getFileExtension());
+				sucess = mediaMid.download(appId, ModelEnum.audio, audioId,audio.getFileExtension(),quality);
 				if (sucess!=null)
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+audio.getFileName()+"."+audio.getFileExtension()).build();
