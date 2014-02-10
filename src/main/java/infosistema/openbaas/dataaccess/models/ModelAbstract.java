@@ -5,6 +5,7 @@ import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
+import infosistema.openbaas.utils.Utils;
 import infosistema.openbaas.utils.geolocation.Geo;
 
 import java.net.UnknownHostException;
@@ -84,6 +85,7 @@ public abstract class ModelAbstract {
 	public ModelAbstract() {
 		
 		try {
+			Utils.printMemoryStats();
 			if(mongoClient == null){
 				if(Const.getMongoAuth()){
 					MongoCredential credential = MongoCredential.createMongoCRCredential(Const.getMongoUser(), Const.getMongoDb(), Const.getMongoPass().toCharArray());

@@ -1,5 +1,6 @@
 package infosistema.openbaas.rest;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -104,6 +105,7 @@ public class IntegrationResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createOrLoginFacebookUser(JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh) {
+		Date startDate = Utils.getDate();
 		Response response = null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		String email = null;
@@ -162,6 +164,8 @@ public class IntegrationResource {
 			Log.debug("", this, "signup with FB", "********signup with FB ************ email: "+email);
 			if (uriInfo == null) uriInfo=ui;
 			Result res = usersMid.createSocialUserAndLogin(headerParams, appId, userName,email, socialId, socialNetwork, Metadata.getNewMetadata(location));
+			Date endDate = Utils.getDate();
+			Log.info(((User)res.getData()).getReturnToken(), this, "signup fb", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 			response = Response.status(Status.CREATED).entity(res).build();
 		} else {
 			Log.debug("", this, "signin with FB", "********signin with FB ************ email: "+email);
@@ -189,6 +193,8 @@ public class IntegrationResource {
 				outUser.setUserName(userName);
 				Result res = new Result(outUser, data.getMetadata());
 				response = Response.status(Status.OK).entity(res).build();
+				Date endDate = Utils.getDate();
+				Log.info(((User)res.getData()).getReturnToken(), this, "signin fb", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 			}
 		}
 		return response;

@@ -16,9 +16,9 @@ import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
+import java.util.Date;
 import java.util.Map;
 
-import javax.servlet.http.Cookie;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -72,7 +72,7 @@ public class UsersResource {
 		Response response = null;
 		String appKey = null;
 		String location = null;
-		
+		Date startDate = Utils.getDate();
 		String newUserName = null;
 		String userAgent = null;
 		String newUserFile = null;
@@ -80,7 +80,7 @@ public class UsersResource {
 		Boolean newBaseLocationOption = null;
 		String newBaseLocation = null;
 		Log.debug("", this, "find", "********Update User ************");
-		Cookie sessionToken=null;
+		//Cookie sessionToken=null;
 		MultivaluedMap<String, String> headerParams = hh.getRequestHeaders();
 		try {
 			location = headerParams.getFirst(Const.LOCATION);
@@ -91,9 +91,8 @@ public class UsersResource {
 		try {
 			userAgent = headerParams.getFirst(Const.USER_AGENT);
 		} catch (Exception e) { }
-		try {
-			sessionToken = new Cookie(Const.SESSION_TOKEN, headerParams.getFirst(Const.SESSION_TOKEN));
-		} catch (Exception e) { }
+		
+		String sessionToken = Utils.getSessionToken(hh);
 		
 		if(appKey==null)
 			return Response.status(Status.BAD_REQUEST).entity("App Key not found").build();
@@ -119,7 +118,9 @@ public class UsersResource {
 					if (newBaseLocationOption == true)
 						usersMid.updateUserLocation(userId, appId, newBaseLocation, metadata);
 					if (res != null){
-						sessionMid.refreshSession(sessionToken.getValue(), location, userAgent);
+						sessionMid.refreshSession(sessionToken, location, userAgent);
+						Date endDate = Utils.getDate();
+						Log.info(sessionToken, this, "patch user", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 						return Response.status(Status.OK).entity(res).build();
 					}
 				}
@@ -148,15 +149,20 @@ public class UsersResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteUser(@PathParam(Const.USER_ID) String userId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
+		Date startDate = Utils.getDate();
 		Response response = null;
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
+			String sessionToken = Utils.getSessionToken(hh);
 			Log.debug("", this, "deleteUser", "*Deleting User(setting as inactive)*");
 			boolean sucess = usersMid.deleteUserInApp(appId, userId);
-			if (sucess)
+			if (sucess){
 				response = Response.status(Status.OK).entity(userId).build();
+				Date endDate = Utils.getDate();
+				Log.info(sessionToken, this, "delete user", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+			}
 			else
 				response = Response.status(Status.NOT_FOUND).entity(userId).build();
 		} else if (code == -2) {
@@ -181,6 +187,7 @@ public class UsersResource {
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
+		Date startDate = Utils.getDate();
 		QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
 				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.users);
 		Response response = null;
@@ -188,12 +195,13 @@ public class UsersResource {
 		if (!sessionMid.checkAppForToken(sessionToken, appId)) {
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		}
-
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			try {
 				ListResult res = usersMid.find(qp);
 				response = Response.status(Status.OK).entity(res).build();
+				Date endDate = Utils.getDate();
+				Log.info(sessionToken, this, "get users list", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 			} catch (Exception e) {
 				Log.error("", this, "find", "********Find Users info************", e);
 				response = Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
@@ -220,17 +228,19 @@ public class UsersResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response findById(@PathParam(Const.USER_ID) String userId,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
+		Date startDate = Utils.getDate();
 		Response response = null;
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
+			String sessionToken = Utils.getSessionToken(hh);
 			Log.debug("", this, "findById", "********Finding User info************ ");
 			if (AppsMiddleLayer.getInstance().appExists(appId)) {
 				Result res = usersMid.getUserInApp(appId, userId);
 				if (res != null) {
-					//Metadata meta = usersMid.getMetadata(appId, null, userId, ModelEnum.users);
-					//Result res = new Result(temp, meta);
+					Date endDate = Utils.getDate();
+					Log.info(sessionToken, this, "get user by id", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					response = Response.status(Status.OK).entity(res).build();
 				} else {
 					response = Response.status(Status.NOT_FOUND).entity(userId).build();

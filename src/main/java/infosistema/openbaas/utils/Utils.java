@@ -1,5 +1,7 @@
 package infosistema.openbaas.utils;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -89,5 +91,28 @@ public class Utils {
 		}
 		return sessionToken;
 	}
-
+	
+	public static Date getDate() {
+		return new Date();
+	}
+	
+	public static String printDate(Date date) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return dateFormat.format(date);
+	}
+	
+	public static void printMemoryStats() {
+		int mb = 1024*1024;
+		 
+		//Getting the runtime reference from system
+		Runtime runtime = Runtime.getRuntime();
+		 
+		//Print used memory
+		StringBuffer str = new StringBuffer();
+		str.append("Used: " + String.valueOf((runtime.totalMemory() - runtime.freeMemory()) / mb));
+		str.append("Free: " + String.valueOf(runtime.freeMemory() / mb));
+		str.append("Total: " + String.valueOf(runtime.totalMemory() / mb));
+		str.append("Max: " + String.valueOf(runtime.maxMemory() / mb));
+		Log.info("", null, "Memory: ",str.toString());
+	}
 }

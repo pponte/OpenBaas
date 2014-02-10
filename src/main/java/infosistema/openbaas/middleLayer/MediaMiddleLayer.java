@@ -3,6 +3,7 @@ package infosistema.openbaas.middleLayer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -173,6 +174,37 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 		} else {
 			return null;
 		}
+	}
+	
+	public Boolean createLog(InputStream stream, FormDataContentDisposition fileDetail, String appId,
+			String userId) {
+        String date = Utils.printDate(new Date());
+		String id = appId + userId + date;
+		Boolean res = false;
+		///// OLD
+		String filePath = "";
+		///// OLD /////
+
+		// Get data from file
+		Map<String, String> fields = getFileFields(stream, fileDetail, null, ModelEnum.log);
+		
+		//Upload File
+		FileInterface fileModel = getAppFileInterface(appId);
+		try{
+			filePath = fileModel.upload(appId, ModelEnum.log, id, fields.get(Media.FILEEXTENSION), stream);
+			if(filePath!=null)
+				res = true;
+		} catch(AmazonServiceException e) {
+			Log.error("", this, "upload", "Amazon Service error.", e);
+			return null;
+		} catch(AmazonClientException e) {
+			Log.error("", this, "upload", "Amazon Client error.", e); 
+			return null;
+		} catch(Exception e) {
+			Log.error("", this, "upload", "An error ocorred.", e); 
+			return null;
+		}
+		return res;
 	}
 
 

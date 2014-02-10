@@ -15,6 +15,7 @@ import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
 import java.io.InputStream;
+import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -64,6 +65,7 @@ public class ImageResource {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response uploadImage(@Context HttpHeaders hh, @Context UriInfo ui, @FormDataParam(Const.FILE) InputStream uploadedInputStream,
 			@FormDataParam(Const.FILE) FormDataContentDisposition fileDetail, @HeaderParam(value = Const.LOCATION) String location) {
+		Date startDate = Utils.getDate();
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
 		Log.debug("", this, "upload image", "********upload image ************");
@@ -81,6 +83,8 @@ public class ImageResource {
 			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
 		} else if(code == -1)
 			response = Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
+		Date endDate = Utils.getDate();
+		Log.info(sessionToken, this, "upload image", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		return response;
 	}
 
@@ -207,18 +211,23 @@ public class ImageResource {
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	public Response downloadImage(@PathParam("imageId") String imageId, @PathParam("quality") String quality,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
+		Date startDate = Utils.getDate();
 		Response response = null;
 		byte[] sucess = null;
-		//if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
-		//	return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-		//int code = Utils.treatParameters(ui, hh);
-		Log.debug("", this, "download image", "******** download image ************");int code=1;
+		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
+			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		int code = Utils.treatParameters(ui, hh);
+		//int code=1;
+		Log.debug("", this, "download image", "******** download image ************");
 		if (code == 1) {
+			String sessionToken = Utils.getSessionToken(hh);
 			Log.debug("", this, "downloadImage", "*********Downloading Image**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.image, imageId)) {
 				Image image = (Image)(mediaMid.getMedia(appId, ModelEnum.image, imageId, false).getData());
 				sucess = mediaMid.download(appId, ModelEnum.image, imageId, image.getFileExtension(),quality);
 				if (sucess!=null){ 
+					Date endDate = Utils.getDate();
+					Log.info(sessionToken, this, "upload image", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+image.getFileName()+"."+image.getFileExtension()).build();
 				}else{

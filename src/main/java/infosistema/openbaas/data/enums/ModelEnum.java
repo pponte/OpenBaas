@@ -7,5 +7,6 @@ public enum ModelEnum {
 	users,
 	storage,
 	media,
-	data
+	data,
+	log
 }
