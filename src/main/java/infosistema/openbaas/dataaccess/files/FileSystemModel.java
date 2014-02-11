@@ -69,6 +69,8 @@ public class FileSystemModel implements FileInterface {
 		try {
 			OutputStream out = new FileOutputStream(file);
 			IOUtils.copy(stream, out);
+			out.close();
+			stream.close();
 		} catch (FileNotFoundException e) {
 			Log.error("", this, "upload", "File not found.", e); 
 			return null;

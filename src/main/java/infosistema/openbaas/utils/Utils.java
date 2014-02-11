@@ -110,9 +110,9 @@ public class Utils {
 		//Print used memory
 		StringBuffer str = new StringBuffer();
 		str.append("Used: " + String.valueOf((runtime.totalMemory() - runtime.freeMemory()) / mb));
-		str.append("Free: " + String.valueOf(runtime.freeMemory() / mb));
-		str.append("Total: " + String.valueOf(runtime.totalMemory() / mb));
-		str.append("Max: " + String.valueOf(runtime.maxMemory() / mb));
-		Log.info("", null, "Memory: ",str.toString());
+		str.append(" - Free: " + String.valueOf(runtime.freeMemory() / mb));
+		str.append(" - Total: " + String.valueOf(runtime.totalMemory() / mb));
+		str.append(" - Max: " + String.valueOf(runtime.maxMemory() / mb));
+		Log.info("", null, "Memory - ",str.toString());
 	}
 }
