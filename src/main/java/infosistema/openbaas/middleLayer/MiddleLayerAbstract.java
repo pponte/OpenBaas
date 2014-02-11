@@ -5,7 +5,10 @@ import java.util.List;
 
 import javax.ws.rs.core.PathSegment;
 
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
+
+import com.mongodb.DBObject;
 
 import infosistema.openbaas.data.ListResult;
 import infosistema.openbaas.data.QueryParameters;
@@ -20,6 +23,7 @@ import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.dataaccess.models.MediaModel;
 import infosistema.openbaas.dataaccess.models.SessionModel;
 import infosistema.openbaas.dataaccess.models.UserModel;
+import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
 public abstract class MiddleLayerAbstract {
@@ -69,13 +73,15 @@ public abstract class MiddleLayerAbstract {
 	
 	// *** GET LIST *** //
 
-	public ListResult find(QueryParameters qp) throws Exception {
-		List<String> listRes = getAllSearchResults(qp.getAppId(), qp.getUserId(), qp.getUrl(), qp.getLatitude(), qp.getLongitude(), qp.getRadius(),
-				qp.getQuery(), qp.getOrderType(), qp.getOrderBy(), qp.getType());
+	public ListResult find(QueryParameters qp, JSONArray arrayToShow) throws Exception {
+		List<String> toShow = new ArrayList<String>();
+		toShow = convertJsonArray2ListString(arrayToShow);
+		List<DBObject> listRes = getAllSearchResults(qp.getAppId(), qp.getUserId(), qp.getUrl(), qp.getLatitude(), qp.getLongitude(), qp.getRadius(),
+				qp.getQuery(), qp.getOrderType(), qp.getOrderBy(), qp.getType(),toShow);
 		return paginate(listRes, qp.getPageNumber(), qp.getPageSize());
 	}
 
-	protected abstract List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception;
+	protected abstract List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception;
 
 	protected List<String> and(List<String> list1, List<String> list2) {
 		List<String> lOrig = list1.size() > list2.size() ? list2 : list1; 
@@ -92,8 +98,8 @@ public abstract class MiddleLayerAbstract {
 		return new ArrayList<String>();
 	}
 	
-	private ListResult paginate(List<String> lst, Integer pageNumber, Integer pageSize) {
-		List<String> listRes = new ArrayList<String>();
+	private ListResult paginate(List<DBObject> lst, Integer pageNumber, Integer pageSize) {
+		List<DBObject> listRes = new ArrayList<DBObject>();
 		Integer iniIndex = (pageNumber-1)*pageSize;
 		Integer finIndex = (((pageNumber-1)*pageSize)+pageSize);
 		if (finIndex > lst.size()) finIndex = lst.size();
@@ -101,6 +107,27 @@ public abstract class MiddleLayerAbstract {
 		Integer totalElems = (int) Utils.roundUp(lst.size(),pageSize);
 		ListResult listResultRes = new ListResult(listRes, pageNumber, pageSize, lst.size(),totalElems);
 		return listResultRes;
+	}
+	
+	protected List<String> convertJsonArray2ListString(JSONArray arrayTo) {
+		List<String> res = new ArrayList<String>();
+		try{
+			if(arrayTo!=null){
+				if(arrayTo.length()>0){
+					for(int i=0; i<arrayTo.length();i++){
+						Object pos = arrayTo.get(i);
+						if(pos instanceof String){
+							String aux = (String)pos;
+							aux = aux.replace("/", ".");
+							res.add(aux);
+						}
+					}
+				}
+			}			
+		}catch(Exception e){
+			Log.error("", this, "convertJsonArray2ListString", "An error ocorred.", e);
+		}
+		return res;
 	}
 	
 }

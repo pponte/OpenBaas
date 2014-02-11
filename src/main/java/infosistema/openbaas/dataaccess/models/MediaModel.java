@@ -14,6 +14,7 @@ import org.codehaus.jettison.json.JSONObject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 
 public class MediaModel extends ModelAbstract {
 
@@ -94,7 +95,7 @@ public class MediaModel extends ModelAbstract {
 
 	// *** GET LIST *** //
 	
-	public List<String> getMedia(String appId, ModelEnum type, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy) throws Exception {
+	public List<DBObject> getMedia(String appId, ModelEnum type, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, List<String> toShow) throws Exception {
 		JSONObject finalQuery = new JSONObject();
 		if (type != null) {
 			finalQuery.append(OperatorEnum.oper.toString(), OperatorEnum.and.toString());
@@ -103,7 +104,7 @@ public class MediaModel extends ModelAbstract {
 		} else {
 			finalQuery = query;
 		}
-		return super.getDocuments(appId, null, null, latitude, longitude, radius, finalQuery, orderType, orderBy);
+		return super.getDocuments(appId, null, null, latitude, longitude, radius, finalQuery, orderType, orderBy, toShow);
 	}
 
 	

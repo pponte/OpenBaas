@@ -221,7 +221,7 @@ public class UserDataResource {
 				QueryParameters qp = QueryParameters.getQueryParameters(appId, userId, query, radiusStr, latitudeStr, longitudeStr, 
 						pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, url, ModelEnum.data);
 				try {
-					ListResult res = docMid.find(qp);
+					ListResult res = docMid.find(qp,arrayShow);
 					response = Response.status(Status.OK).entity(res).build();
 					Date endDate = Utils.getDate();
 					Log.info(sessionToken, this, "delete user data", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));

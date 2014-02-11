@@ -307,8 +307,9 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	@Override
-	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception {
-		if (query==null) {
+	protected List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, 
+			Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception {
+		if (query==null || query.length() == 0) {
 			query = new JSONObject();
 			JSONObject jAux= new JSONObject();
 			jAux.put("$exists",1);
@@ -316,7 +317,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			query.put(User.HASH, jAux);
 			query.put(User.SALT, jAux); 
 		}
-		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy);
+		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy, toShow);
 	}
 
 	

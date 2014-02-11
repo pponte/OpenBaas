@@ -109,12 +109,12 @@ public class UserModel extends ModelAbstract {
 				obj.put(_USER_ID, userId);
 				obj.put(_ID, userId);
 				if (metadata != null){ 
-					Map metaMap = convertJsonToMap(metadata);
+					Map<?,?> metaMap = convertJsonToMap(metadata);
 					obj.put(_METADATA, metaMap);
 					jedis.hset(userKey, _METADATA, metadata.toString());
 				}
 				if (geolocation != null){ 
-					Map metaGeo = convertJsonToMap(geolocation);
+					Map<?,?> metaGeo = convertJsonToMap(geolocation);
 					obj.put(_GEO, metaGeo);
 					jedis.hset(userKey, _GEO, geolocation.toString());
 				}

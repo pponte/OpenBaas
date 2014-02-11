@@ -15,7 +15,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.identitymanagement.model.NoSuchEntityException;
 import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 
 import infosistema.openbaas.data.Metadata;
@@ -231,14 +230,14 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	@Override
-	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception {
-		if(query==null){
+	protected List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception {
+		if(query==null||query.length()==0){
 			query = new JSONObject();
 			JSONObject jAux= new JSONObject();
 			jAux.put("$exists",1);
 			query.put(Media.FILENAME, jAux); 
 		}
-		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy);
+		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy,toShow);
 	}
 	
 	
@@ -250,7 +249,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 		Metadata metadata = null;
 		
 		try {
-			obj.put(Media.ID, id);
+			obj.put(Media._ID, id);
 			if (type == ModelEnum.audio) {
 				media = new Audio();
 				//((Audio)media).setDefaultBitRate(obj.get(Audio.BITRATE));
@@ -263,7 +262,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 				media = new Video();
 				//((Video)media).setResolution(obj.get(Video.RESOLUTION));
 			}
-			media.setId(obj.getString(Media.ID));
+			media.setId(obj.getString(Media._ID));
 			media.setSize(obj.getLong(Media.SIZE));
 			media.setDir(obj.getString(Media.PATH));
 			media.setFileName(obj.getString(Media.FILENAME));

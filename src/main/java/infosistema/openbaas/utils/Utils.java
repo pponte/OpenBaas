@@ -3,7 +3,6 @@ package infosistema.openbaas.utils;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Cookie;

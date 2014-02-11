@@ -9,6 +9,7 @@ import org.codehaus.jettison.json.JSONObject;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.identitymanagement.model.EntityAlreadyExistsException;
+import com.mongodb.DBObject;
 
 import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.Application;
@@ -56,6 +57,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 			salt = service.generateSalt();
 			hash = service.getEncryptedPassword(appKey, salt);
 			app = appModel.createApp(appId,appKey, hash, salt, appName, new Date().toString(), userEmailConfirmation,AWS,FTP,FileSystem);
+			
 		} catch (Exception e) {
 			Log.error("", this, "createApp Login","", e); 
 		}
@@ -97,7 +99,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 
 	// *** GET LIST *** //
 
-	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception {
+	protected List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception {
 		return null;
 	}
 

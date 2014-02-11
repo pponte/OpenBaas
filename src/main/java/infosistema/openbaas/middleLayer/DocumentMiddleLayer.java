@@ -117,8 +117,8 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 	// *** GET LIST *** //
 
 	@Override
-	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception {
-		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy);
+	protected List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception {
+		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy,toShow);
 	}
 
 	
@@ -164,24 +164,5 @@ public class DocumentMiddleLayer extends MiddleLayerAbstract {
 
 	
 	// *** OTHERS *** //
-	private List<String> convertJsonArray2ListString(JSONArray arrayTo) {
-		List<String> res = new ArrayList<String>();
-		try{
-			if(arrayTo!=null){
-				if(arrayTo.length()>0){
-					for(int i=0; i<arrayTo.length();i++){
-						Object pos = arrayTo.get(i);
-						if(pos instanceof String){
-							String aux = (String)pos;
-							aux.replace("/", ".");
-							res.add(aux);
-						}
-					}
-				}
-			}			
-		}catch(Exception e){
-			Log.error("", this, "convertJsonArray2ListString", "An error ocorred.", e);
-		}
-		return res;
-	}
+	
 }

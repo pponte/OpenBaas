@@ -21,7 +21,7 @@ public class Application {
 	 
 	private String createdAt;
 	private String updatedAt;
-	private String appId;
+	private String _id;
 	private String alive;
 	private String appName;
 	private String appKey;
@@ -39,12 +39,12 @@ public class Application {
 	public Application(){
 	}
 	
-	public Application(String appId){
-		this.appId = appId;
+	public Application(String _id){
+		this._id = _id;
 		this.alive = "true";
 	}
-	public Application(String appId, String date) {
-		this.appId = appId;
+	public Application(String _id, String date) {
+		this._id = _id;
 		createdAt = date;
 		this.alive = "true";
 	}
@@ -62,10 +62,10 @@ public class Application {
 		this.updatedAt = updatedAt;
 	}
 	public String getAppId() {
-		return this.appId;
+		return this._id;
 	}
-	public void setAppId(String appId){
-		this.appId = appId;
+	public void setAppId(String _id){
+		this._id = _id;
 	}
 	public void setAlive(String alive){
 		this.alive = alive;

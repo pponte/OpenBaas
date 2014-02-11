@@ -15,6 +15,8 @@ import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
 
+import com.mongodb.DBObject;
+
 public class SessionMiddleLayer extends MiddleLayerAbstract {
 
 	// *** MEMBERS *** //
@@ -134,7 +136,7 @@ public class SessionMiddleLayer extends MiddleLayerAbstract {
 
 	// *** GET LIST *** //
 
-	protected List<String> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type) throws Exception {
+	protected List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception {
 		return null;
 	}
 

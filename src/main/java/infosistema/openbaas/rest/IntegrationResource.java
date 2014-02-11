@@ -1,8 +1,6 @@
 package infosistema.openbaas.rest;
 
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Set;
 
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
@@ -32,10 +30,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;

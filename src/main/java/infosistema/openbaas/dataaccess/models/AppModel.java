@@ -19,7 +19,7 @@ public class AppModel {
 
 	// request types
 	private JedisPool pool;// = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
-	private Jedis jedis;
+	//private Jedis jedis;
 	
 	public AppModel() {
 		pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());

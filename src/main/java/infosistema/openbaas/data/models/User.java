@@ -36,7 +36,7 @@ public class User {
 	private static final String SN_SUFIXO = "_ID";
 	private static final String SOCIAL_NETWORK_ID_FORMAT = SN_PREFIXO +"%s" + SN_SUFIXO;
 	
-	private String userId;
+	private String _id;
 	private String email;
 	private String emailConfirmed;
 	private String userName;
@@ -52,23 +52,23 @@ public class User {
 	private String lastLocation;
 	private String online;
 
-	public User(String userId){
-		this.userId = userId;
+	public User(String _id){
+		this._id = _id;
 	}
 	public User() {
 		this.setAlive("true");
 	}
 
-	public boolean equals(String id) {
-		return this.userId.equalsIgnoreCase(id);
+	public boolean equals(String _id) {
+		return this._id.equalsIgnoreCase(_id);
 	}
 
-	public void setUserID(String userId) {
-		this.userId = userId;
+	public void setUserID(String _id) {
+		this._id = _id;
 	}
 
 	public String getUserId() {
-		return this.userId;
+		return this._id;
 	}
 
 	public void setEmail(String email) {

@@ -212,7 +212,7 @@ public class AppDataResource {
 				QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
 						pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, url, ModelEnum.data);
 				try {
-					ListResult res = docMid.find(qp);
+					ListResult res = docMid.find(qp,arrayShow);
 					response = Response.status(Status.OK).entity(res).build();
 					Date endDate = Utils.getDate();
 					Log.info(sessionToken, this, "get app data1", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));

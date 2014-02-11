@@ -42,6 +42,7 @@ public abstract class ModelAbstract {
 	// *** CONSTANTS *** //
 
 	public static final String _ID = "_id"; 
+	public static final String DATA = "data"; 
 	protected static final String _USER_ID = "_userId";
 	public static final String _METADATA = "_metadata";
 	public static final String _TYPE = "_type";
@@ -224,7 +225,6 @@ public abstract class ModelAbstract {
 		DBObject dbData = (DBObject)JSON.parse(data.toString());
 		coll.insert(dbData);
 		
-		//mongoClient.close();
 		return data;		
 	}
 	
@@ -247,7 +247,6 @@ public abstract class ModelAbstract {
 			Log.error("", this, "updateDocument", "An error ocorred.", e); 
 			return null;
 		}
-		//mongoClient.close();
 		return getDocument(appId, id, true, null, null);
 	}
 
@@ -283,7 +282,6 @@ public abstract class ModelAbstract {
 			Log.error("", this, "deleteDocument", "An error ocorred.", e); 
 			return false;
 		}
-		//mongoClient.close();
 		return true;		
 	}
 	
@@ -301,14 +299,15 @@ public abstract class ModelAbstract {
 		catch(Exception e){
 			return false;
 		}
-		//mongoClient.close();
 		return true;	
 	}
 	
 	
 	// *** GET LIST *** //
 
-	public List<String> getDocuments(String appId, String userId, String path, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy) throws Exception {
+	public List<DBObject> getDocuments(String appId, String userId, String path, 
+			Double latitude, Double longitude, Double radius, JSONObject query, 
+			String orderType, String orderBy, List<String> toShow) throws Exception {
 		String strParentPathQuery = getParentPathQueryString(path);
 		String strQueryLocation = getQueryLocationString(latitude, longitude, radius);
 		String strQuery = getQueryString(appId, path, query, orderType);
@@ -318,22 +317,27 @@ public abstract class ModelAbstract {
 		if (userId != null && !"".equals(userId))
 			searchQuery = getAndQueryString(searchQuery, getUserIdQueryString(userId));
 		DBCollection coll = getCollection(appId);
-		DBObject queryObj = (DBObject)JSON.parse(searchQuery);
+		DBObject queryObj = (DBObject)JSON.parse(searchQuery); 
 		
 /*
 {"_parentPath": "specials/precincts", , "_geo.gridLatitude": {$gte: 70.0}, "_geo.gridLatitude": {$lte: 270.0}, 
 "_geo.gridLongitude": {$gte: -110.0}, "_geo.gridLongitude": {$lte: 110.0}, }
  */
 		BasicDBObject projection = new BasicDBObject();
-		projection.append(_ID, 1);
+		if(toShow.size()>0){
+			projection = getDataProjection(true, toShow, null);
+		}
+		
 		if (strQueryLocation != null)
 			projection.append(_GEO, 1);
+		
+		projection.append(_ID, 1);
 		DBObject sortQuery = getSortQuery(orderBy, orderType);
 		Log.debug(userId, "", "getDocuments", "Query: "+query.toString());
 		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
-		List<String> retObj = new ArrayList<String>();
-		HashMap<String, String> lstIdDists = new HashMap<String, String>();
+		List<DBObject> retObj = new ArrayList<DBObject>();
+		HashMap<Object, String> lstIdDists = new HashMap<Object, String>();
 		while (cursor.hasNext()) {
 			DBObject obj = cursor.next();
 			try {
@@ -345,46 +349,55 @@ public abstract class ModelAbstract {
 						continue;
 					else if (orderBy.equals(_DIST)){
 						Double dist = geo.getDistanceFromLatLonInKm(latitude, longitude, objLatitude, objLongitude);
-						lstIdDists.put((String)obj.get(_ID),dist.toString());
+						lstIdDists.put(obj,dist.toString());
 					}
 				}
 			} catch (Exception e) {
 				Log.error("", this, "getDocuments", "Error determining location distance for objectId = " + obj.get(_ID).toString() + " .");
 			}
-			String idRes =obj.get(_ID).toString();
-			String[] splitArray = idRes.split("/");
-			retObj.add(splitArray[splitArray.length-1]);
+			String idAux =obj.get(_ID).toString();
+			String[] splitArray = idAux.split("/");
+			String id = splitArray[splitArray.length-1];
+			obj.removeField(_ID);
+			DBObject res = new BasicDBObject();
+			res.put(_ID, id);
+			res.put(DATA,obj);
+			retObj.add(res);
 		}
 		if (orderBy.equals(_DIST)){
 			retObj = sortByValues(lstIdDists, orderType);
 		}
-		//mongoClient.close();
 		return retObj;
 	}
 	
-	private static List<String> sortByValues(Map<String, String> map, String orderType){
-		List<String> retObj = new ArrayList<String>();
-		List<Map.Entry<String, String>> entries = new LinkedList<Map.Entry<String, String>>(map.entrySet());
-		Collections.sort(entries, new Comparator<Map.Entry<String, String>>() {
+	private static List<DBObject> sortByValues(Map<Object, String> map, String orderType){
+		List<DBObject> retObj = new ArrayList<DBObject>();
+		List<Map.Entry<Object, String>> entries = new LinkedList<Map.Entry<Object, String>>(map.entrySet());
+		Collections.sort(entries, new Comparator<Map.Entry<Object, String>>() {
             @Override
-            public int compare(Entry<String, String> o1, Entry<String, String> o2) {
+            public int compare(Entry<Object, String> o1, Entry<Object, String> o2) {
                 return o1.getValue().compareTo(o2.getValue());
             }
         });
      
         //LinkedHashMap will keep the keys in the order they are inserted
         //which is currently sorted on natural ordering
-        Map<String, String> sortedMap = new LinkedHashMap<String, String>();
-        for(Map.Entry<String, String> entry: entries){
+        Map<Object, String> sortedMap = new LinkedHashMap<Object, String>();
+        for(Map.Entry<Object, String> entry: entries){
             sortedMap.put(entry.getKey(), entry.getValue());
         }
      
-        Iterator<Entry<String,String>> entries2 = sortedMap.entrySet().iterator();
+        Iterator<Entry<Object,String>> entries2 = sortedMap.entrySet().iterator();
 		while (entries2.hasNext()) { 
-		  Entry<String,String> thisEntry = entries2.next();
-		  String key = thisEntry.getKey();
-		  String[] splitArray = key.split("/");
-		  retObj.add(splitArray[splitArray.length-1]);
+		  Entry<Object,String> thisEntry = entries2.next();
+		  DBObject key = (DBObject)thisEntry.getKey();
+		  String id = (String) key.get(_ID);
+		  String[] splitArray = id.split("/");
+		  key.removeField(_ID);
+		  DBObject res = new BasicDBObject();
+		  res.put(_ID, splitArray[splitArray.length-1]);
+		  res.put(DATA,key);
+		  retObj.add(res);
 		}
 		if(orderType.equals("desc")){
 			Collections.reverse(retObj);

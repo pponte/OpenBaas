@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class UsersState {
 
-	String userId;
+	String _id;
 	Boolean online;
 	Date lastUpdateDate;
 	
@@ -15,19 +15,19 @@ public class UsersState {
 		
 	}
 
-	public UsersState(String userId, Boolean online, Date lastUpdateDate) {
+	public UsersState(String _id, Boolean online, Date lastUpdateDate) {
 		super();
-		this.userId = userId;
+		this._id = _id;
 		this.online = online;
 		this.lastUpdateDate = lastUpdateDate;
 	}
 
 	public String getUserId() {
-		return userId;
+		return _id;
 	}
 
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setUserId(String _id) {
+		this._id = _id;
 	}
 
 	public Boolean getOnline() {
