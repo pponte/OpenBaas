@@ -10,11 +10,13 @@ public class Application {
 	public final static String CREATION_DATE = "creationdate";
 	public final static String ALIVE = "alive";
 	public final static String APP_NAME = "appName";
+	public final static String IMAGE_RES = "imageRes";
 	public final static String CONFIRM_USERS_EMAIL = "confirmUsersEmail";
 	public final static String UPDATE_DATE = "updateDate";
 	public final static String APP_KEY = "appKey";
 	public final static String SALT = "salt";
 	public final static String HASH = "hash";
+	
 	
 	public final static String INCLUDEMISSES = "includeMisses";
 	public final static String USERS = "users";

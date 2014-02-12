@@ -3,6 +3,7 @@ package infosistema.openbaas.dataaccess.models;
 import infosistema.openbaas.data.enums.FileMode;
 import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.utils.Const;
+import infosistema.openbaas.utils.Log;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -10,6 +11,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.codehaus.jettison.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -70,7 +73,24 @@ public class AppModel {
 		}
 		return null;
 	}
-
+	
+	public JSONObject createAppImageResolutions(JSONObject imageRes, String appId) {
+		Jedis jedis = pool.getResource();
+		try {
+			Iterator<?> keys = imageRes.keys();
+			while(keys.hasNext()){
+				String key = (String)keys.next();
+				String value = imageRes.getString(key);
+				jedis.hset("apps:" + appId + ":"+Application.IMAGE_RES, key, value);
+			}
+			return imageRes;
+		} catch (Exception e) {
+			Log.error("", this, "createAppImageResolutions", "Error.", e); 
+		} finally {
+			pool.returnResource(jedis);
+		}
+		return null;
+	}
 
 	// *** UPDATE *** //
 	
@@ -251,5 +271,7 @@ public class AppModel {
 			pool.returnResource(jedis);
 		}
 	}
+
+	
 
 }

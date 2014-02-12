@@ -97,8 +97,10 @@ public class AppResource {
 			String appId = null;
 			String appKey = null;
 			boolean readSucess = false;
+			JSONObject imageRes = null;
 			try {
 				appName = (String) inputJsonObj.get(Application.APP_NAME);
+				imageRes = (JSONObject) inputJsonObj.get(Application.IMAGE_RES);
 				confirmUsersEmail = (boolean) inputJsonObj.optBoolean(Application.CONFIRM_USERS_EMAIL, false);
 				AWS = (boolean) inputJsonObj.optBoolean(FileMode.aws.toString(), false);
 				FTP = (boolean) inputJsonObj.optBoolean(FileMode.ftp.toString(), false);
@@ -116,7 +118,7 @@ public class AppResource {
 			if (readSucess) {
 				appId = Utils.getRandomString(Const.getIdLength());
 				appKey = Utils.getRandomString(Const.getIdLength());
-				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem);
+				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem,imageRes);
 			}
 			if (temp != null) {
 				String sessionToken = Utils.getSessionToken(hh);
@@ -239,6 +241,7 @@ public class AppResource {
 			String newAlive = null;
 			String newAppName = null;
 			Application temp = null;
+			JSONObject imageRes = null;
 			Boolean newAWS;
 			Boolean newFTP;
 			Boolean newFileSystem;
@@ -249,9 +252,9 @@ public class AppResource {
 			newAWS = (Boolean) inputJsonObj.opt(FileMode.aws.toString());
 			newFTP = (Boolean) inputJsonObj.opt(FileMode.ftp.toString());
 			newFileSystem = (Boolean) inputJsonObj.opt(FileMode.filesystem.toString());
+			imageRes = (JSONObject) inputJsonObj.opt(Application.IMAGE_RES);
 			Application app = this.appsMid.getApp(appId);
-			
-			
+				
 			if(newAlive.equals(""))
 				newAlive = app.getAlive();
 			if(newAppName.equals(""))
@@ -271,6 +274,9 @@ public class AppResource {
 			
 			
 			if (this.appsMid.appExists(appId)) {
+				if(imageRes!=null && imageRes.length()>0){
+					this.appsMid.updateImageRes(imageRes,appId);
+				}
 				String sessionToken = Utils.getSessionToken(hh);
 				temp = this.appsMid.updateAllAppFields(appId, newAlive, newAppName,newConfirmUsersEmail,newAWS,newFTP,newFileSystem);
 				Result res = new Result(temp, null);

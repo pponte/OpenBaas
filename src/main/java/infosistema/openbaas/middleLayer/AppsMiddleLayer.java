@@ -48,16 +48,19 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 	 * @return
 	 */
 	public Application createApp(String appId, String appKey, String appName, boolean userEmailConfirmation,
-			boolean AWS,boolean FTP,boolean FileSystem) {
+			boolean AWS,boolean FTP,boolean FileSystem, JSONObject imageRes) {
 		byte[] salt = null;
 		byte[] hash = null;
 		PasswordEncryptionService service = new PasswordEncryptionService();
 		Application app = null;
+		
 		try {
 			salt = service.generateSalt();
 			hash = service.getEncryptedPassword(appKey, salt);
 			app = appModel.createApp(appId,appKey, hash, salt, appName, new Date().toString(), userEmailConfirmation,AWS,FTP,FileSystem);
-			
+			if(imageRes!=null && imageRes.length()>0){
+				appModel.createAppImageResolutions(imageRes,appId);
+			}
 		} catch (Exception e) {
 			Log.error("", this, "createApp Login","", e); 
 		}
@@ -89,6 +92,12 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 		return null;
 	}
 
+	public void updateImageRes(JSONObject imageRes, String appId) {
+		if(imageRes!=null && imageRes.length()>0){
+			appModel.createAppImageResolutions(imageRes,appId);
+		}
+		
+	}
 
 	// *** DELETE *** //
 	
@@ -150,5 +159,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 		} 	
 		return false;
 	}
+
+	
 
 }

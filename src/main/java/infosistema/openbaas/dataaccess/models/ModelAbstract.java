@@ -337,7 +337,7 @@ public abstract class ModelAbstract {
 		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<DBObject> retObj = new ArrayList<DBObject>();
-		HashMap<Object, String> lstIdDists = new HashMap<Object, String>();
+		HashMap<DBObject, String> lstIdDists = new HashMap<DBObject, String>();
 		while (cursor.hasNext()) {
 			DBObject obj = cursor.next();
 			try {
@@ -370,27 +370,27 @@ public abstract class ModelAbstract {
 		return retObj;
 	}
 	
-	private static List<DBObject> sortByValues(Map<Object, String> map, String orderType){
+	private static List<DBObject> sortByValues(Map<DBObject, String> map, String orderType){
 		List<DBObject> retObj = new ArrayList<DBObject>();
-		List<Map.Entry<Object, String>> entries = new LinkedList<Map.Entry<Object, String>>(map.entrySet());
-		Collections.sort(entries, new Comparator<Map.Entry<Object, String>>() {
+		List<Map.Entry<DBObject, String>> entries = new LinkedList<Map.Entry<DBObject, String>>(map.entrySet());
+		Collections.sort(entries, new Comparator<Map.Entry<DBObject, String>>() {
             @Override
-            public int compare(Entry<Object, String> o1, Entry<Object, String> o2) {
+            public int compare(Entry<DBObject, String> o1, Entry<DBObject, String> o2) {
                 return o1.getValue().compareTo(o2.getValue());
             }
         });
      
         //LinkedHashMap will keep the keys in the order they are inserted
         //which is currently sorted on natural ordering
-        Map<Object, String> sortedMap = new LinkedHashMap<Object, String>();
-        for(Map.Entry<Object, String> entry: entries){
+        Map<DBObject, String> sortedMap = new LinkedHashMap<DBObject, String>();
+        for(Map.Entry<DBObject, String> entry: entries){
             sortedMap.put(entry.getKey(), entry.getValue());
         }
      
-        Iterator<Entry<Object,String>> entries2 = sortedMap.entrySet().iterator();
+        Iterator<Entry<DBObject,String>> entries2 = sortedMap.entrySet().iterator();
 		while (entries2.hasNext()) { 
-		  Entry<Object,String> thisEntry = entries2.next();
-		  DBObject key = (DBObject)thisEntry.getKey();
+		  Entry<DBObject,String> thisEntry = entries2.next();
+		  DBObject key = thisEntry.getKey();
 		  String id = (String) key.get(_ID);
 		  String[] splitArray = id.split("/");
 		  key.removeField(_ID);
