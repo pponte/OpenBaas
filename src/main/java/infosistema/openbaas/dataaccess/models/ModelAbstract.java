@@ -358,7 +358,7 @@ public abstract class ModelAbstract {
 			String idAux =obj.get(_ID).toString();
 			String[] splitArray = idAux.split("/");
 			String id = splitArray[splitArray.length-1];
-			obj.removeField(_ID);
+			//obj.removeField(_ID);
 			DBObject res = new BasicDBObject();
 			res.put(_ID, id);
 			res.put(DATA,obj);
@@ -386,14 +386,19 @@ public abstract class ModelAbstract {
         for(Map.Entry<DBObject, String> entry: entries){
             sortedMap.put(entry.getKey(), entry.getValue());
         }
-     
+        String[] splitArray = null;
         Iterator<Entry<DBObject,String>> entries2 = sortedMap.entrySet().iterator();
 		while (entries2.hasNext()) { 
 		  Entry<DBObject,String> thisEntry = entries2.next();
 		  DBObject key = thisEntry.getKey();
 		  String id = (String) key.get(_ID);
-		  String[] splitArray = id.split("/");
-		  key.removeField(_ID);
+		  if(id.contains("/"))
+			  splitArray = id.split("/");
+		  else{
+			  splitArray = new String[1];
+			  splitArray[0]=id;
+		  }
+		  key.removeField(_GEO);
 		  DBObject res = new BasicDBObject();
 		  res.put(_ID, splitArray[splitArray.length-1]);
 		  res.put(DATA,key);
