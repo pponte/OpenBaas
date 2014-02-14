@@ -328,7 +328,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 				DBObject dbo = it.next();
 				String _id = (String) dbo.get(User._ID);
 				online = sessionModel.isUserOnline(_id);
-				dbo.put("online", online.toString());
+				((DBObject) dbo.get(User.DATA)).put("online", online.toString());
 			}
 		}
 		return result; 
