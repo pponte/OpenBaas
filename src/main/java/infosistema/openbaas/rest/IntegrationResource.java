@@ -181,7 +181,7 @@ public class IntegrationResource {
 				}else
 					lastLocation = user.getLastLocation();
 				outUser.setLastLocation(lastLocation);
-				outUser.setUserID(userId);
+				outUser.set_id(userId);
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);
 				outUser.setUserName(userName);
@@ -275,7 +275,7 @@ public class IntegrationResource {
 			boolean validation = sessionMid.createSession(sessionToken, appId, userId, socialId);
 			if(validation){
 				sessionMid.refreshSession(sessionToken, location, userAgent);
-				outUser.setUserID(userId);
+				outUser.set_id(userId);
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);
 				outUser.setUserName(userName);

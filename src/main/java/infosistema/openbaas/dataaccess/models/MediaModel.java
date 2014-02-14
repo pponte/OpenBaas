@@ -90,7 +90,6 @@ public class MediaModel extends ModelAbstract {
 		return null;
 	}
 	
-	
 	// *** UPDATE *** //
 
 	// *** GET LIST *** //
@@ -153,6 +152,8 @@ public class MediaModel extends ModelAbstract {
 		//CACHE
 		return super.existsNode(appId, objId);
 	}
+
+	
 
 	// *** OTHERS *** //
 

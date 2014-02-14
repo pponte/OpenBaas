@@ -78,7 +78,7 @@ public abstract class Media {
 	 * Returns the imager identifier.
 	 * @return String Image ID.
 	 */
-	public String getID() {
+	public String get_id() {
 		return this._id;
 	}
 	public String getDir(){
@@ -166,7 +166,7 @@ public abstract class Media {
 	public void setLocation(String location){
 		this.location = location;
 	}
-	public void setId(String _id){
+	public void set_id(String _id){
 		this._id = _id;
 	}
 }

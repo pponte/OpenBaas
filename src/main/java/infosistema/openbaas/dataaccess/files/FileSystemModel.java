@@ -1,6 +1,7 @@
 package infosistema.openbaas.dataaccess.files;
 
 import infosistema.openbaas.data.enums.ModelEnum;
+import infosistema.openbaas.dataaccess.models.AppModel;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 
@@ -14,15 +15,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 public class FileSystemModel implements FileInterface {
 
 	private static final String DIR_PATH_FORMAT = "%sapps/%s/media/%s";
 	private static final String FILE_PATH_FORMAT = "%s/%s.%s";
+	private static final String FILE_PATH_QUAL_FORMAT = "%s/%s%s.%s";
 	private static final String ORIGINAL = "original";
 	private static FileSystemModel instance;
 
@@ -42,6 +47,10 @@ public class FileSystemModel implements FileInterface {
 	
 	private String getFilePath(String dirPath, String id, String extension) {
 		return String.format(FILE_PATH_FORMAT, dirPath, id, extension);
+	}
+	
+	private String getFilePathWithQuality(String dirPath, String id,String quality, String extension) {
+		return String.format(FILE_PATH_QUAL_FORMAT, dirPath, id, quality, extension);
 	}
 	
 	// *** CREATE *** //
@@ -86,12 +95,35 @@ public class FileSystemModel implements FileInterface {
 	
 	@Override
 	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality) throws IOException {
-		String filePath = getFilePath(getDirPath(appId, type), id, extension);
-		File file = new File(filePath);
-		byte[] byteArray = null;
+		byte[] byteArrayRes = null;
+		String filePath = null;
+		if(quality.equals("") || quality==null) quality=ORIGINAL;
+		String filePathOriginal = getFilePath(getDirPath(appId, type), id, extension);
+		if(quality.equals(ORIGINAL)){
+			filePath = getFilePath(getDirPath(appId, type), id, extension);
+		}else{
+			filePath = getFilePathWithQuality(getDirPath(appId, type), id, quality, extension);
+		}
 		try {
-			InputStream in = new FileInputStream(file);
-			byteArray = IOUtils.toByteArray(in);
+			File file = new File(filePath);
+			if(file.exists()){
+				InputStream in = new FileInputStream(file);
+				byteArrayRes = IOUtils.toByteArray(in);
+				in.close();
+			}else{
+				AppModel appModel = new AppModel();
+				String qualityRes = appModel.getFileQuality(appId, type, quality);
+				if(qualityRes==null) return null;
+				File fileAux = new File(filePathOriginal);
+				byte[] byteArray = null;
+				InputStream in = new FileInputStream(filePathOriginal);
+				FileOutputStream fos = new FileOutputStream(filePath);
+				byteArray = IOUtils.toByteArray(in);
+				byteArrayRes= resizeFile(byteArray, qualityRes, type, fileAux, extension);
+				fos.write(byteArrayRes);
+				fos.close();
+				in.close();
+			}
 		} catch (FileNotFoundException e) {
 			Log.error("", this, "download", "File not found.", e); 
 			return null;
@@ -99,7 +131,7 @@ public class FileSystemModel implements FileInterface {
 			Log.error("", this, "download", "An error ocorred.", e); 
 			return null;
 		}
-		return resizeFile(byteArray, quality, type, file, extension);
+		return byteArrayRes;
 	}
 
 	
@@ -153,7 +185,33 @@ public class FileSystemModel implements FileInterface {
 		return imageInByte;
 	}
 	
-	// *** DETETE *** //
+	// *** DELETE *** //
+	@Override
+	public Boolean delFilesResolution(String appId, ModelEnum type, List<String> filesRes) {
+		Boolean res = false;
+		File folder = new File(getDirPath(appId, type));
+		File[] listOfFiles = folder.listFiles();
+		for(int i = 0; i<listOfFiles.length; i++){
+			File curr = listOfFiles[i];
+			if(curr.isFile()){
+				String extension = FilenameUtils.getExtension(curr.getAbsolutePath());
+				Iterator<String> it = filesRes.iterator();
+				while(it.hasNext()){
+					String fileRes = it.next();
+					if(curr.getName().endsWith(fileRes+"."+extension)){
+						try {
+							curr.delete();
+							res = true;
+						} catch (Exception e) {
+							Log.error("", this, "delete", "An error ocorred.", e); 
+							res = false;
+						}
+					}
+				}
+			}
+		}
+		return res;
+	}
 	
 	@Override
 	public boolean deleteFile(String appId, ModelEnum type, String id, String extension) {
@@ -162,7 +220,7 @@ public class FileSystemModel implements FileInterface {
 			File file = new File(filePath);
 			return file.delete();
 		} catch (Exception e) {
-			Log.error("", this, "download", "An error ocorred.", e); 
+			Log.error("", this, "delete", "An error ocorred.", e); 
 		}
 		return false;
 	}

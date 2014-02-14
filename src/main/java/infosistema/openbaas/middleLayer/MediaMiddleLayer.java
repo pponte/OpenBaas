@@ -156,7 +156,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 			}
 			
 			try {
-				media.setId(((JSONObject) data).getString(ModelAbstract._ID));
+				media.set_id(((JSONObject) data).getString(ModelAbstract._ID));
 				((JSONObject) data).remove(ModelAbstract._ID);
 				media.setSize(((JSONObject) data).getLong(Media.SIZE));
 				media.setDir(((JSONObject) data).getString(Media.PATH));
@@ -225,6 +225,17 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 				
 		return res ;
 	}
+	
+	public boolean deleteMediaByResolution(String appId, ModelEnum type, List<String> filesRes) {
+		Boolean res = false;
+		FileInterface fileModel = getAppFileInterface(appId);
+		try{
+			res = fileModel.delFilesResolution(appId, type, filesRes);
+		}catch(Exception e){
+			Log.error("", this, "deleteMediaByResolution", "Delete file with list of images res.", e); 
+		}	
+		return res ;
+	}
 
 
 	// *** GET LIST *** //
@@ -262,7 +273,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 				media = new Video();
 				//((Video)media).setResolution(obj.get(Video.RESOLUTION));
 			}
-			media.setId(obj.getString(Media._ID));
+			media.set_id(obj.getString(Media._ID));
 			media.setSize(obj.getLong(Media.SIZE));
 			media.setDir(obj.getString(Media.PATH));
 			media.setFileName(obj.getString(Media.FILENAME));
@@ -286,7 +297,7 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	public byte[] download(String appId, ModelEnum type, String id,String ext,String quality) {
 		FileInterface fileModel = getAppFileInterface(appId);
 		try {
-			return fileModel.download(appId, type, id,ext,quality);
+			return fileModel.download(appId, type, id, ext, quality);
 		} catch (IOException e) {
 			Log.error("", this, "download", "An error ocorred.", e); 
 		}

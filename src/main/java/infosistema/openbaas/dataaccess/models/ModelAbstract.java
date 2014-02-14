@@ -43,6 +43,7 @@ public abstract class ModelAbstract {
 
 	public static final String _ID = "_id"; 
 	public static final String DATA = "data"; 
+	public static final String METADATA = "metadata";
 	protected static final String _USER_ID = "_userId";
 	public static final String _METADATA = "_metadata";
 	public static final String _TYPE = "_type";
@@ -361,6 +362,12 @@ public abstract class ModelAbstract {
 			//obj.removeField(_ID);
 			DBObject res = new BasicDBObject();
 			res.put(_ID, id);
+			DBObject meta = new BasicDBObject();
+			  try{
+				  meta = (DBObject) obj.get(_METADATA);
+				  obj.removeField(_METADATA);
+			  }catch(Exception e){ }
+			  res.put(METADATA,meta);
 			res.put(DATA,obj);
 			retObj.add(res);
 		}
@@ -391,6 +398,7 @@ public abstract class ModelAbstract {
 		while (entries2.hasNext()) { 
 		  Entry<DBObject,String> thisEntry = entries2.next();
 		  DBObject key = thisEntry.getKey();
+		  
 		  String id = (String) key.get(_ID);
 		  if(id.contains("/"))
 			  splitArray = id.split("/");
@@ -402,6 +410,12 @@ public abstract class ModelAbstract {
 		  DBObject res = new BasicDBObject();
 		  res.put(_ID, splitArray[splitArray.length-1]);
 		  res.put(DATA,key);
+		  DBObject meta = new BasicDBObject();
+		  try{
+			  meta = (DBObject) key.get(_METADATA);
+			  key.removeField(_METADATA);
+		  }catch(Exception e){ }
+		  res.put(METADATA,meta);
 		  retObj.add(res);
 		}
 		if(orderType.equals("desc")){

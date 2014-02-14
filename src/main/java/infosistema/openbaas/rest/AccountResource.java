@@ -173,20 +173,20 @@ public class AccountResource {
 			return Response.status(Status.BAD_REQUEST).entity("Error reading JSON").build();
 		Result res = usersMid.getUserUsingEmail(appId, email);
 		outUser = (User)res.getData();
-		if (outUser != null && outUser.getUserId() != null) {
+		if (outUser != null && outUser.get_id() != null) {
 			boolean usersConfirmedOption = usersMid.getConfirmUsersEmailOption(appId);
 			// Remember the order of evaluation in java
 			if (usersConfirmedOption) {
-				if (usersMid.userEmailIsConfirmed(appId, outUser.getUserId())) {
+				if (usersMid.userEmailIsConfirmed(appId, outUser.get_id())) {
 					String sessionToken = Utils.getRandomString(Const.getIdLength());
-					boolean validation = sessionMid.createSession(sessionToken, appId, outUser.getUserId(), attemptedPassword);
+					boolean validation = sessionMid.createSession(sessionToken, appId, outUser.get_id(), attemptedPassword);
 					sessionMid.refreshSession(sessionToken, location, userAgent);
-					lastLocation = usersMid.updateUserLocation(outUser.getUserId(), appId, location, Metadata.getNewMetadata(location));
+					lastLocation = usersMid.updateUserLocation(outUser.get_id(), appId, location, Metadata.getNewMetadata(location));
 					if(lastLocation==null)
 						lastLocation = outUser.getLastLocation();
 					refreshCode = true;
 					if (validation && refreshCode) {
-						outUser.setUserID(outUser.getUserId());
+						outUser.set_id(outUser.get_id());
 						outUser.setReturnToken(sessionToken);
 						outUser.setEmail(email);
 						outUser.setUserName(outUser.getUserName());
@@ -204,12 +204,12 @@ public class AccountResource {
 				}
 			} else {
 				String sessionToken = Utils.getRandomString(Const.getIdLength());
-				boolean validation = sessionMid.createSession(sessionToken, appId, outUser.getUserId(), attemptedPassword);
+				boolean validation = sessionMid.createSession(sessionToken, appId, outUser.get_id(), attemptedPassword);
 				if(validation){
 					refreshCode = sessionMid.refreshSession(sessionToken, location, userAgent);
-					lastLocation = usersMid.updateUserLocation(outUser.getUserId(), appId, location, Metadata.getNewMetadata(location));
+					lastLocation = usersMid.updateUserLocation(outUser.get_id(), appId, location, Metadata.getNewMetadata(location));
 					if (validation && refreshCode) {
-						outUser.setUserID(outUser.getUserId());
+						outUser.set_id(outUser.get_id());
 						outUser.setReturnToken(sessionToken);
 						outUser.setEmail(email);
 						outUser.setUserName(outUser.getUserName());

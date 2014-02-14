@@ -23,6 +23,7 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -98,9 +99,13 @@ public class AppResource {
 			String appKey = null;
 			boolean readSucess = false;
 			JSONObject imageRes = null;
+			JSONObject videoRes = null;
+			JSONObject audioRes = null;
 			try {
 				appName = (String) inputJsonObj.get(Application.APP_NAME);
 				imageRes = (JSONObject) inputJsonObj.get(Application.IMAGE_RES);
+				videoRes = (JSONObject) inputJsonObj.get(Application.AUDIO_RES);
+				audioRes = (JSONObject) inputJsonObj.get(Application.VIDEO_RES);
 				confirmUsersEmail = (boolean) inputJsonObj.optBoolean(Application.CONFIRM_USERS_EMAIL, false);
 				AWS = (boolean) inputJsonObj.optBoolean(FileMode.aws.toString(), false);
 				FTP = (boolean) inputJsonObj.optBoolean(FileMode.ftp.toString(), false);
@@ -118,7 +123,7 @@ public class AppResource {
 			if (readSucess) {
 				appId = Utils.getRandomString(Const.getIdLength());
 				appKey = Utils.getRandomString(Const.getIdLength());
-				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem,imageRes);
+				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem,imageRes,videoRes,audioRes);
 			}
 			if (temp != null) {
 				String sessionToken = Utils.getSessionToken(hh);
@@ -234,6 +239,9 @@ public class AppResource {
 	public Response updateApp(@PathParam(Const.APP_ID) String appId,	JSONObject inputJsonObj,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Date startDate = Utils.getDate();
+		List<String> oldImageRes = new ArrayList<String>();
+		List<String> oldVideoRes = new ArrayList<String>();
+		List<String> oldAudioRes = new ArrayList<String>();
 		Response response = null;
 		Log.debug("", this, "patch app ", "********patch app  ************");
 		int code = Utils.treatParametersAdmin(ui, hh);
@@ -242,6 +250,8 @@ public class AppResource {
 			String newAppName = null;
 			Application temp = null;
 			JSONObject imageRes = null;
+			JSONObject videoRes = null;
+			JSONObject audioRes = null;
 			Boolean newAWS;
 			Boolean newFTP;
 			Boolean newFileSystem;
@@ -253,8 +263,13 @@ public class AppResource {
 			newFTP = (Boolean) inputJsonObj.opt(FileMode.ftp.toString());
 			newFileSystem = (Boolean) inputJsonObj.opt(FileMode.filesystem.toString());
 			imageRes = (JSONObject) inputJsonObj.opt(Application.IMAGE_RES);
+			videoRes = (JSONObject) inputJsonObj.opt(Application.VIDEO_RES);
+			audioRes = (JSONObject) inputJsonObj.opt(Application.AUDIO_RES);
 			Application app = this.appsMid.getApp(appId);
-				
+			
+			Set<String> imagesRes = app.getImageResolutions().keySet();
+			Set<String> videosRes = app.getVideoResolutions().keySet();
+			Set<String> audiosRes = app.getAudioResolutions().keySet();
 			if(newAlive.equals(""))
 				newAlive = app.getAlive();
 			if(newAppName.equals(""))
@@ -274,8 +289,18 @@ public class AppResource {
 			
 			
 			if (this.appsMid.appExists(appId)) {
-				if(imageRes!=null && imageRes.length()>0){
-					this.appsMid.updateImageRes(imageRes,appId);
+				if((imageRes!=null && imageRes.length()>0) || (videoRes!=null && videoRes.length()>0) 
+						|| (audioRes!=null && audioRes.length()>0)){
+					if(!imagesRes.isEmpty()){
+						oldImageRes.addAll(imagesRes);
+					}
+					if(!videosRes.isEmpty()){
+						oldVideoRes.addAll(videosRes);
+					}
+					if(!audiosRes.isEmpty()){
+						oldAudioRes.addAll(audiosRes);
+					}
+					this.appsMid.updateFilesRes(imageRes,videoRes,audioRes,appId,oldImageRes,oldVideoRes,oldAudioRes);
 				}
 				String sessionToken = Utils.getSessionToken(hh);
 				temp = this.appsMid.updateAllAppFields(appId, newAlive, newAppName,newConfirmUsersEmail,newAWS,newFTP,newFileSystem);

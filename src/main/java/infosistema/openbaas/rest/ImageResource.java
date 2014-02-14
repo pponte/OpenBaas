@@ -210,7 +210,7 @@ public class ImageResource {
 	
 	@Path("{imageId}/{quality}/download")
 	@GET
-	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	//@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	public Response downloadImage(@PathParam("imageId") String imageId, @PathParam("quality") String quality,
 			@Context UriInfo ui, @Context HttpHeaders hh) {
 		Date startDate = Utils.getDate();
@@ -233,14 +233,14 @@ public class ImageResource {
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+image.getFileName()+"."+image.getFileExtension()).build();
 				}else{
-					response = Response.status(Status.NO_CONTENT).entity(new Error("Error downloading file.")).build();
+					response = Response.status(Status.NOT_FOUND).type(MediaType.APPLICATION_JSON).entity(new Error("Error downloading file.")).build();
 				}
 			} else
-				response = Response.status(Status.NOT_FOUND).entity(imageId).build();
+				response = Response.status(Status.NOT_FOUND).type(MediaType.APPLICATION_JSON).entity(imageId).build();
 		}else if(code == -2){
-			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
+			response = Response.status(Status.FORBIDDEN).type(MediaType.APPLICATION_JSON).entity(new Error("Invalid Session Token.")).build();
 		}else if(code == -1)
-			response = Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
+			response = Response.status(Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON).entity(new Error("Error handling the request.")).build();
 		return response;
 	}
 

@@ -1,6 +1,7 @@
 package infosistema.openbaas.dataaccess.models;
 
 import infosistema.openbaas.data.enums.FileMode;
+import infosistema.openbaas.data.enums.ModelEnum;
 import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
@@ -74,14 +75,14 @@ public class AppModel {
 		return null;
 	}
 	
-	public JSONObject createAppImageResolutions(JSONObject imageRes, String appId) {
+	public JSONObject createAppResolutions(JSONObject imageRes, String appId, ModelEnum type) {
 		Jedis jedis = pool.getResource();
 		try {
 			Iterator<?> keys = imageRes.keys();
 			while(keys.hasNext()){
 				String key = (String)keys.next();
 				String value = imageRes.getString(key);
-				jedis.hset("apps:" + appId + ":"+Application.IMAGE_RES, key, value);
+				jedis.hset("apps:" + appId + ":"+type.toString(), key, value);
 			}
 			return imageRes;
 		} catch (Exception e) {
@@ -135,6 +136,31 @@ public class AppModel {
 	
 	// *** GET *** //
 
+	public String getFileQuality(String appId, ModelEnum type, String qualityKey) {
+		Jedis jedis = pool.getResource();
+		String res = Application.ORIGINAL;
+		try {
+			if (jedis.exists("apps:" + appId + ":"+type.toString())) {
+				res = jedis.hget("apps:" + appId + ":"+type.toString(),qualityKey);
+			}
+		} finally {
+			pool.returnResource(jedis);
+		}
+		return res;
+	}
+	/*
+	public Map<String,String> getAppResolutions(String appId, ModelEnum type) {
+		Jedis jedis = pool.getResource();
+		Map<String, String> fieldsRes = null;
+		try {
+			if (jedis.exists("apps:" + appId)) {
+				fieldsRes = jedis.hgetAll("apps:" + appId + ":"+type);
+			}
+		} finally {
+			pool.returnResource(jedis);
+		}
+		return fieldsRes;
+	}*/
 	/**
 	 * Returns the fields of the corresponding application
 	 */
@@ -142,9 +168,15 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		Application res = new Application();
 		Map<String, String> fields = null;
+		Map<String, String> imageRes = null;
+		Map<String, String> videoRes = null;
+		Map<String, String> audioRes = null;
 		try {
 			if (jedis.exists("apps:" + appId)) {
 				fields = jedis.hgetAll("apps:" + appId);
+				imageRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.image);
+				videoRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.video);
+				audioRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.audio);
 			}
 			if (fields != null) {
 				res.setCreationDate(fields.get(Application.CREATION_DATE));
@@ -156,7 +188,16 @@ public class AppModel {
 				res.setFileSystem(Boolean.parseBoolean(fields.get(FileMode.filesystem.toString())));
 				res.setUpdateDate(fields.get(Application.CREATION_DATE));
 				res.setAppKey(fields.get(Application.APP_KEY));
-				res.setAppId(appId);
+				res.set_id(appId);
+			}
+			if(imageRes!=null){
+				res.setImageResolutions(imageRes);
+			}
+			if(videoRes!=null){
+				res.setVideoResolutions(videoRes);
+			}
+			if(audioRes!=null){
+				res.setAudioResolutions(audioRes);
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -271,7 +312,4 @@ public class AppModel {
 			pool.returnResource(jedis);
 		}
 	}
-
-	
-
 }

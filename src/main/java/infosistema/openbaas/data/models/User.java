@@ -63,11 +63,11 @@ public class User {
 		return this._id.equalsIgnoreCase(_id);
 	}
 
-	public void setUserID(String _id) {
+	public void set_id(String _id) {
 		this._id = _id;
 	}
 
-	public String getUserId() {
+	public String get_id() {
 		return this._id;
 	}
 

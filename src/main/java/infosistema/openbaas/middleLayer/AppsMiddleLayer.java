@@ -25,6 +25,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 
 	AppModel appModel = new AppModel();	
 	MediaModel mediaModel = new MediaModel();	
+	MediaMiddleLayer mediaMiddleLayer = MediaMiddleLayer.getInstance();
 	// *** INSTANCE *** //
 	
 	private static AppsMiddleLayer instance = null;
@@ -48,7 +49,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 	 * @return
 	 */
 	public Application createApp(String appId, String appKey, String appName, boolean userEmailConfirmation,
-			boolean AWS,boolean FTP,boolean FileSystem, JSONObject imageRes) {
+			boolean AWS,boolean FTP,boolean FileSystem, JSONObject ImageRes,JSONObject videoRes,JSONObject AudioRes) {
 		byte[] salt = null;
 		byte[] hash = null;
 		PasswordEncryptionService service = new PasswordEncryptionService();
@@ -58,8 +59,14 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 			salt = service.generateSalt();
 			hash = service.getEncryptedPassword(appKey, salt);
 			app = appModel.createApp(appId,appKey, hash, salt, appName, new Date().toString(), userEmailConfirmation,AWS,FTP,FileSystem);
-			if(imageRes!=null && imageRes.length()>0){
-				appModel.createAppImageResolutions(imageRes,appId);
+			if(ImageRes!=null && ImageRes.length()>0){
+				appModel.createAppResolutions(ImageRes,appId,ModelEnum.image);
+			}
+			if(videoRes!=null && videoRes.length()>0){
+				appModel.createAppResolutions(videoRes,appId,ModelEnum.video);
+			}
+			if(AudioRes!=null && AudioRes.length()>0){
+				appModel.createAppResolutions(AudioRes,appId,ModelEnum.audio);
 			}
 		} catch (Exception e) {
 			Log.error("", this, "createApp Login","", e); 
@@ -92,11 +99,26 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 		return null;
 	}
 
-	public void updateImageRes(JSONObject imageRes, String appId) {
+	public void updateFilesRes(JSONObject imageRes,JSONObject videoRes,JSONObject audioRes, String appId, 
+			List<String> oldImageRes,List<String> oldVideoRes,List<String> oldAudioRes) {
 		if(imageRes!=null && imageRes.length()>0){
-			appModel.createAppImageResolutions(imageRes,appId);
+			appModel.createAppResolutions(imageRes,appId,ModelEnum.image);
+			if(oldImageRes.size()>0){
+				mediaMiddleLayer.deleteMediaByResolution(appId, ModelEnum.image,oldImageRes);
+			}
 		}
-		
+		if(videoRes!=null && videoRes.length()>0){
+			appModel.createAppResolutions(videoRes,appId,ModelEnum.video);
+			if(oldVideoRes.size()>0){
+				mediaMiddleLayer.deleteMediaByResolution(appId, ModelEnum.video,oldVideoRes);
+			}
+		}
+		if(audioRes!=null && audioRes.length()>0){
+			appModel.createAppResolutions(audioRes,appId,ModelEnum.audio);
+			if(oldAudioRes.size()>0){
+				mediaMiddleLayer.deleteMediaByResolution(appId, ModelEnum.audio, oldAudioRes);
+			}
+		}
 	}
 
 	// *** DELETE *** //

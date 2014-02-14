@@ -135,7 +135,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			if(lastLocation==null)
 				lastLocation = outUser.getLastLocation();
 			if (validation && refresh) {
-				outUser.setUserID(userId);
+				outUser.set_id(userId);
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);
 				outUser.setUserName(userName);
@@ -149,7 +149,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			boolean emailConfirmed = false;
 			res = createUser(appId, userId, userName, "NOK", "SocialNetwork", email, salt,hash, userFile, emailConfirmed,
 					uriInfo, baseLocationOption, baseLocation, location, extraMetadata);
-			outUser.setUserID(userId);
+			outUser.set_id(userId);
 			outUser.setEmail(email);
 			outUser.setUserName(userName);
 			outUser.setUserFile(userFile);
@@ -203,7 +203,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			lastLocation = outUser.getLastLocation();
 
 		if (validation) {
-			outUser.setUserID(userId);
+			outUser.set_id(userId);
 			outUser.setEmail(email);
 			outUser.setUserName(userName);
 			outUser.setBaseLocationOption("false");
