@@ -21,6 +21,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class User {
 	
 	public static final String USER_NAME = "userName";
+	public static final String _ID = "_id";
 	public static final String EMAIL = "email";
 	public static final String USER_FILE = "userFile";
 	public static final String SALT = "salt";

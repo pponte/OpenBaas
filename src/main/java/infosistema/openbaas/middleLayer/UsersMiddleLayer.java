@@ -16,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -309,15 +310,28 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 	@Override
 	protected List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, 
 			Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception {
-		if (query==null || query.length() == 0) {
+		List<DBObject> result = null;
+		SessionModel sessionModel = new SessionModel();
+		Boolean online = false;
+		if (query == null || query.length() == 0) {
 			query = new JSONObject();
-			JSONObject jAux= new JSONObject();
+			JSONObject jAux = new JSONObject();
 			jAux.put("$exists",1);
 			query.put(User.EMAIL, jAux); 
 			query.put(User.HASH, jAux);
 			query.put(User.SALT, jAux); 
 		}
-		return docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy, toShow);
+		result = docModel.getDocuments(appId, userId, url, latitude, longitude, radius, query, orderType, orderBy, toShow);
+		if(toShow.contains(User.ONLINE)){
+			Iterator<DBObject> it = result.iterator();
+			while(it.hasNext()){
+				DBObject dbo = it.next();
+				String _id = (String) dbo.get(User._ID);
+				online = sessionModel.isUserOnline(_id);
+				dbo.put("online", online.toString());
+			}
+		}
+		return result; 
 	}
 
 	
