@@ -134,7 +134,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			Boolean refresh = sessionMid.refreshSession(sessionToken, location, userAgent);
 			lastLocation = updateUserLocation(userId, appId, location, extraMetadata);
 			if(lastLocation==null)
-				lastLocation = outUser.getLastLocation();
+				lastLocation = outUser.getLocation();
 			if (validation && refresh) {
 				outUser.set_id(userId);
 				outUser.setReturnToken(sessionToken);
@@ -143,7 +143,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 				outUser.setUserFile(userFile);
 				outUser.setBaseLocation(baseLocation);
 				outUser.setBaseLocationOption(baseLocationOption.toString());
-				outUser.setLastLocation(lastLocation);
+				outUser.setLocation(lastLocation);
 				outUser.setOnline("true");
 			}
 		} else if (getConfirmUsersEmailOption(appId)) {
@@ -156,7 +156,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			outUser.setUserFile(userFile);
 			outUser.setBaseLocation(baseLocation);
 			outUser.setBaseLocationOption(baseLocationOption.toString());
-			outUser.setLastLocation(location);
+			outUser.setLocation(location);
 			outUser.setOnline("true");
 		}
 		return new Result(outUser,res.getMetadata());
@@ -201,14 +201,14 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 		sessionMid.refreshSession(sessionToken, location, userAgent);
 		lastLocation = updateUserLocation(userId, appId, location, extraMetadata);
 		if(lastLocation==null)
-			lastLocation = outUser.getLastLocation();
+			lastLocation = outUser.getLocation();
 
 		if (validation) {
 			outUser.set_id(userId);
 			outUser.setEmail(email);
 			outUser.setUserName(userName);
 			outUser.setBaseLocationOption("false");
-			outUser.setLastLocation(lastLocation);
+			outUser.setLocation(lastLocation);
 			outUser.setReturnToken(sessionToken);
 			outUser.setOnline("true");
 		}
@@ -357,7 +357,7 @@ public class UsersMiddleLayer extends MiddleLayerAbstract {
 			if(user.has(User.BASE_LOCATION))
 				data.setBaseLocation(user.getString(User.BASE_LOCATION));
 			if(user.has(User.LOCATION))
-				data.setLastLocation(user.getString(User.LOCATION));
+				data.setLocation(user.getString(User.LOCATION));
 			if(user.has(User.ONLINE))
 				data.setOnline(user.getString(User.ONLINE));
 			Metadata metadata = null;

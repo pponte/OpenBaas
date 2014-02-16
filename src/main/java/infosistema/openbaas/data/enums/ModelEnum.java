@@ -8,5 +8,6 @@ public enum ModelEnum {
 	storage,
 	media,
 	data,
-	log
+	log,
+	bars
 }

@@ -14,6 +14,8 @@ public class Const {
 	public static final String RADIUS = "radius";
 	public static final String PAGE_NUMBER = "pageNumber";
 	public static final String PAGE_SIZE = "pageSize";
+	public static final String ELEM_COUNT = "elemCount";
+	public static final String ELEM_INDEX = "elemIndex";
 	public static final String ORDER_BY = "orderBy";
 	public static final String ORDER_TYPE = "orderType";
 	public static final String USER_AGENT = "user-agent";

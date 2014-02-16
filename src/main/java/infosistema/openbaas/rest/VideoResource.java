@@ -130,10 +130,11 @@ public class VideoResource {
 	public Response find(@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
 			@QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
+			@QueryParam(Const.ELEM_COUNT) String elemCount, @QueryParam(Const.ELEM_INDEX) String elemIndex,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_BY) String orderTypeStr) {
 		QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
-				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.video);
+				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.video,elemCount,elemIndex);
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -208,7 +209,7 @@ public class VideoResource {
 			Log.debug("", this, "updateUser", "*********Downloading Video**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.video, videoId)) {
 				Video video = (Video)(mediaMid.getMedia(appId, ModelEnum.video, videoId, false).getData());
-				sucess = mediaMid.download(appId, ModelEnum.video, videoId, video.getFileExtension(),quality);
+				sucess = mediaMid.download(appId, ModelEnum.video, videoId, video.getFileExtension(),quality,null);
 				if (sucess!=null)
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+video.getFileName()+"."+video.getFileExtension()).build();

@@ -22,7 +22,7 @@ public interface FileInterface {
 	
 	// *** DOWNLOAD *** //
 	
-	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality) throws IOException;
+	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality, String bars) throws IOException;
 
 	
 	// *** DETETE *** //

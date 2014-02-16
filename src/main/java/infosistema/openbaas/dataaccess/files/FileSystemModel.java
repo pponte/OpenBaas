@@ -1,10 +1,12 @@
 package infosistema.openbaas.dataaccess.files;
 
 import infosistema.openbaas.data.enums.ModelEnum;
+import infosistema.openbaas.data.models.Image;
 import infosistema.openbaas.dataaccess.models.AppModel;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -27,12 +29,14 @@ public class FileSystemModel implements FileInterface {
 
 	private static final String DIR_PATH_FORMAT = "%sapps/%s/media/%s";
 	private static final String FILE_PATH_FORMAT = "%s/%s.%s";
-	private static final String FILE_PATH_QUAL_FORMAT = "%s/%s%s.%s";
+	private static final String FILE_PATH_QUAL_FORMAT = "%s/%s_%s_%s.%s";
 	private static final String ORIGINAL = "original";
 	private static FileSystemModel instance;
+	private static AppModel appModel =null;
 
 	public static FileSystemModel getInstance() {
 		if (instance == null) instance = new FileSystemModel();
+		appModel = new AppModel();
 		return instance;
 	}
 
@@ -49,8 +53,8 @@ public class FileSystemModel implements FileInterface {
 		return String.format(FILE_PATH_FORMAT, dirPath, id, extension);
 	}
 	
-	private String getFilePathWithQuality(String dirPath, String id,String quality, String extension) {
-		return String.format(FILE_PATH_QUAL_FORMAT, dirPath, id, quality, extension);
+	private String getFilePathWithQuality(String dirPath, String id,String quality, String extension,String bars) {
+		return String.format(FILE_PATH_QUAL_FORMAT, dirPath, id,bars, quality, extension);
 	}
 	
 	// *** CREATE *** //
@@ -94,48 +98,51 @@ public class FileSystemModel implements FileInterface {
 	// *** DOWNLOAD *** //
 	
 	@Override
-	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality) throws IOException {
+	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality, String bars) throws IOException {
 		byte[] byteArrayRes = null;
 		String filePath = null;
 		if(quality.equals("") || quality==null) quality=ORIGINAL;
 		String filePathOriginal = getFilePath(getDirPath(appId, type), id, extension);
+		if(type.equals(ModelEnum.image)) extension = Image.EXTENSION;
 		if(quality.equals(ORIGINAL)){
 			filePath = getFilePath(getDirPath(appId, type), id, extension);
 		}else{
-			filePath = getFilePathWithQuality(getDirPath(appId, type), id, quality, extension);
+			filePath = getFilePathWithQuality(getDirPath(appId, type), id, quality, extension,bars);
 		}
+		File file = new File(filePath);
 		try {
-			File file = new File(filePath);
 			if(file.exists()){
 				InputStream in = new FileInputStream(file);
 				byteArrayRes = IOUtils.toByteArray(in);
 				in.close();
 			}else{
-				AppModel appModel = new AppModel();
-				String qualityRes = appModel.getFileQuality(appId, type, quality);
+				String qualityRes = appModel.getFileQuality(appId, type, quality).toUpperCase();
 				if(qualityRes==null) return null;
 				File fileAux = new File(filePathOriginal);
 				byte[] byteArray = null;
 				InputStream in = new FileInputStream(filePathOriginal);
 				FileOutputStream fos = new FileOutputStream(filePath);
 				byteArray = IOUtils.toByteArray(in);
-				byteArrayRes= resizeFile(byteArray, qualityRes, type, fileAux, extension);
+				byteArrayRes= resizeFile(appId,byteArray, qualityRes, type, fileAux, extension,filePath,bars);
 				fos.write(byteArrayRes);
 				fos.close();
 				in.close();
+				
+				//file.delete();
 			}
 		} catch (FileNotFoundException e) {
 			Log.error("", this, "download", "File not found.", e); 
 			return null;
 		} catch (Exception e) {
-			Log.error("", this, "download", "An error ocorred.", e); 
+			Log.error("", this, "download", "An error ocorred.", e);
+			file.delete();
 			return null;
 		}
 		return byteArrayRes;
 	}
 
 	
-	private byte[] resizeFile(byte[] byteArray, String quality, ModelEnum type, File file, String extension) {
+	private byte[] resizeFile(String appId, byte[] byteArray, String quality, ModelEnum type, File file, String extension, String filePath, String bars) {
 		byte[] res=null;
 		try {
 			if(quality.equals(ORIGINAL))
@@ -144,12 +151,13 @@ public class FileSystemModel implements FileInterface {
 				if(type.equals(ModelEnum.image)){
 					int IMG_WIDTH=100;
 					int IMG_HEIGHT=100;
+					String barsRes = appModel.getFileQuality(appId, ModelEnum.bars, bars);
 					String[] qualityArray = quality.split("X");
 					IMG_WIDTH = Integer.parseInt(qualityArray[0]);
 					IMG_HEIGHT = Integer.parseInt(qualityArray[1]);
 					BufferedImage originalImage = ImageIO.read(file);
 					int fileType = originalImage.getType() == 0? BufferedImage.TYPE_INT_ARGB : originalImage.getType();
-					res = resizeImage(originalImage, fileType, IMG_WIDTH, IMG_HEIGHT, extension);
+					res = resizeImage(originalImage, fileType, IMG_WIDTH, IMG_HEIGHT, Image.EXTENSION, filePath,barsRes);
 				}
 				if(type.equals(ModelEnum.video)){
 					res = byteArray;
@@ -167,19 +175,53 @@ public class FileSystemModel implements FileInterface {
 		return res;
 	}
 
-	private byte[] resizeImage(BufferedImage originalImage, int type, int IMG_WIDTH, int IMG_HEIGHT, String extension){
+	private byte[] resizeImage(BufferedImage originalImage, int type, int finalWidth, int finalHeight, String extension, String filePath, String bars){
 		byte[] imageInByte = null;
 		try {
-			BufferedImage resizedImage = new BufferedImage(IMG_WIDTH, IMG_HEIGHT, type);
-			Graphics2D g = resizedImage.createGraphics();
-			g.drawImage(originalImage, 0, 0, IMG_WIDTH, IMG_HEIGHT, null);
-			g.dispose();
+						
+			int originalWidth = originalImage.getWidth();
+		    int originalHeight = originalImage.getHeight();
+
+		    int newWidth;
+		    int newHeight;
+		   
+		    double aspectRatio = (double) originalWidth / (double) originalHeight;
+		    double boundaryAspect = (double) finalWidth / (double) finalHeight;
+
+		    if (aspectRatio > boundaryAspect) {
+		        newWidth = finalWidth;
+		        newHeight = (int) Math.round(newWidth / aspectRatio);
+		    } else {
+		        newHeight = finalHeight;
+		        newWidth = (int) Math.round(aspectRatio * newHeight);
+		    }
+
+		    int xOffset = (finalWidth - newWidth) / 2;
+		    int yOffset = (finalHeight - newHeight) / 2;
+		    
+		    BufferedImage intermediateImage=null;
+		    if(bars!=null){
+		    	intermediateImage = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_ARGB);
+			    Graphics2D gi = intermediateImage.createGraphics();
+			    Color color1 = Color.decode("0x"+bars.substring(0, 6));
+			    Color color2 = new Color(color1.getRed(), color1.getGreen(), color1.getBlue(), Integer.parseInt(bars.substring(6),16));
+			    gi.setColor(color2);
+			    gi.fillRect(0, 0, finalWidth, finalHeight);
+			    gi.drawImage(originalImage, xOffset, yOffset, xOffset + newWidth, yOffset + newHeight, 0, 0, originalWidth, originalHeight, null);
+		    }else{
+		    	intermediateImage = new BufferedImage(finalWidth, finalHeight, type);
+		    	Graphics2D gi = intermediateImage.createGraphics();
+		    	gi.drawImage(originalImage, 0, 0, finalWidth, finalWidth, null);
+			    gi.dispose();
+		    }
+		    
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ImageIO.write( resizedImage, extension, baos );
+			ImageIO.write(intermediateImage, extension, baos);
+			
 			baos.flush();
 			imageInByte = baos.toByteArray();
 			baos.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.error("", this, "resize image", "An error ocorred.", e); 
 		}
 		return imageInByte;

@@ -49,7 +49,7 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 	 * @return
 	 */
 	public Application createApp(String appId, String appKey, String appName, boolean userEmailConfirmation,
-			boolean AWS,boolean FTP,boolean FileSystem, JSONObject ImageRes,JSONObject videoRes,JSONObject AudioRes) {
+			boolean AWS,boolean FTP,boolean FileSystem, JSONObject ImageRes,JSONObject ImageBars,JSONObject videoRes,JSONObject AudioRes) {
 		byte[] salt = null;
 		byte[] hash = null;
 		PasswordEncryptionService service = new PasswordEncryptionService();
@@ -59,6 +59,9 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 			salt = service.generateSalt();
 			hash = service.getEncryptedPassword(appKey, salt);
 			app = appModel.createApp(appId,appKey, hash, salt, appName, new Date().toString(), userEmailConfirmation,AWS,FTP,FileSystem);
+			if(ImageBars!=null && ImageBars.length()>0){
+				appModel.createAppResolutions(ImageRes,appId,ModelEnum.bars);
+			}
 			if(ImageRes!=null && ImageRes.length()>0){
 				appModel.createAppResolutions(ImageRes,appId,ModelEnum.image);
 			}
@@ -99,10 +102,18 @@ public class AppsMiddleLayer extends MiddleLayerAbstract {
 		return null;
 	}
 
-	public void updateFilesRes(JSONObject imageRes,JSONObject videoRes,JSONObject audioRes, String appId, 
-			List<String> oldImageRes,List<String> oldVideoRes,List<String> oldAudioRes) {
+	public void updateFilesRes(JSONObject imageRes,JSONObject imageBars,JSONObject videoRes,JSONObject audioRes, String appId, 
+			List<String> oldImageRes, List<String> oldVideoRes,List<String> oldAudioRes) {
+		Boolean flag = false;
 		if(imageRes!=null && imageRes.length()>0){
 			appModel.createAppResolutions(imageRes,appId,ModelEnum.image);
+			flag =true;
+		}
+		if(imageBars!=null && imageBars.length()>0){
+			appModel.createAppResolutions(imageBars,appId,ModelEnum.bars);
+			flag =true;
+		}
+		if(flag){
 			if(oldImageRes.size()>0){
 				mediaMiddleLayer.deleteMediaByResolution(appId, ModelEnum.image,oldImageRes);
 			}

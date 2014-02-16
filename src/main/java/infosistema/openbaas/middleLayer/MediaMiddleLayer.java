@@ -294,10 +294,10 @@ public class MediaMiddleLayer extends MiddleLayerAbstract {
 	
 	// *** DOWNLOAD *** //
 
-	public byte[] download(String appId, ModelEnum type, String id,String ext,String quality) {
+	public byte[] download(String appId, ModelEnum type, String id,String ext,String quality, String bars) {
 		FileInterface fileModel = getAppFileInterface(appId);
 		try {
-			return fileModel.download(appId, type, id, ext, quality);
+			return fileModel.download(appId, type, id, ext, quality,bars);
 		} catch (IOException e) {
 			Log.error("", this, "download", "An error ocorred.", e); 
 		}

@@ -335,7 +335,7 @@ public abstract class ModelAbstract {
 		projection.append(_ID, 1);
 		DBObject sortQuery = getSortQuery(orderBy, orderType);
 		Log.debug(userId, "", "getDocuments", "Query: "+query.toString());
-		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - SortQuery: "+sortQuery);
+		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - Projection: "+projection+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<DBObject> retObj = new ArrayList<DBObject>();
 		HashMap<DBObject, String> lstIdDists = new HashMap<DBObject, String>();
@@ -352,24 +352,25 @@ public abstract class ModelAbstract {
 						Double dist = geo.getDistanceFromLatLonInKm(latitude, longitude, objLatitude, objLongitude);
 						lstIdDists.put(obj,dist.toString());
 					}
+				}else{
+					String idAux =obj.get(_ID).toString();
+					String[] splitArray = idAux.split("/");
+					String id = splitArray[splitArray.length-1];
+					//obj.removeField(_ID);
+					DBObject res = new BasicDBObject();
+					res.put(_ID, id);
+					DBObject meta = new BasicDBObject();
+					  try{
+						  meta = (DBObject) obj.get(_METADATA);
+						  obj.removeField(_METADATA);
+					  }catch(Exception e){ }
+					  res.put(METADATA,meta);
+					res.put(DATA,obj);
+					retObj.add(res);
 				}
 			} catch (Exception e) {
 				Log.error("", this, "getDocuments", "Error determining location distance for objectId = " + obj.get(_ID).toString() + " .");
 			}
-			String idAux =obj.get(_ID).toString();
-			String[] splitArray = idAux.split("/");
-			String id = splitArray[splitArray.length-1];
-			//obj.removeField(_ID);
-			DBObject res = new BasicDBObject();
-			res.put(_ID, id);
-			DBObject meta = new BasicDBObject();
-			  try{
-				  meta = (DBObject) obj.get(_METADATA);
-				  obj.removeField(_METADATA);
-			  }catch(Exception e){ }
-			  res.put(METADATA,meta);
-			res.put(DATA,obj);
-			retObj.add(res);
 		}
 		if (orderBy.equals(_DIST)){
 			retObj = sortByValues(lstIdDists, orderType);

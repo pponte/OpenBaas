@@ -78,7 +78,10 @@ public abstract class MiddleLayerAbstract {
 		toShow = convertJsonArray2ListString(arrayToShow);
 		List<DBObject> listRes = getAllSearchResults(qp.getAppId(), qp.getUserId(), qp.getUrl(), qp.getLatitude(), qp.getLongitude(), qp.getRadius(),
 				qp.getQuery(), qp.getOrderType(), qp.getOrderBy(), qp.getType(),toShow);
-		return paginate(listRes, qp.getPageNumber(), qp.getPageSize());
+		if(qp.getPageIndex()!=null && qp.getPageCount()!=null)
+			return paginate2(listRes, qp.getPageIndex(), qp.getPageCount());
+		else
+			return paginate1(listRes, qp.getPageNumber(), qp.getPageSize());
 	}
 
 	protected abstract List<DBObject> getAllSearchResults(String appId, String userId, String url, Double latitude, Double longitude, Double radius, JSONObject query, String orderType, String orderBy, ModelEnum type, List<String> toShow) throws Exception;
@@ -98,7 +101,7 @@ public abstract class MiddleLayerAbstract {
 		return new ArrayList<String>();
 	}
 	
-	private ListResult paginate(List<DBObject> lst, Integer pageNumber, Integer pageSize) {
+	private ListResult paginate1(List<DBObject> lst, Integer pageNumber, Integer pageSize) {
 		List<DBObject> listRes = new ArrayList<DBObject>();
 		Integer iniIndex = (pageNumber-1)*pageSize;
 		Integer finIndex = (((pageNumber-1)*pageSize)+pageSize);
@@ -106,6 +109,20 @@ public abstract class MiddleLayerAbstract {
 		try { listRes = lst.subList(iniIndex, finIndex); } catch (Exception e) {}
 		Integer totalElems = (int) Utils.roundUp(lst.size(),pageSize);
 		ListResult listResultRes = new ListResult(listRes, pageNumber, pageSize, lst.size(),totalElems);
+		return listResultRes;
+	}
+	
+	private ListResult paginate2(List<DBObject> lst, Integer index, Integer count) {
+		List<DBObject> listRes = null;
+		if (index-1 > lst.size()) 
+			 listRes = new ArrayList<DBObject>();
+		else{
+			if((index+count-1)>lst.size())
+				try { listRes = lst.subList(index, lst.size());} catch (Exception e) {}
+			else
+				try { listRes = lst.subList(index, index+count);} catch (Exception e) {}
+		}
+		ListResult listResultRes = new ListResult(listRes, lst.size());
 		return listResultRes;
 	}
 	

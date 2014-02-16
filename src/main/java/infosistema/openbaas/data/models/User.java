@@ -51,7 +51,7 @@ public class User {
 	private String returnToken;
 	private String baseLocationOption;
 	private String baseLocation;
-	private String lastLocation;
+	private String location;
 	private String online;
 
 	public User(String _id){
@@ -147,14 +147,6 @@ public class User {
 		this.baseLocationOption = baseLocationOption;
 	}
 	
-	public String getLastLocation() {
-		return lastLocation;
-	}
-	
-	public void setLastLocation(String lastLocation) {
-		this.lastLocation = lastLocation;
-	}
-	
 	public String getBaseLocation() {
 		return baseLocation;
 	}
@@ -175,6 +167,12 @@ public class User {
 	}
 	public void setOnline(String online) {
 		this.online = online;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public void setLocation(String location) {
+		this.location = location;
 	}
 
 }

@@ -101,11 +101,13 @@ public class AppResource {
 			JSONObject imageRes = null;
 			JSONObject videoRes = null;
 			JSONObject audioRes = null;
+			JSONObject imageBars = null;
 			try {
 				appName = (String) inputJsonObj.get(Application.APP_NAME);
 				imageRes = (JSONObject) inputJsonObj.get(Application.IMAGE_RES);
 				videoRes = (JSONObject) inputJsonObj.get(Application.AUDIO_RES);
 				audioRes = (JSONObject) inputJsonObj.get(Application.VIDEO_RES);
+				imageBars = (JSONObject) inputJsonObj.get(Application.IMAGE_BARS);
 				confirmUsersEmail = (boolean) inputJsonObj.optBoolean(Application.CONFIRM_USERS_EMAIL, false);
 				AWS = (boolean) inputJsonObj.optBoolean(FileMode.aws.toString(), false);
 				FTP = (boolean) inputJsonObj.optBoolean(FileMode.ftp.toString(), false);
@@ -123,7 +125,8 @@ public class AppResource {
 			if (readSucess) {
 				appId = Utils.getRandomString(Const.getIdLength());
 				appKey = Utils.getRandomString(Const.getIdLength());
-				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem,imageRes,videoRes,audioRes);
+				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem,
+						imageRes,imageBars,videoRes,audioRes);
 			}
 			if (temp != null) {
 				String sessionToken = Utils.getSessionToken(hh);
@@ -188,9 +191,9 @@ public class AppResource {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(new Error("Error in getUserState.")).build();
 			}
 		} else if(code == -2){
-			 return Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
-		 }else if(code == -1)
-			 return Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
+			 	return Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
+			 }else if(code == -1)
+				 return Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
 		return response;		
 	}
 	
@@ -250,6 +253,7 @@ public class AppResource {
 			String newAppName = null;
 			Application temp = null;
 			JSONObject imageRes = null;
+			JSONObject imageBars = null;
 			JSONObject videoRes = null;
 			JSONObject audioRes = null;
 			Boolean newAWS;
@@ -263,6 +267,7 @@ public class AppResource {
 			newFTP = (Boolean) inputJsonObj.opt(FileMode.ftp.toString());
 			newFileSystem = (Boolean) inputJsonObj.opt(FileMode.filesystem.toString());
 			imageRes = (JSONObject) inputJsonObj.opt(Application.IMAGE_RES);
+			imageBars = (JSONObject) inputJsonObj.opt(Application.IMAGE_BARS);
 			videoRes = (JSONObject) inputJsonObj.opt(Application.VIDEO_RES);
 			audioRes = (JSONObject) inputJsonObj.opt(Application.AUDIO_RES);
 			Application app = this.appsMid.getApp(appId);
@@ -290,7 +295,7 @@ public class AppResource {
 			
 			if (this.appsMid.appExists(appId)) {
 				if((imageRes!=null && imageRes.length()>0) || (videoRes!=null && videoRes.length()>0) 
-						|| (audioRes!=null && audioRes.length()>0)){
+						|| (audioRes!=null && audioRes.length()>0) || (imageBars!=null && imageBars.length()>0)){
 					if(!imagesRes.isEmpty()){
 						oldImageRes.addAll(imagesRes);
 					}
@@ -300,7 +305,8 @@ public class AppResource {
 					if(!audiosRes.isEmpty()){
 						oldAudioRes.addAll(audiosRes);
 					}
-					this.appsMid.updateFilesRes(imageRes,videoRes,audioRes,appId,oldImageRes,oldVideoRes,oldAudioRes);
+					this.appsMid.updateFilesRes(imageRes,imageBars,videoRes,audioRes,appId,
+							oldImageRes,oldVideoRes,oldAudioRes);
 				}
 				String sessionToken = Utils.getSessionToken(hh);
 				temp = this.appsMid.updateAllAppFields(appId, newAlive, newAppName,newConfirmUsersEmail,newAWS,newFTP,newFileSystem);

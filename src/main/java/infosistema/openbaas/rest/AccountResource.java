@@ -183,7 +183,7 @@ public class AccountResource {
 					sessionMid.refreshSession(sessionToken, location, userAgent);
 					lastLocation = usersMid.updateUserLocation(outUser.get_id(), appId, location, Metadata.getNewMetadata(location));
 					if(lastLocation==null)
-						lastLocation = outUser.getLastLocation();
+						lastLocation = outUser.getLocation();
 					refreshCode = true;
 					if (validation && refreshCode) {
 						outUser.set_id(outUser.get_id());
@@ -193,7 +193,7 @@ public class AccountResource {
 						outUser.setUserFile(outUser.getUserFile());
 						outUser.setBaseLocation(outUser.getBaseLocation());
 						outUser.setBaseLocationOption(outUser.getBaseLocationOption());
-						outUser.setLastLocation(lastLocation);
+						outUser.setLocation(lastLocation);
 						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
 						Date endDate = Utils.getDate();
@@ -216,7 +216,7 @@ public class AccountResource {
 						outUser.setUserFile(outUser.getUserFile());
 						outUser.setBaseLocation(outUser.getBaseLocation());
 						outUser.setBaseLocationOption(outUser.getBaseLocationOption());
-						outUser.setLastLocation(lastLocation);
+						outUser.setLocation(lastLocation);
 						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
 						Date endDate = Utils.getDate();
@@ -252,7 +252,7 @@ public class AccountResource {
 				return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 			if (location != null) {
 				String lastLocation = usersMid.updateUserLocation(userId, appId, location, Metadata.getNewMetadata(location));
-				user.setLastLocation(lastLocation);
+				user.setLocation(lastLocation);
 				Metadata meta = (Metadata)res.getMetadata();
 				meta.setLocation(lastLocation);
 				sessionMid.refreshSession(sessionToken, location, userAgent);					

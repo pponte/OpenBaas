@@ -179,8 +179,8 @@ public class IntegrationResource {
 						lastLocation = location;
 					usersMid.updateUserLocation(userId, appId, lastLocation, Metadata.getNewMetadata(lastLocation));
 				}else
-					lastLocation = user.getLastLocation();
-				outUser.setLastLocation(lastLocation);
+					lastLocation = user.getLocation();
+				outUser.setLocation(lastLocation);
 				outUser.set_id(userId);
 				outUser.setReturnToken(sessionToken);
 				outUser.setEmail(email);

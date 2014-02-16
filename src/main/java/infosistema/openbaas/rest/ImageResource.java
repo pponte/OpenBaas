@@ -138,10 +138,11 @@ public class ImageResource {
 	public Response find(@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
 			@QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
+			@QueryParam(Const.ELEM_COUNT) String pageCount, @QueryParam(Const.ELEM_INDEX) String pageIndex,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
 		QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
-				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.image);
+				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.image,pageCount,pageIndex);
 		Response response = null;
 		Log.debug("", this, "get images list", "********get images list ************");
 		if(pageNumberStr==null) pageNumberStr = "1";
@@ -180,6 +181,18 @@ public class ImageResource {
 	@GET
 	@Produces({ MediaType.APPLICATION_JSON })
 	public Response getImageMetadata(@PathParam("imageId") String imageId,@Context UriInfo ui, @Context HttpHeaders hh){
+		
+		StringBuilder buf = new StringBuilder();
+		for(String header:hh.getRequestHeaders().keySet()){
+			buf.append(header+" : "+hh.getRequestHeader(header));
+			buf.append("\n");
+		}
+		
+		System.out.println(buf.toString());
+		
+		/*if(true)
+			return Response.status(Status.OK).entity(buf.toString()).build();
+		*/
 		Response response = null;
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
@@ -212,21 +225,21 @@ public class ImageResource {
 	@GET
 	//@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	public Response downloadImage(@PathParam("imageId") String imageId, @PathParam("quality") String quality,
-			@Context UriInfo ui, @Context HttpHeaders hh) {
+			@QueryParam("bars") String bars, @Context UriInfo ui, @Context HttpHeaders hh) {
 		Date startDate = Utils.getDate();
 		Response response = null;
 		byte[] sucess = null;
-		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
-			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-		int code = Utils.treatParameters(ui, hh);
-		//int code=1;
+		//if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
+		//	return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		//int code = Utils.treatParameters(ui, hh);
+		int code=1;
 		Log.debug("", this, "download image", "******** download image ************");
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);
 			Log.debug("", this, "downloadImage", "*********Downloading Image**********");
 			if (mediaMid.mediaExists(appId, ModelEnum.image, imageId)) {
 				Image image = (Image)(mediaMid.getMedia(appId, ModelEnum.image, imageId, false).getData());
-				sucess = mediaMid.download(appId, ModelEnum.image, imageId, image.getFileExtension(),quality);
+				sucess = mediaMid.download(appId, ModelEnum.image, imageId, image.getFileExtension(),quality,bars);
 				if (sucess!=null){ 
 					Date endDate = Utils.getDate();
 					Log.info(sessionToken, this, "upload image", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));

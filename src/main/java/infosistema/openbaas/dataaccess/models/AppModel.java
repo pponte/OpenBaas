@@ -75,16 +75,17 @@ public class AppModel {
 		return null;
 	}
 	
-	public JSONObject createAppResolutions(JSONObject imageRes, String appId, ModelEnum type) {
+	public JSONObject createAppResolutions(JSONObject res, String appId, ModelEnum type) {
 		Jedis jedis = pool.getResource();
 		try {
-			Iterator<?> keys = imageRes.keys();
+			jedis.del("apps:" + appId + ":"+type.toString());
+			Iterator<?> keys = res.keys();
 			while(keys.hasNext()){
 				String key = (String)keys.next();
-				String value = imageRes.getString(key);
+				String value = res.getString(key);
 				jedis.hset("apps:" + appId + ":"+type.toString(), key, value);
 			}
-			return imageRes;
+			return res;
 		} catch (Exception e) {
 			Log.error("", this, "createAppImageResolutions", "Error.", e); 
 		} finally {
@@ -136,31 +137,21 @@ public class AppModel {
 	
 	// *** GET *** //
 
-	public String getFileQuality(String appId, ModelEnum type, String qualityKey) {
-		Jedis jedis = pool.getResource();
-		String res = Application.ORIGINAL;
-		try {
-			if (jedis.exists("apps:" + appId + ":"+type.toString())) {
-				res = jedis.hget("apps:" + appId + ":"+type.toString(),qualityKey);
+	public String getFileQuality(String appId, ModelEnum type, String key) {
+		String res=null;
+		if(key!=null){
+			Jedis jedis = pool.getResource();
+			try {
+				if (jedis.exists("apps:" + appId + ":"+type.toString())) {
+					res = jedis.hget("apps:" + appId + ":"+type.toString(),key);
+				}
+			} finally {
+				pool.returnResource(jedis);
 			}
-		} finally {
-			pool.returnResource(jedis);
 		}
 		return res;
 	}
-	/*
-	public Map<String,String> getAppResolutions(String appId, ModelEnum type) {
-		Jedis jedis = pool.getResource();
-		Map<String, String> fieldsRes = null;
-		try {
-			if (jedis.exists("apps:" + appId)) {
-				fieldsRes = jedis.hgetAll("apps:" + appId + ":"+type);
-			}
-		} finally {
-			pool.returnResource(jedis);
-		}
-		return fieldsRes;
-	}*/
+	
 	/**
 	 * Returns the fields of the corresponding application
 	 */
@@ -171,12 +162,14 @@ public class AppModel {
 		Map<String, String> imageRes = null;
 		Map<String, String> videoRes = null;
 		Map<String, String> audioRes = null;
+		Map<String, String> barsColors = null;
 		try {
 			if (jedis.exists("apps:" + appId)) {
 				fields = jedis.hgetAll("apps:" + appId);
 				imageRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.image);
 				videoRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.video);
 				audioRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.audio);
+				barsColors = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.bars);
 			}
 			if (fields != null) {
 				res.setCreationDate(fields.get(Application.CREATION_DATE));
@@ -198,6 +191,9 @@ public class AppModel {
 			}
 			if(audioRes!=null){
 				res.setAudioResolutions(audioRes);
+			}
+			if(barsColors!=null){
+				res.setBarsColors(barsColors);
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -312,4 +308,6 @@ public class AppModel {
 			pool.returnResource(jedis);
 		}
 	}
+
+	
 }

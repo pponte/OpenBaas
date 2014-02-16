@@ -38,11 +38,17 @@ public class ListResult {
 		this.totalElems = totalElems;
 		this.totalnumberpages =totalnumberpages;
 	}
-	
+	/*
 	public ListResult(List<DBObject> obj, Integer pageNumber) {
 		super();
 		this.obj = obj;
 		this.pageNumber = pageNumber;
+	}*/
+	
+	public ListResult(List<DBObject> obj, Integer totalElems) {
+		super();
+		this.obj = obj;
+		this.totalElems = totalElems;
 	}
 	
 	public ListResult(List<DBObject> obj, Integer pageNumber,Integer totalnumberpages) {

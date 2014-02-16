@@ -179,9 +179,10 @@ public class AppDataResource {
 	public Response find(@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
 			@QueryParam("hide") JSONArray arrayHide, @QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
+			@QueryParam(Const.ELEM_COUNT) String pageCount, @QueryParam(Const.ELEM_INDEX) String pageIndex,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
-		return findDocument(null, ui, hh, arrayShow, arrayHide, query, radiusStr, latitudeStr, longitudeStr, pageNumberStr, pageSizeStr, orderByStr, orderTypeStr);
+		return findDocument(null, ui, hh, arrayShow, arrayHide, query, radiusStr, latitudeStr, longitudeStr,pageCount,pageIndex, pageNumberStr, pageSizeStr, orderByStr, orderTypeStr);
 	}
 	
 	/**
@@ -197,6 +198,7 @@ public class AppDataResource {
 			@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
 			@QueryParam("hide") JSONArray arrayHide, @QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
+			@QueryParam(Const.ELEM_COUNT) String pageCount, @QueryParam(Const.ELEM_INDEX) String pageIndex,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
 		Date startDate = Utils.getDate();
@@ -210,7 +212,7 @@ public class AppDataResource {
 			if ((latitudeStr != null && longitudeStr != null && radiusStr != null) || query != null) {
 				String url = docMid.getDocumentPath(null, path);
 				QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
-						pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, url, ModelEnum.data);
+						pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, url, ModelEnum.data, pageCount, pageIndex);
 				try {
 					ListResult res = docMid.find(qp,arrayShow);
 					response = Response.status(Status.OK).entity(res).build();

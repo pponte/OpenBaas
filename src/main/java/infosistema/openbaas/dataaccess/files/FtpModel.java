@@ -46,7 +46,7 @@ public class FtpModel implements FileInterface {
 	// *** DOWNLOAD *** //
 	
 	@Override
-	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality) throws IOException {
+	public byte[] download(String appId, ModelEnum type, String id, String extension, String quality, String bars) throws IOException {
 		//TODO
 		return null;
 	}

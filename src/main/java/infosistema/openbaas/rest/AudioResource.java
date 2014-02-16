@@ -144,10 +144,11 @@ public class AudioResource {
 	public Response find(@Context UriInfo ui, @Context HttpHeaders hh, @QueryParam("show") JSONArray arrayShow,
 			@QueryParam("query") JSONObject query, @QueryParam(Const.RADIUS) String radiusStr,
 			@QueryParam(Const.LAT) String latitudeStr, @QueryParam(Const.LONG) String longitudeStr,
+			@QueryParam(Const.ELEM_COUNT) String pageCount, @QueryParam(Const.ELEM_INDEX) String pageIndex,
 			@QueryParam(Const.PAGE_NUMBER) String pageNumberStr, @QueryParam(Const.PAGE_SIZE) String pageSizeStr, 
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_BY) String orderTypeStr) {
 		QueryParameters qp = QueryParameters.getQueryParameters(appId, null, query, radiusStr, latitudeStr, longitudeStr, 
-				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.audio);
+				pageNumberStr, pageSizeStr, orderByStr, orderTypeStr, ModelEnum.audio,pageCount,pageIndex);
 		Response response = null;
 		String sessionToken = Utils.getSessionToken(hh);
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -226,7 +227,7 @@ public class AudioResource {
 			Log.debug("", this, "downloadAudio", "*********Downloading Audio**********");
 			if (this.mediaMid.mediaExists(appId, ModelEnum.audio, audioId)) {
 				Audio audio = (Audio)(mediaMid.getMedia(appId, ModelEnum.audio, audioId, false).getData());
-				sucess = mediaMid.download(appId, ModelEnum.audio, audioId,audio.getFileExtension(),quality);
+				sucess = mediaMid.download(appId, ModelEnum.audio, audioId,audio.getFileExtension(),quality,null);
 				if (sucess!=null)
 					return Response.ok(sucess, MediaType.APPLICATION_OCTET_STREAM)
 							.header("content-disposition","attachment; filename = "+audio.getFileName()+"."+audio.getFileExtension()).build();

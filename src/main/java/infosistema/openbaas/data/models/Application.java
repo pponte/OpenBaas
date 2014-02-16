@@ -13,6 +13,7 @@ public class Application {
 	public final static String ALIVE = "alive";
 	public final static String APP_NAME = "appName";
 	public final static String IMAGE_RES = "imageRes";
+	public final static String IMAGE_BARS = "imageBars";
 	public final static String VIDEO_RES = "videoRes";
 	public final static String AUDIO_RES = "audioRes";
 	public final static String CONFIRM_USERS_EMAIL = "confirmUsersEmail";
@@ -39,6 +40,7 @@ public class Application {
 	private Map<String,String> imageResolutions;
 	private Map<String,String> videoResolutions;
 	private Map<String,String> audioResolutions;
+	private Map<String,String> barsColors;
 	
 
 
@@ -156,5 +158,13 @@ public class Application {
 
 	public void setImageResolutions(Map<String,String> imageResolutions) {
 		this.imageResolutions = imageResolutions;
+	}
+
+	public Map<String,String> getBarsColors() {
+		return barsColors;
+	}
+
+	public void setBarsColors(Map<String,String> barsColors) {
+		this.barsColors = barsColors;
 	}
 }
