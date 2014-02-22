@@ -10,13 +10,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-
-/**
- * Contains all the user information and possible actions.
- * 
- * @author Miguel Aniceto
- * 
- */
 @XmlRootElement
 public class User {
 	

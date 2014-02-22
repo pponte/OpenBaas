@@ -114,15 +114,16 @@ public abstract class MiddleLayerAbstract {
 	
 	private ListResult paginate2(List<DBObject> lst, Integer index, Integer count) {
 		List<DBObject> listRes = null;
-		if (index-1 > lst.size()) 
+		if (index > lst.size()-1) 
 			 listRes = new ArrayList<DBObject>();
 		else{
-			if((index+count-1)>lst.size())
+			if((index+count)>lst.size())
 				try { listRes = lst.subList(index, lst.size());} catch (Exception e) {}
 			else
 				try { listRes = lst.subList(index, index+count);} catch (Exception e) {}
 		}
 		ListResult listResultRes = new ListResult(listRes, lst.size());
+		listResultRes.setTotalnumberpages(999999999);
 		return listResultRes;
 	}
 	

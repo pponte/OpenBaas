@@ -2,13 +2,18 @@ package infosistema.openbaas.utils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
 
 import infosistema.openbaas.dataaccess.models.SessionModel;
 
@@ -114,4 +119,31 @@ public class Utils {
 		str.append(" - Max: " + String.valueOf(runtime.maxMemory() / mb));
 		Log.info("", null, "Memory - ",str.toString());
 	}
+	
+	public static String getStringByJSONArray(JSONArray array, String separator) {
+		String res = "";
+		try {
+			String aux="";
+			for (int i = 0; i < array.length(); i++) {
+				aux += (String)array.getString(i)+separator;
+			}
+			res = aux.substring(0,aux.length()-1);
+		} catch (JSONException e) {
+			Log.error("", "", "getNameByArray", "Error parsing the JSON.", e); 
+		}
+		return res;
+	}
+	
+	public static List<String> getListByString(String list, String separator) {
+		List<String> res = null;
+		try {
+			String[] aux = list.split(separator);
+			if(list!=null)
+				res = Arrays.asList(aux);
+		} catch (Exception e) {
+			Log.error("", "", "getStringByJSONArray", "Error occored.", e); 
+		}
+		return res;
+	}
+	
 }

@@ -229,10 +229,10 @@ public class ImageResource {
 		Date startDate = Utils.getDate();
 		Response response = null;
 		byte[] sucess = null;
-		//if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
-		//	return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-		//int code = Utils.treatParameters(ui, hh);
-		int code=1;
+		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
+			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		int code = Utils.treatParameters(ui, hh);
+		//int code=1;
 		Log.debug("", this, "download image", "******** download image ************");
 		if (code == 1) {
 			String sessionToken = Utils.getSessionToken(hh);

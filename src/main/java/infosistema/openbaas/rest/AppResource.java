@@ -537,4 +537,13 @@ public class AppResource {
 		}
 	}
 
+	@Path("{appId}/chat")
+	public ChatResource chat(@PathParam(Const.APP_ID) String appId) {
+		try {
+			return new ChatResource(appId);
+		} catch (IllegalArgumentException e) {
+			Log.error("", this, "storage", "Illegal Arguments.", e); 
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Parse error").build());
+		}
+	}
 }

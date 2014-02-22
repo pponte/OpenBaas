@@ -103,10 +103,11 @@ public class FileSystemModel implements FileInterface {
 		String filePath = null;
 		if(quality.equals("") || quality==null) quality=ORIGINAL;
 		String filePathOriginal = getFilePath(getDirPath(appId, type), id, extension);
-		if(type.equals(ModelEnum.image)) extension = Image.EXTENSION;
+		
 		if(quality.equals(ORIGINAL)){
 			filePath = getFilePath(getDirPath(appId, type), id, extension);
 		}else{
+			if(type.equals(ModelEnum.image)) extension = Image.EXTENSION;
 			filePath = getFilePathWithQuality(getDirPath(appId, type), id, quality, extension,bars);
 		}
 		File file = new File(filePath);
@@ -116,26 +117,24 @@ public class FileSystemModel implements FileInterface {
 				byteArrayRes = IOUtils.toByteArray(in);
 				in.close();
 			}else{
-				String qualityRes = appModel.getFileQuality(appId, type, quality).toUpperCase();
-				if(qualityRes==null) return null;
+				String qualityRes = appModel.getFileQuality(appId, type, quality);
 				File fileAux = new File(filePathOriginal);
 				byte[] byteArray = null;
 				InputStream in = new FileInputStream(filePathOriginal);
 				FileOutputStream fos = new FileOutputStream(filePath);
 				byteArray = IOUtils.toByteArray(in);
+				if(qualityRes!=null) qualityRes.toUpperCase();
 				byteArrayRes= resizeFile(appId,byteArray, qualityRes, type, fileAux, extension,filePath,bars);
 				fos.write(byteArrayRes);
 				fos.close();
 				in.close();
-				
-				//file.delete();
 			}
 		} catch (FileNotFoundException e) {
 			Log.error("", this, "download", "File not found.", e); 
 			return null;
 		} catch (Exception e) {
 			Log.error("", this, "download", "An error ocorred.", e);
-			file.delete();
+			//file.delete();
 			return null;
 		}
 		return byteArrayRes;

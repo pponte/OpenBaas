@@ -46,10 +46,10 @@ public class Const {
 	private static String REDIS_GEO_SERVER = "localhost";
 	private static Integer REDIS_GEO_PORT = 6381;
 
-	private static String REDIS_METADATA_USER = "openbaas";
-	private static String REDIS_METADATA_PASS = "redisdbpwd";
-	private static Integer REDIS_METADATA_PORT = 6383;
-	private static String REDIS_METADATA_SERVER = "localhost";
+	private static String REDIS_CHAT_USER = "openbaas";
+	private static String REDIS_CHAT_PASS = "redisdbpwd";
+	private static Integer REDIS_CHAT_PORT = 6383;
+	private static String REDIS_CHAT_SERVER = "localhost";
 
 	
 	private static String MONGO_SERVER = "localhost";
@@ -137,11 +137,11 @@ public class Const {
 				REDIS_GEO_PORT = Integer.parseInt(props.getProperty("REDIS_GEO_PORT"));
 			} catch (Exception e) {}
 
-			stmp = props.getProperty("REDIS_METADATA_SERVER");
-			if (stmp != null) REDIS_METADATA_SERVER = stmp;
+			stmp = props.getProperty("REDIS_CHAT_SERVER");
+			if (stmp != null) REDIS_CHAT_SERVER = stmp;
 
 			try {
-				REDIS_METADATA_PORT = Integer.parseInt(props.getProperty("REDIS_METADATA_PORT"));
+				REDIS_CHAT_PORT = Integer.parseInt(props.getProperty("REDIS_CHAT_PORT"));
 			} catch (Exception e) {}
 
 			stmp = props.getProperty("REDIS_GENERAL_USER");
@@ -162,11 +162,11 @@ public class Const {
 			stmp = props.getProperty("REDIS_SESSIONS_PASS");
 			if (stmp != null) REDIS_SESSION_PASS = stmp;
 			
-			stmp = props.getProperty("REDIS_METADATA_USER");
-			if (stmp != null) REDIS_METADATA_USER = stmp;
+			stmp = props.getProperty("REDIS_CHAT_USER");
+			if (stmp != null) REDIS_CHAT_USER = stmp;
 			
-			stmp = props.getProperty("REDIS_METADATA_PASS");
-			if (stmp != null) REDIS_METADATA_PASS = stmp;
+			stmp = props.getProperty("REDIS_CHAT_PASS");
+			if (stmp != null) REDIS_CHAT_PASS = stmp;
 			
 			stmp = props.getProperty("MONGO_SERVER");
 			if (stmp != null) MONGO_SERVER = stmp;
@@ -302,12 +302,12 @@ public class Const {
 		return REDIS_GEO_PORT;
 	}
 
-	public static String getRedisMetadataServer() {
-		return REDIS_METADATA_SERVER;
+	public static String getRedisChatServer() {
+		return REDIS_CHAT_SERVER;
 	}
 
-	public static Integer getRedisMetadataPort() {
-		return REDIS_METADATA_PORT;
+	public static Integer getRedisChatPort() {
+		return REDIS_CHAT_PORT;
 	}
 
 
@@ -331,12 +331,12 @@ public class Const {
 		return MONGO_PASS;
 	}
 	
-	public static String getRedisMetadataUser() {
-		return REDIS_METADATA_USER;
+	public static String getRedisChatUser() {
+		return REDIS_CHAT_USER;
 	}
 	
-	public static String getRedisMetadataPass() {
-		return REDIS_METADATA_PASS;
+	public static String getRedisChatPass() {
+		return REDIS_CHAT_PASS;
 	}
 	
 	public static String getRedisSessionUser() {
