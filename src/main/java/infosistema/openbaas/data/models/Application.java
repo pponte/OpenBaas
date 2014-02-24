@@ -1,5 +1,6 @@
 package infosistema.openbaas.data.models;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -9,6 +10,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Application {
 
+	public final static String APNS_CERTIFICATION_PATH = "APNSCertificationPath";
+	public final static String APNS_PASSWORD = "APNSPassword";
+	public final static String APNS_CLIENT_ID = "APNSClientId";
 	public final static String CREATION_DATE = "creationdate";
 	public final static String ALIVE = "alive";
 	public final static String APP_NAME = "appName";
@@ -16,6 +20,7 @@ public class Application {
 	public final static String IMAGE_BARS = "imageBars";
 	public final static String VIDEO_RES = "videoRes";
 	public final static String AUDIO_RES = "audioRes";
+	public final static String CLIENTS_LIST = "clientsList";
 	public final static String CONFIRM_USERS_EMAIL = "confirmUsersEmail";
 	public final static String UPDATE_DATE = "updateDate";
 	public final static String APP_KEY = "appKey";
@@ -41,6 +46,7 @@ public class Application {
 	private Map<String,String> videoResolutions;
 	private Map<String,String> audioResolutions;
 	private Map<String,String> barsColors;
+	private List<String> clients;
 	
 
 
@@ -166,5 +172,13 @@ public class Application {
 
 	public void setBarsColors(Map<String,String> barsColors) {
 		this.barsColors = barsColors;
+	}
+
+	public List<String> getClients() {
+		return clients;
+	}
+
+	public void setClients(List<String> clients) {
+		this.clients = clients;
 	}
 }

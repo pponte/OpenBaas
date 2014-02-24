@@ -102,12 +102,14 @@ public class AppResource {
 			JSONObject videoRes = null;
 			JSONObject audioRes = null;
 			JSONObject imageBars = null;
+			List<String> clientsList = null;
 			try {
 				appName = (String) inputJsonObj.get(Application.APP_NAME);
 				imageRes = (JSONObject) inputJsonObj.get(Application.IMAGE_RES);
 				videoRes = (JSONObject) inputJsonObj.get(Application.AUDIO_RES);
 				audioRes = (JSONObject) inputJsonObj.get(Application.VIDEO_RES);
 				imageBars = (JSONObject) inputJsonObj.get(Application.IMAGE_BARS);
+				clientsList = Utils.getListByJsonArray((JSONArray) inputJsonObj.opt(Application.CLIENTS_LIST));
 				confirmUsersEmail = (boolean) inputJsonObj.optBoolean(Application.CONFIRM_USERS_EMAIL, false);
 				AWS = (boolean) inputJsonObj.optBoolean(FileMode.aws.toString(), false);
 				FTP = (boolean) inputJsonObj.optBoolean(FileMode.ftp.toString(), false);
@@ -126,7 +128,7 @@ public class AppResource {
 				appId = Utils.getRandomString(Const.getIdLength());
 				appKey = Utils.getRandomString(Const.getIdLength());
 				temp = appsMid.createApp(appId, appKey, appName, confirmUsersEmail, AWS, FTP, FileSystem,
-						imageRes,imageBars,videoRes,audioRes);
+						imageRes,imageBars,videoRes,audioRes, clientsList);
 			}
 			if (temp != null) {
 				String sessionToken = Utils.getSessionToken(hh);
@@ -256,6 +258,7 @@ public class AppResource {
 			JSONObject imageBars = null;
 			JSONObject videoRes = null;
 			JSONObject audioRes = null;
+			List<String> clientsList = null;
 			Boolean newAWS;
 			Boolean newFTP;
 			Boolean newFileSystem;
@@ -270,6 +273,7 @@ public class AppResource {
 			imageBars = (JSONObject) inputJsonObj.opt(Application.IMAGE_BARS);
 			videoRes = (JSONObject) inputJsonObj.opt(Application.VIDEO_RES);
 			audioRes = (JSONObject) inputJsonObj.opt(Application.AUDIO_RES);
+			clientsList = Utils.getListByJsonArray((JSONArray) inputJsonObj.opt(Application.CLIENTS_LIST));
 			Application app = this.appsMid.getApp(appId);
 			
 			Set<String> imagesRes = app.getImageResolutions().keySet();
@@ -307,9 +311,9 @@ public class AppResource {
 					}
 					this.appsMid.updateFilesRes(imageRes,imageBars,videoRes,audioRes,appId,
 							oldImageRes,oldVideoRes,oldAudioRes);
-				}
+				}				
 				String sessionToken = Utils.getSessionToken(hh);
-				temp = this.appsMid.updateAllAppFields(appId, newAlive, newAppName,newConfirmUsersEmail,newAWS,newFTP,newFileSystem);
+				temp = this.appsMid.updateAllAppFields(appId, newAlive, newAppName,newConfirmUsersEmail,newAWS,newFTP,newFileSystem, clientsList);
 				Result res = new Result(temp, null);
 				response = Response.status(Status.OK).entity(res).build();
 				Date endDate = Utils.getDate();
@@ -537,10 +541,20 @@ public class AppResource {
 		}
 	}
 
-	@Path("{appId}/chat")
+	@Path("{appId}/chatroom")
 	public ChatResource chat(@PathParam(Const.APP_ID) String appId) {
 		try {
 			return new ChatResource(appId);
+		} catch (IllegalArgumentException e) {
+			Log.error("", this, "storage", "Illegal Arguments.", e); 
+			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Parse error").build());
+		}
+	}
+	
+	@Path("{appId}/settings")
+	public SettingsResource settings(@PathParam(Const.APP_ID) String appId) {
+		try {
+			return new SettingsResource(appId);
 		} catch (IllegalArgumentException e) {
 			Log.error("", this, "storage", "Illegal Arguments.", e); 
 			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("Parse error").build());

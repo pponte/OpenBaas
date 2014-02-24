@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ public class AppModel {
 	// request types
 	private JedisPool pool;// = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
 	//private Jedis jedis;
+	private static final int MAXELEMS = 9999999;
 	
 	public AppModel() {
 		pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
@@ -51,7 +53,7 @@ public class AppModel {
 	 * @throws UnsupportedEncodingException 
 	 */
 	public Application createApp(String appId, String appKey, byte[] hash, byte[] salt, String appName, String creationDate, 
-			Boolean confirmUsersEmail, Boolean AWS, Boolean FTP, Boolean FileSystem) throws UnsupportedEncodingException {
+			Boolean confirmUsersEmail, Boolean AWS, Boolean FTP, Boolean FileSystem, List<String> clientsList) throws UnsupportedEncodingException {
 		Jedis jedis = pool.getResource();
 		try {
 			if (!jedis.exists("apps:" + appId)) {
@@ -66,6 +68,12 @@ public class AppModel {
 				jedis.hset("apps:" + appId, FileMode.aws.toString(), "" + AWS);
 				jedis.hset("apps:" + appId, FileMode.ftp.toString(), "" + FTP);
 				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), "" + FileSystem);
+				if (clientsList != null && clientsList.size()>0){
+					Iterator<String> it = clientsList.iterator();
+					while(it.hasNext()){
+						jedis.lpush("apps_" + appId + "ClientsList_",it.next());
+					}
+				}
 				return getApplication(appId);
 			}
 		} catch (Exception e) {
@@ -97,7 +105,7 @@ public class AppModel {
 	// *** UPDATE *** //
 	
 	public Application updateAppFields(String appId, String alive, String newAppName, Boolean confirmUsersEmail,
-			Boolean aws, Boolean ftp, Boolean fileSystem) {
+			Boolean aws, Boolean ftp, Boolean fileSystem,List<String> clientsList) {
 		Jedis jedis = pool.getResource();
 		try {
 			if (newAppName != null)
@@ -120,6 +128,13 @@ public class AppModel {
 				jedis.hset("apps:" + appId, FileMode.ftp.toString(), ""+ftp);
 			if (fileSystem != null)
 				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), ""+fileSystem);
+			if (clientsList != null && clientsList.size()>0){
+				jedis.del("apps_" + appId + "ClientsList_");
+				Iterator<String> it = clientsList.iterator();
+				while(it.hasNext()){
+					jedis.lpush("apps_" + appId + "ClientsList_",it.next());
+				}
+			}
 		} finally {
 			pool.returnResource(jedis);
 		}
@@ -163,6 +178,7 @@ public class AppModel {
 		Map<String, String> videoRes = null;
 		Map<String, String> audioRes = null;
 		Map<String, String> barsColors = null;
+		List<String> clients = null;
 		try {
 			if (jedis.exists("apps:" + appId)) {
 				fields = jedis.hgetAll("apps:" + appId);
@@ -170,6 +186,7 @@ public class AppModel {
 				videoRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.video);
 				audioRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.audio);
 				barsColors = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.bars);
+				clients = jedis.lrange("apps_" + appId + "ClientsList_", 0, MAXELEMS);
 			}
 			if (fields != null) {
 				res.setCreationDate(fields.get(Application.CREATION_DATE));
@@ -194,6 +211,9 @@ public class AppModel {
 			}
 			if(barsColors!=null){
 				res.setBarsColors(barsColors);
+			}
+			if(clients!=null && clients.size()>0){
+				res.setClients(clients);
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -309,5 +329,6 @@ public class AppModel {
 		}
 	}
 
+	
 	
 }

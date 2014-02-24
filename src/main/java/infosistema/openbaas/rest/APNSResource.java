@@ -1,13 +1,13 @@
 package infosistema.openbaas.rest;
 
 import infosistema.openbaas.data.Error;
-import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
 import infosistema.openbaas.data.enums.ModelEnum;
-import infosistema.openbaas.data.models.ChatMessage;
-import infosistema.openbaas.data.models.ChatRoom;
+import infosistema.openbaas.data.models.Application;
+import infosistema.openbaas.data.models.Certificate;
 import infosistema.openbaas.data.models.Media;
-import infosistema.openbaas.middleLayer.ChatMiddleLayer;
+import infosistema.openbaas.data.models.Storage;
+import infosistema.openbaas.middleLayer.AppsMiddleLayer;
 import infosistema.openbaas.middleLayer.MediaMiddleLayer;
 import infosistema.openbaas.middleLayer.SessionMiddleLayer;
 import infosistema.openbaas.utils.Const;
@@ -15,18 +15,10 @@ import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
 
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -35,28 +27,64 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 
-public class ChatResource {
+public class APNSResource {
 	
 	private String appId;
+	private AppsMiddleLayer appMid;
 	private SessionMiddleLayer sessionMid;
 	private MediaMiddleLayer mediaMid;
-	private ChatMiddleLayer chatMid;
 
-	public ChatResource(String appId) {
+	public APNSResource(String appId) {
 		this.appId = appId;
+		this.appMid = AppsMiddleLayer.getInstance();
 		this.sessionMid = SessionMiddleLayer.getInstance();
-		this.mediaMid = MediaMiddleLayer.getInstance();
-		this.chatMid = ChatMiddleLayer.getInstance();
 	}
-
+	
+	@POST
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response createCertificate(@Context UriInfo ui, @Context HttpHeaders hh,
+			@FormDataParam(Application.APNS_PASSWORD) String APNSPassword,
+			@FormDataParam(Application.APNS_CLIENT_ID) String clientId,
+			@FormDataParam(Const.FILE) InputStream fileInputStream, 
+			@FormDataParam(Const.FILE) FormDataContentDisposition fileDetail) {
+		Response response = null;
+		Date startDate = Utils.getDate();
+		String certificatePath;
+		String sessionToken = Utils.getSessionToken(hh);
+		Log.debug("", this, "createCertificate", "********createCertificate ************");
+		if (!sessionMid.checkAppForToken(sessionToken, appId))
+			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+		int code = Utils.treatParametersAdmin(ui, hh);
+		if (code == 1) {
+			try {
+				Result res = mediaMid.createMedia(fileInputStream, fileDetail, appId, userId, ModelEnum.storage, null, null);
+				Media media = (Storage) res.getData();
+				certificatePath = media.getLocation();
+				Certificate certificate = appMid.createCertificate(appId, certificatePath,APNSPassword,clientId);
+				response = Response.status(Status.OK).entity(certificate).build();				
+			} catch (Exception e) {
+				Log.error("", this, "createCertificate", "Error creating certificate.", e); 
+				return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
+			}
+		} else if(code == -2) {
+			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
+		} else if(code == -1){
+			response = Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
+		}
+		Date endDate = Utils.getDate();
+		Log.info(sessionToken, this, "createCertificate", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+		return response;
+	}
+	
+	
+/*
 	@POST
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
@@ -86,8 +114,8 @@ public class ChatResource {
 				if(roomName==null){
 					roomName = Utils.getStringByJSONArray(participants,";");
 				}
-				ChatRoom chatRoom = chatMid.createChatRoom(appId,roomName,userId,flagNotification,participants);
-				response = Response.status(Status.OK).entity(chatRoom).build();				
+				String chatRoomId = chatMid.createChatRoom(appId,roomName,userId,flagNotification,participants);
+				response = Response.status(Status.OK).entity(chatRoomId).build();				
 			} catch (Exception e) {
 				Log.error("", this, "createChatRoom", "Error creating chat.", e); 
 				return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
@@ -178,7 +206,7 @@ public class ChatResource {
 		String videoText;
 		ModelEnum flag = null;
 		String sessionToken = Utils.getSessionToken(hh);
-		Log.debug("", this, "sendMessage Chat", "********sendMessage Chat************");
+		Log.debug("", this, "createChatRoom", "********createChatRoom ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
@@ -300,5 +328,5 @@ public class ChatResource {
 		Log.info(sessionToken, this, "getMessages", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		return response;
 	}
-	
+	*/
 }

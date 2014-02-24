@@ -6,8 +6,12 @@ public class Const {
 
 	//CONSTANTS
 	
-	public static final String SESSION_TOKEN = "sessionToken";	
+	public static final String SESSION_TOKEN = "sessionToken";
+	public static final String MESSAGE = "message";
 	public static final String FILE = "file";	
+	public static final String AUDIO = "audio";
+	public static final String VIDEO = "video";
+	public static final String IMAGE = "image";
 	public static final String LOCATION = "location";	
 	public static final String LAT = "lat";	
 	public static final String LONG = "long";	
@@ -58,6 +62,7 @@ public class Const {
 	private static String MONGO_USER = null;
 	private static String MONGO_PASS = null;
 	
+	private static Boolean APNS_PROD = false;
 	
 	
 	
@@ -174,6 +179,12 @@ public class Const {
 			try {
 				MONGO_PORT = Integer.parseInt(props.getProperty("MONGO_PORT"));
 			} catch (Exception e) {}
+			
+			try {
+				setAPNS_PROD(Boolean.parseBoolean(props.getProperty("APNS_PROD")));
+			} catch (Exception e) {}
+			
+			
 
 			stmp = props.getProperty("MONGO_DB");
 			if (stmp != null) MONGO_DB = stmp;
@@ -472,6 +483,14 @@ public class Const {
 
 	public static void setADMIN_TOKEN(String aDMIN_TOKEN) {
 		ADMIN_TOKEN = aDMIN_TOKEN;
+	}
+
+	public static Boolean getAPNS_PROD() {
+		return APNS_PROD;
+	}
+
+	public static void setAPNS_PROD(Boolean aPNS_PROD) {
+		APNS_PROD = aPNS_PROD;
 	}
 
 }

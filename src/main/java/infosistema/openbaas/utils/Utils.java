@@ -2,6 +2,7 @@ package infosistema.openbaas.utils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -144,6 +145,19 @@ public class Utils {
 			Log.error("", "", "getStringByJSONArray", "Error occored.", e); 
 		}
 		return res;
-	}
+	}	
 	
+	public static List<String> getListByJsonArray(JSONArray jsonArray) {
+		List<String> res = new ArrayList<String>();
+		try {
+			if(jsonArray.length()>0){
+				for(int i=0; i<jsonArray.length(); i++){
+					res.add(jsonArray.getString(i));
+				}
+			}
+		} catch (Exception e) {
+			Log.error("", "", "getStringByJSONArray", "Error occored.", e); 
+		}
+		return res;
+	}	
 }

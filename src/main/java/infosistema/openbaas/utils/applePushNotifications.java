@@ -7,6 +7,7 @@ import javapns.Push;
 import javapns.communication.KeystoreManager;
 import javapns.communication.exceptions.CommunicationException;
 import javapns.communication.exceptions.KeystoreException;
+import javapns.devices.Device;
 import javapns.notification.AppleNotificationServer;
 import javapns.notification.AppleNotificationServerBasicImpl;
 import javapns.notification.Payload;
@@ -17,22 +18,21 @@ public class applePushNotifications {
 
 	
 	
-	public void pushSimpleTestNotification(String keystore, String password, Boolean production, String token) throws CommunicationException, KeystoreException {
+	public static void pushCombineNotification(String alertText, int badge, String keystore, String password, Boolean production, Object devices) throws CommunicationException, KeystoreException {
 		
-		verifyKeystore(keystore, password, production);
-		List<PushedNotification> notifications = Push.test(keystore, password, production, token);
+		
+		List<PushedNotification> notifications = Push.combined(alertText, badge, "default", keystore, password, production, devices);
 		printPushedNotifications(notifications);
+
 		/*
-		} else if (complex) {
-
-			// Push a more complex payload 
-			List<PushedNotification> notifications = Push.payload(createComplexPayload(), keystore, password, production, token);
-			printPushedNotifications(notifications);
-
-		} */
+		List<Device> a = Push.feedback(keystore, password, production);
+		// Push a more complex payload 
+		List<PushedNotification> notifications = Push.payload(createComplexPayload(), keystore, password, production, token);
+		printPushedNotifications(notifications);
+		*/
 	}
 	
-	private void verifyKeystore(Object keystoreReference, String password, boolean production) {
+	private static void verifyKeystore(Object keystoreReference, String password, boolean production) {
 		try {
 			System.out.print("Validating keystore reference: ");
 			KeystoreManager.validateKeystoreParameter(keystoreReference);

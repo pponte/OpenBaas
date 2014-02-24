@@ -8,11 +8,18 @@ public class ChatMessage {
 	private Date date;
 	private String sender;
 	private String messageText;
-	private String fileText;
+	private String fileId;
+	private String imageId;
+	private String audioId;
+	private String videoId;
 	
 	public final static String ORIENTATION = "orientation";
+	public final static String MSGSLIST = "msgsList";
 	public final static String MESSAGE_TEXT = "messageText";
-	public final static String FILE_TEXT = "fileText";
+	public final static String IMAGE_TEXT = "imageId";
+	public final static String AUDIO_TEXT = "audioId";
+	public final static String VIDEO_TEXT = "videoId";
+	public final static String FILE_TEXT = "fileId";
 	public final static String ROOM_ID = "roomId";
 	public final static String PARTICIPANTS = "participants";
 	public final static String DATE = "date";
@@ -26,15 +33,19 @@ public class ChatMessage {
 	}
 	
 	public ChatMessage(String _id, Date date, String sender,
-			String messageText,String fileText) {
+			String messageText, String fileId, String imageId, String audioId,
+			String videoId) {
 		super();
 		this._id = _id;
 		this.date = date;
 		this.sender = sender;
 		this.messageText = messageText;
-		this.fileText = fileText;
+		this.fileId = fileId;
+		this.imageId = imageId;
+		this.audioId = audioId;
+		this.videoId = videoId;
 	}
-	
+
 	public String get_id() {
 		return _id;
 	}
@@ -67,13 +78,79 @@ public class ChatMessage {
 		this.messageText = messageText;
 	}
 
-	public String getFileText() {
-		return fileText;
+
+
+
+
+
+	public String getFileId() {
+		return fileId;
 	}
 
-	public void setFileText(String fileText) {
-		this.fileText = fileText;
+
+
+
+
+
+	public void setFileId(String fileId) {
+		this.fileId = fileId;
 	}
+
+
+
+
+
+
+	public String getImageId() {
+		return imageId;
+	}
+
+
+
+
+
+
+	public void setImageId(String imageId) {
+		this.imageId = imageId;
+	}
+
+
+
+
+
+
+	public String getAudioId() {
+		return audioId;
+	}
+
+
+
+
+
+
+	public void setAudioId(String audioId) {
+		this.audioId = audioId;
+	}
+
+
+
+
+
+
+	public String getVideoId() {
+		return videoId;
+	}
+
+
+
+
+
+
+	public void setVideoId(String videoId) {
+		this.videoId = videoId;
+	}
+
+	
 	
 	
 }
