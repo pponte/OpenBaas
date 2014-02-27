@@ -23,7 +23,8 @@ public class NotificationsModel {
 	private static final String DEVICE = "Device";
 	private static final int MAXELEMS = 9999999;
 	private static final String DEVICEID = "deviceId";
-	private static final String DEVICETOKEN = "deviceToken";
+	public static final String DEVICETOKEN = "deviceToken";
+	public static final String CLIENTID = "clientId";
 	private static final String LASTREGISTER= "lastRegister";
 	
 	private JedisPool pool;

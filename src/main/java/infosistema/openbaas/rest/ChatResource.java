@@ -66,7 +66,7 @@ public class ChatResource {
 		String roomName;		
 		boolean flag=false;
 		JSONArray participants=null;
-		Boolean flagNotification=true;
+		Boolean flagNotification=false;
 		String sessionToken = Utils.getSessionToken(hh);
 		Log.debug("", this, "createChatRoom", "********createChatRoom ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
@@ -77,6 +77,7 @@ public class ChatResource {
 			try {
 				roomName = (String) inputJsonObj.opt(ChatRoom.ROOM_NAME);
 				participants = (JSONArray) inputJsonObj.get(ChatRoom.PARTICIPANTS);
+				flagNotification =  inputJsonObj.optBoolean(ChatRoom.FLAG_NOTIFICATION);
 				for(int i = 0; i<participants.length(); i++){
 					String userCurr = participants.getString(i);
 					if(userCurr.equals(userId))
@@ -216,7 +217,11 @@ public class ChatResource {
 					fileText = inputJsonObj.optString(ChatMessage.FILE_TEXT);
 					messageText = inputJsonObj.optString(ChatMessage.MESSAGE_TEXT);
 					ChatMessage msg = chatMid.sendMessage(appId,userId,chatRoomId,fileText,messageText,imageText, audioText, videoText);
-					response = Response.status(Status.OK).entity(msg).build();
+					if(msg!=null){
+						response = Response.status(Status.OK).entity(msg).build();
+					}else{
+						throw new Exception("Error sendMessage");
+					}
 				} catch (Exception e) {
 					Log.error("", this, "sendMessage", "Error sendMessage.", e); 
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error sendMessage").build();

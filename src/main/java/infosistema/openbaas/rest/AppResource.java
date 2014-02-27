@@ -296,7 +296,6 @@ public class AppResource {
 			if(!newAWS && !newFTP && !newFileSystem)
 				newFileSystem = true;
 			
-			
 			if (this.appsMid.appExists(appId)) {
 				if((imageRes!=null && imageRes.length()>0) || (videoRes!=null && videoRes.length()>0) 
 						|| (audioRes!=null && audioRes.length()>0) || (imageBars!=null && imageBars.length()>0)){

@@ -1,6 +1,7 @@
 package infosistema.openbaas.middleLayer;
 
 import infosistema.openbaas.data.enums.ModelEnum;
+import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.data.models.Certificate;
 import infosistema.openbaas.data.models.ChatMessage;
 import infosistema.openbaas.data.models.ChatRoom;
@@ -117,13 +118,17 @@ public class ChatMiddleLayer extends MiddleLayerAbstract{
 		ChatMessage res = null;
 		List<String> participants = new ArrayList<String>();
 		participants = chatModel.getListParticipants(appId, chatRoomId);
-		List<List<String>> devices2Alert= new ArrayList<List<String>>();
-		Certificate cert=null;
 		if(participants.size()>0 && participants!=null){
-			try {String clientId= "";
+			try {
 				Boolean flagNotification = chatModel.hasNotification(appId,chatRoomId);
-				if(flagNotification)
-					cert = noteModel.getCertificate(appId,clientId);
+				Application app = appModel.getApplication(appId);
+				List<String> clientsList = app.getClients();
+				List<Certificate> certList = new ArrayList<Certificate>();
+				Iterator<String> it2 = clientsList.iterator();
+				while(it2.hasNext()){
+					String clientId = it2.next();
+					certList.add(noteModel.getCertificate(appId,clientId));
+				}
 				List<String> unReadUsers = new ArrayList<String>();
 				Iterator<String> it = participants.iterator();
 				while(it.hasNext()){
@@ -131,8 +136,21 @@ public class ChatMiddleLayer extends MiddleLayerAbstract{
 					if(!curr.equals(sender)){
 						unReadUsers.add(curr);
 						if(flagNotification){
-							List<Device> devices = noteModel.getDeviceIdList(appId, curr, clientId);
-							applePushNotifications.pushCombineNotification("alert",1,cert.getCertificatePath(), cert.getAPNSPassword(), Const.getAPNS_PROD(), devices);
+							if(app!=null){
+								if(clientsList!= null && clientsList.size()>0){
+										if(certList.size()>0){
+											Iterator<Certificate> it3 = certList.iterator();
+											while(it3.hasNext()){
+												Certificate certi = it3.next();
+												List<Device> devices = noteModel.getDeviceIdList(appId, curr, certi.getClientId());
+												if(devices!=null && devices.size()>0){
+													int badge = chatModel.getTotalUnreadMsg(appId, curr).size();
+													applePushNotifications.pushCombineNotification("Recebeu uma mensagem nova",badge,certi.getCertificatePath(), certi.getAPNSPassword(), Const.getAPNS_PROD(), devices);
+												}
+											}
+										}										
+								}
+							}
 						}
 					}
 				}

@@ -8,6 +8,8 @@ import javapns.communication.KeystoreManager;
 import javapns.communication.exceptions.CommunicationException;
 import javapns.communication.exceptions.KeystoreException;
 import javapns.devices.Device;
+import javapns.devices.exceptions.InvalidDeviceTokenFormatException;
+import javapns.devices.implementations.basic.BasicDevice;
 import javapns.notification.AppleNotificationServer;
 import javapns.notification.AppleNotificationServerBasicImpl;
 import javapns.notification.Payload;
@@ -20,9 +22,18 @@ public class applePushNotifications {
 	
 	public static void pushCombineNotification(String alertText, int badge, String keystore, String password, Boolean production, Object devices) throws CommunicationException, KeystoreException {
 		
+		try {
+			//to test
+			PushedNotification notification = new PushedNotification(new BasicDevice("aa"), null, null);
+			List<PushedNotification> notifications = new ArrayList<PushedNotification>();
+			notifications.add(notification);
 		
-		List<PushedNotification> notifications = Push.combined(alertText, badge, "default", keystore, password, production, devices);
-		printPushedNotifications(notifications);
+			//List<PushedNotification> notifications = Push.combined(alertText, badge, "default", keystore, password, production, devices);
+			printPushedNotifications(notifications);
+		} catch (InvalidDeviceTokenFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		/*
 		List<Device> a = Push.feedback(keystore, password, production);
