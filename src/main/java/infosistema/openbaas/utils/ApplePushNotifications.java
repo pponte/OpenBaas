@@ -1,6 +1,7 @@
 package infosistema.openbaas.utils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javapns.Push;
@@ -8,32 +9,26 @@ import javapns.communication.KeystoreManager;
 import javapns.communication.exceptions.CommunicationException;
 import javapns.communication.exceptions.KeystoreException;
 import javapns.devices.Device;
-import javapns.devices.exceptions.InvalidDeviceTokenFormatException;
-import javapns.devices.implementations.basic.BasicDevice;
 import javapns.notification.AppleNotificationServer;
 import javapns.notification.AppleNotificationServerBasicImpl;
 import javapns.notification.Payload;
 import javapns.notification.PushNotificationPayload;
 import javapns.notification.PushedNotification;
 
-public class applePushNotifications {
+public class ApplePushNotifications {
 
 	
 	
 	public static void pushCombineNotification(String alertText, int badge, String keystore, String password, Boolean production, Object devices) throws CommunicationException, KeystoreException {
 		
-		try {
-			//to test
-			PushedNotification notification = new PushedNotification(new BasicDevice("aa"), null, null);
-			List<PushedNotification> notifications = new ArrayList<PushedNotification>();
-			notifications.add(notification);
-		
-			//List<PushedNotification> notifications = Push.combined(alertText, badge, "default", keystore, password, production, devices);
-			printPushedNotifications(notifications);
-		} catch (InvalidDeviceTokenFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+		List<Device> devs = (List<Device>)devices;
+		Iterator<Device> it = devs.iterator();
+		while(it.hasNext()){
+			Log.info("", "", "push", "push0:" +"keystore:" +keystore+" - password:"+password+" - production:"+production+" - devices token:"+ it.next().getToken());
 		}
+		List<PushedNotification> notifications = Push.combined(alertText, badge, "default", keystore, password, production, devices);
+		printPushedNotifications(notifications);
 
 		/*
 		List<Device> a = Push.feedback(keystore, password, production);
@@ -42,6 +37,44 @@ public class applePushNotifications {
 		printPushedNotifications(notifications);
 		*/
 	}
+	
+	/**
+	 * Create a complex payload for test purposes.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private static Payload createComplexPayload(String userId, String msg, String alertText, int badge, String keystore, String password, Boolean production, Object devices) {
+		PushNotificationPayload complexPayload = PushNotificationPayload.complex();
+		try {
+			// You can use addBody to add simple message, but we'll use
+			// a more complex alert message so let's comment it
+			complexPayload.addCustomAlertBody("My alert message");
+			complexPayload.addCustomAlertActionLocKey("Open App");
+			complexPayload.addCustomAlertLocKey("javapns rocks %@ %@%@");
+			ArrayList parameters = new ArrayList();
+			parameters.add("Test1");
+			parameters.add("Test");
+			parameters.add(2);
+			complexPayload.addCustomAlertLocArgs(parameters);
+			complexPayload.addBadge(45);
+			complexPayload.addSound("default");
+			complexPayload.addCustomDictionary("acme", "foo");
+			complexPayload.addCustomDictionary("acme2", 42);
+			ArrayList values = new ArrayList();
+			values.add("value1");
+			values.add(2);
+			complexPayload.addCustomDictionary("acme3", values);
+		} catch (Exception e) {
+			System.out.println("Error creating complex payload:");
+			e.printStackTrace();
+		}
+		return complexPayload;
+	}
+	
+	
+	
+	
+	
 	
 	private static void verifyKeystore(Object keystoreReference, String password, boolean production) {
 		try {
@@ -67,7 +100,7 @@ public class applePushNotifications {
 	/**
 	 * Create a complex payload for test purposes.
 	 * @return
-	 */
+	 *//*
 	@SuppressWarnings("unchecked")
 	private static Payload createComplexPayload() {
 		PushNotificationPayload complexPayload = PushNotificationPayload.complex();
@@ -95,7 +128,7 @@ public class applePushNotifications {
 			e.printStackTrace();
 		}
 		return complexPayload;
-	}
+	}*/
 
 	/**
 	 * Print to the console a comprehensive report of all pushed notifications and results.
@@ -112,7 +145,7 @@ public class applePushNotifications {
 		} else if (successful == 0 && failed > 0) {
 			printPushedNotifications("All notifications failed (" + failedNotifications.size() + "):", failedNotifications);
 		} else if (successful == 0 && failed == 0) {
-			System.out.println("No notifications could be sent, probably because of a critical error");
+			Log.info("","", "printPushedNotifications ->", "No notifications could be sent, probably because of a critical error");
 		} else {
 			printPushedNotifications("Some notifications failed (" + failedNotifications.size() + "):", failedNotifications);
 			printPushedNotifications("Others succeeded (" + successfulNotifications.size() + "):", successfulNotifications);
@@ -125,10 +158,12 @@ public class applePushNotifications {
 	 * @param notifications a list of pushed notifications to print
 	 */
 	public static void printPushedNotifications(String description, List<PushedNotification> notifications) {
-		System.out.println(description);
+		//Log.info("","", "printPushedNotifications", description);
+		//System.out.println(description);
 		for (PushedNotification notification : notifications) {
 			try {
-				System.out.println("  " + notification.toString());
+				Log.info("","", "printPushedNotifications desc->", description +" Notification:"+ notification.toString());
+				//System.out.println("  " + notification.toString());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

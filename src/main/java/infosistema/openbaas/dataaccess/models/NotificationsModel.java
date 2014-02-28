@@ -3,6 +3,7 @@ package infosistema.openbaas.dataaccess.models;
 import infosistema.openbaas.data.models.Application;
 import infosistema.openbaas.data.models.Certificate;
 import infosistema.openbaas.utils.Const;
+import infosistema.openbaas.utils.Log;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class NotificationsModel {
 	private static final String SEPARATOR1 = ":";
 	private static final String SEPARATOR2 = "_";
 	private static final String DTLIST = "DTList";
+	private static final String CERT = "Cert";
 	private static final String DEVICE = "Device";
 	private static final int MAXELEMS = 9999999;
 	private static final String DEVICEID = "deviceId";
@@ -38,10 +40,10 @@ public class NotificationsModel {
 		Jedis jedis = pool.getResource();
 		long milliseconds = cert.getCreatedDate().getTime();
 		try {
-			jedis.hset(appId+SEPARATOR1+cert.getClientId(), Application.APNS_CLIENT_ID, cert.getClientId());
-			jedis.hset(appId+SEPARATOR1+cert.getClientId(), Application.APNS_CERTIFICATION_PATH, cert.getCertificatePath());
-			jedis.hset(appId+SEPARATOR1+cert.getClientId(), Application.APNS_PASSWORD, cert.getAPNSPassword());
-			jedis.hset(appId+SEPARATOR1+cert.getClientId(), Application.CREATION_DATE, String.valueOf(milliseconds));
+			jedis.hset(appId+SEPARATOR1+CERT+SEPARATOR1+cert.getClientId(), Application.APNS_CLIENT_ID, cert.getClientId());
+			jedis.hset(appId+SEPARATOR1+CERT+SEPARATOR1+cert.getClientId(), Application.APNS_CERTIFICATION_PATH, cert.getCertificatePath());
+			jedis.hset(appId+SEPARATOR1+CERT+SEPARATOR1+cert.getClientId(), Application.APNS_PASSWORD, cert.getAPNSPassword());
+			jedis.hset(appId+SEPARATOR1+CERT+SEPARATOR1+cert.getClientId(), Application.CREATION_DATE, String.valueOf(milliseconds));
 			res = true;
 		} finally {
 			pool.returnResource(jedis);
@@ -53,9 +55,9 @@ public class NotificationsModel {
 		Certificate res = null;
 		Jedis jedis = pool.getResource();
 		try {
-			String path = jedis.hget(appId+SEPARATOR1+clientId, Application.APNS_CERTIFICATION_PATH);
-			String pass = jedis.hget(appId+SEPARATOR1+clientId, Application.APNS_PASSWORD);
-			long l = Long.valueOf(jedis.hget(appId+SEPARATOR1+clientId, Application.CREATION_DATE));
+			String path = jedis.hget(appId+SEPARATOR1+CERT+SEPARATOR1+clientId, Application.APNS_CERTIFICATION_PATH);
+			String pass = jedis.hget(appId+SEPARATOR1+CERT+SEPARATOR1+clientId, Application.APNS_PASSWORD);
+			long l = Long.valueOf(jedis.hget(appId+SEPARATOR1+CERT+SEPARATOR1+clientId, Application.CREATION_DATE));
 			res = new Certificate();
 			res.setClientId(clientId);
 			res.setCertificatePath(path);
@@ -72,9 +74,10 @@ public class NotificationsModel {
 		Jedis jedis = pool.getResource();
 		Long milliseconds = device.getLastRegister().getTime();
 		try {
-			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+device.getDeviceId(), DEVICEID, device.getDeviceId());
-			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+device.getDeviceId(), DEVICETOKEN, device.getToken());
-			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+device.getDeviceId(), LASTREGISTER, milliseconds.toString());
+			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+clientId+SEPARATOR1+device.getToken(), DEVICEID, device.getDeviceId());
+			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+clientId+SEPARATOR1+device.getToken(), DEVICETOKEN, device.getToken());
+			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+clientId+SEPARATOR1+device.getToken(), LASTREGISTER, milliseconds.toString());
+			jedis.hset(appId+SEPARATOR1+DEVICE+SEPARATOR1+clientId+SEPARATOR1+device.getToken(),"userId", userId);
 			res = true;
 		} finally {
 			pool.returnResource(jedis);
@@ -82,53 +85,60 @@ public class NotificationsModel {
 		return res;
 	}
 	
-	public Device getDevice(String appId,String userId,String clientId, String deviceId) {
+	public Device getDevice(String appId,String userId,String clientId, String deviceToken) {
 		Device res = new BasicDevice();
 		Jedis jedis = pool.getResource();
 		try {
-			String deviceToken = jedis.hget(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+deviceId, DEVICETOKEN);
-			long l = Long.valueOf(jedis.hget(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+deviceId, LASTREGISTER));
-			if(deviceToken!=null) res.setDeviceId(deviceToken);
+			Log.info("", "", "hget", "hget->" +"key:" +appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId+" - min:"+"0"+" - max:"+MAXELEMS);
+			String deviceId = jedis.hget(appId+SEPARATOR1+DEVICE+SEPARATOR1+clientId+SEPARATOR1+deviceToken, DEVICEID);
+			long l = Long.valueOf(jedis.hget(appId+SEPARATOR1+DEVICE+SEPARATOR1+clientId+SEPARATOR1+deviceToken, LASTREGISTER));
 			res.setLastRegister(new Timestamp(l));
+			res.setToken(deviceToken);
 			res.setDeviceId(deviceId);
+			//res.setUserId(userId);
 		} finally {
 			pool.returnResource(jedis);
 		}
 		return res;
 	}
 	
-	public Boolean removeDevice(String appId,String userId,String clientId, String deviceId) {
+	public Boolean removeDevice(String appId,String userId,String clientId, String deviceToken) {
 		Boolean res = false;
 		Jedis jedis = pool.getResource();
 		try {
-			if(jedis.exists(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+deviceId)){
-				jedis.del(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+deviceId);
+			if(jedis.exists(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+deviceToken)){
+				jedis.del(appId+SEPARATOR1+DEVICE+SEPARATOR1+userId+SEPARATOR1+clientId+SEPARATOR1+deviceToken);
 				res = true;
 			}
+			else
+				res = true;
 		} finally {
 			pool.returnResource(jedis);
 		}
 		return res;
 	}
 	
-	public Boolean addDeviceId(String appId,String userId, String clientId, String deviceId) {
+	public Boolean addDeviceId(String appId,String userId, String clientId, String deviceToken) {
 		Boolean res = false;
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.rpush(appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId, deviceId);
+			jedis.rpush(appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId, deviceToken);
 			res = true;
+		} catch(Exception e){
+			res = false;
+			Log.error("", this, "addDeviceId", "Error in addDeviceId to list", e);
 		} finally {
 			pool.returnResource(jedis);
 		}
 		return res;
 	}
 	
-	public Boolean removeDeviceId(String appId,String userId, String clientId, String deviceId) {
+	public Boolean removeDeviceId(String appId,String userId, String clientId, String deviceToken) {
 		Boolean res = false;
 		Jedis jedis = pool.getResource();
 		try {
-			Long aux = jedis.lrem(appId+SEPARATOR2+"DTLIST"+SEPARATOR2+userId+SEPARATOR2+clientId,0, deviceId);
-			if(aux>0) 
+			Long aux = jedis.lrem(appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId,0, deviceToken);
+			if(aux>0)				
 				res = true;
 		} finally {
 			pool.returnResource(jedis);
@@ -141,7 +151,8 @@ public class NotificationsModel {
 		List<String> aux = new ArrayList<String>();
 		Jedis jedis = pool.getResource();
 		try {
-			aux = jedis.lrange(appId+SEPARATOR2+"DTLIST"+SEPARATOR2+userId+SEPARATOR2+clientId, 0, MAXELEMS);
+			Log.info("", "", "push", "lrange ->" +"key:" +appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId+" - min:"+"0"+" - max:"+MAXELEMS);
+			aux = jedis.lrange(appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId, 0, MAXELEMS);
 			Iterator<String> it = aux.iterator();
 			while(it.hasNext()){
 				res.add(getDevice(appId, userId, clientId, it.next()));

@@ -1,11 +1,14 @@
 package infosistema.openbaas.rest;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
 import infosistema.openbaas.data.Result;
 import infosistema.openbaas.data.models.Application;
+import infosistema.openbaas.data.models.DeviceOB;
 import infosistema.openbaas.data.models.User;
 //import infosistema.openbaas.dataaccess.models.DocumentModel;
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
@@ -14,11 +17,12 @@ import infosistema.openbaas.middleLayer.UsersMiddleLayer;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
 import infosistema.openbaas.utils.Utils;
-import infosistema.openbaas.utils.applePushNotifications;
+import infosistema.openbaas.utils.ApplePushNotifications;
 
 import javapns.communication.exceptions.CommunicationException;
 import javapns.communication.exceptions.KeystoreException;
 import javapns.devices.Device;
+import javapns.devices.exceptions.InvalidDeviceTokenFormatException;
 import javapns.devices.implementations.basic.BasicDevice;
 
 import javax.ws.rs.Consumes;
@@ -55,8 +59,8 @@ public class IntegrationResource {
 
     // iPhone's UDID (64-char device token)
      
-     private static String CERTIFICATE = "/home/aniceto/baas/apps/26ba/TestApp.p12";
-     private static String PASSWORD = "mBRWxPvTKi4s";
+     private static String CERTIFICATE = "/home/administrator/baas/apps/8917/media/storage/storage:d302.p12";
+     private static String PASSWORD = "qkqd8ur9vfur";
 
 	 
 	@Context
@@ -76,26 +80,27 @@ public class IntegrationResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response test(JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh){
 
-		String dt = "";
+		List<Device> list = new ArrayList<Device>();
 		try {
-			dt = (String) inputJsonObj.opt("deviceToken");
-		} catch (Exception e) {
-			Log.error("", this, "pushNotification", "Error parsing the JSON.", e); 
-			return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+			list.add(new BasicDevice("d287e62da2550ea8163dd0733711bb0a17743e678d3d5a637cb01d04ce33668e"));
+		} catch (InvalidDeviceTokenFormatException e1) {
+			Log.error("", this, "CommunicationException", "Error Communication Exception0.", e1); 
 		}
-
-		//3239fcf4c597259a0a3d482b98e0098a3b15c6e315bbcd103e0c89761f485c0a
-		dt = "4d6a6e38 394d5758 4a5a6f4b 50556772 6d4f414a 696a7356 78754d56 75383051 5067794a 64683949 58416f3d";
-		
-		dt = "3239fcf4c597259a0a3d482b98e0098a3b15c6e315bbcd103e0c89761f485c0a";
-		
-		Device d = new BasicDevice();
-		d.setToken(dt);
 		
 		try {
-			applePushNotifications.pushCombineNotification("", 1, CERTIFICATE,PASSWORD,false,d.getToken());
+			ApplePushNotifications.pushCombineNotification("test", 0, CERTIFICATE,PASSWORD,false,list);
 		} catch (CommunicationException e) {
-			Log.error("", this, "CommunicationException", "Error Communication Exception.", e); 
+			Log.error("", this, "CommunicationException", "Error Communication Exception1.", e); 
 		} catch (KeystoreException e) {
 			Log.error("", this, "KeystoreException", "Error Keystore Exception.", e);
 		}

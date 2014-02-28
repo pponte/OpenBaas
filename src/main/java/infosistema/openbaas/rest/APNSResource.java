@@ -23,6 +23,7 @@ import java.util.Map;
 import javapns.devices.Device;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -138,6 +139,46 @@ public class APNSResource {
 		}
 		Date endDate = Utils.getDate();
 		Log.info(sessionToken, this, "registerDeviceToken", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+		return response;
+	}
+	
+	@POST
+	@Path("/unregister")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response unRegisterDeviceToken(JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh) {
+		Response response = null;
+		Date startDate = Utils.getDate();
+		String deviceToken = null;
+		String client = null;
+		String sessionToken = Utils.getSessionToken(hh);
+		Log.debug("", this, "unRegisterDeviceToken", "********unRegisterDeviceToken ************");
+		if (!sessionMid.checkAppForToken(sessionToken, appId))
+			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
+		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+		int code = Utils.treatParameters(ui, hh);
+		if (code == 1) {
+			try {
+				deviceToken = inputJsonObj.getString(NotificationsModel.DEVICETOKEN);
+				client = inputJsonObj.getString(NotificationsModel.CLIENTID);
+			} catch (Exception e) {
+				Log.error("", this, "unRegisterDeviceToken", "Error parsing json in unRegisterDeviceToken", e); 
+				return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
+			}
+			try {
+				Boolean res = noteMid.remDeviceToken(appId,userId,client,deviceToken);
+				response = Response.status(Status.OK).entity(res).build();				
+			} catch (Exception e) {
+				Log.error("", this, "unRegisterDeviceToken", "Error registerDeviceToken", e); 
+				return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error in unRegisterDeviceToken.").build();
+			}
+		} else if(code == -2) {
+			response = Response.status(Status.FORBIDDEN).entity(new Error("Invalid Session Token.")).build();
+		} else if(code == -1){
+			response = Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
+		}
+		Date endDate = Utils.getDate();
+		Log.info(sessionToken, this, "unRegisterDeviceToken", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		return response;
 	}
 }

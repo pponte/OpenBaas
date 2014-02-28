@@ -155,6 +155,7 @@ public class ChatModel {
 		}
 
 		public List<ChatMessage> getMessageList(String appId, String roomId, Date date, Integer numberMessages, String orientation) {
+			Log.info("", this, "aqui1", "aqui0:" +"roomId:" +roomId+" - date:"+date+" - numberMessages:"+numberMessages+" - orientation:"+orientation);
 			Jedis jedis = pool.getResource();
 			List<ChatMessage> res = new ArrayList<ChatMessage>();
 			if(orientation==null) orientation = "";
@@ -196,25 +197,30 @@ public class ChatModel {
 					return new ArrayList<ChatMessage>();
 				}
 				for(int o=startIndex;o<=endIndex;o++){
+					Log.info("", this, "aqui1", "aqui1:" +"LRANGE:" +appId+SEPARATOR2+roomId+" - INDEX:"+o);
 					String msgId = jedis.lindex(appId+SEPARATOR2+roomId, o);
-					ChatMessage msg = new ChatMessage();
-					String sender = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.SENDER);
-					String messageText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.MESSAGE_TEXT);
-					String fileText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.FILE_TEXT);
-					String audioText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.AUDIO_TEXT);
-					String videoText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.VIDEO_TEXT);
-					String imageText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.IMAGE_TEXT);
-					
-					if(sender!=null) msg.setSender(sender);
-					if(fileText!=null) msg.setFileId(fileText);
-					if(messageText!=null) msg.setMessageText(messageText);
-					if(audioText!=null) msg.setAudioId(audioText);
-					if(videoText!=null) msg.setVideoId(videoText);
-					if(imageText!=null) msg.setImageId(imageText);
-					long l = Long.valueOf(jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.DATE)).longValue();
-					msg.setDate(new Date(l));
-					msg.set_id(msgId);
-					res.add(msg);
+					if(msgId!=null){
+						ChatMessage msg = new ChatMessage();
+						String sender = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.SENDER);
+						String messageText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.MESSAGE_TEXT);
+						String fileText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.FILE_TEXT);
+						String audioText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.AUDIO_TEXT);
+						String videoText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.VIDEO_TEXT);
+						String imageText = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.IMAGE_TEXT);
+						
+						if(sender!=null) msg.setSender(sender);
+						if(fileText!=null) msg.setFileId(fileText);
+						if(messageText!=null) msg.setMessageText(messageText);
+						if(audioText!=null) msg.setAudioId(audioText);
+						if(videoText!=null) msg.setVideoId(videoText);
+						if(imageText!=null) msg.setImageId(imageText);
+						Log.info("", this, "aqui2", "aqui2:" +appId+SEPARATOR1+msgId+" "+ChatMessage.DATE);
+						String aux = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.DATE);
+						long l = Long.valueOf(aux).longValue();
+						msg.setDate(new Date(l));
+						msg.set_id(msgId);
+						res.add(msg);
+					}
 				}
 			}catch(Exception e){
 				Log.error("", this, "getMessageList", "Error getMessageList redis.", e); 
