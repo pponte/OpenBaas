@@ -1,8 +1,11 @@
+
 package infosistema.openbaas.rest;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import infosistema.openbaas.data.Error;
 import infosistema.openbaas.data.Metadata;
@@ -41,12 +44,14 @@ import javax.ws.rs.core.Response.Status;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
-
-
 
 public class IntegrationResource {
 
@@ -183,7 +188,37 @@ public class IntegrationResource {
 		return Response.status(Status.OK).entity("DEL OK").build();
 	}
 	
-	
+	@Path("/test2")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response test2(JSONObject inputJsonObj, @Context UriInfo ui, @Context HttpHeaders hh){
+		//Serve para apagar coisas do redis
+		String delKey = null;
+		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisChatServer(),Const.getRedisChatPort());
+		//JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(),Const.getRedisSessionPort());
+		try {
+			delKey = inputJsonObj.getString("key");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Jedis jedis = pool.getResource();
+		try {
+			Set<String> a = jedis.keys(delKey+"*");
+			Iterator<String> it =  a.iterator();
+			while(it.hasNext()){
+				String s = it.next();
+				jedis.del(s);
+				System.out.println(s);
+			}
+		} finally {
+			pool.returnResource(jedis);
+		}
+
+		
+		return Response.status(Status.OK).entity("DEL OK").build();
+	}
 	
 	
 	/**

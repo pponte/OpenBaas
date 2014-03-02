@@ -7,14 +7,13 @@ public class Certificate {
 	private String certificatePath;
 	private String APNSPassword;
 	private String clientId;
+	private String appId;
 	private Timestamp createdDate;
 	
 	
 	public Certificate() {
 		super();
 	}
-	
-	
 	
 	public String getClientId() {
 		return clientId;
@@ -46,6 +45,18 @@ public class Certificate {
 
 	public void setCreatedDate(Timestamp createdDate) {
 		this.createdDate = createdDate;
+	}
+
+
+
+	public String getAppId() {
+		return appId;
+	}
+
+
+
+	public void setAppId(String appId) {
+		this.appId = appId;
 	}
 	
 }

@@ -9,6 +9,7 @@ import infosistema.openbaas.data.models.ChatRoom;
 import infosistema.openbaas.data.models.Media;
 import infosistema.openbaas.middleLayer.ChatMiddleLayer;
 import infosistema.openbaas.middleLayer.MediaMiddleLayer;
+import infosistema.openbaas.middleLayer.NotificationMiddleLayer;
 import infosistema.openbaas.middleLayer.SessionMiddleLayer;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
@@ -49,12 +50,14 @@ public class ChatResource {
 	private SessionMiddleLayer sessionMid;
 	private MediaMiddleLayer mediaMid;
 	private ChatMiddleLayer chatMid;
+	private NotificationMiddleLayer noteMid;
 
 	public ChatResource(String appId) {
 		this.appId = appId;
 		this.sessionMid = SessionMiddleLayer.getInstance();
 		this.mediaMid = MediaMiddleLayer.getInstance();
 		this.chatMid = ChatMiddleLayer.getInstance();
+		this.noteMid = NotificationMiddleLayer.getInstance();
 	}
 
 	@POST
@@ -119,7 +122,7 @@ public class ChatResource {
 		Log.debug("", this, "getMessages", "********getMessages ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-		//String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			try {
@@ -127,7 +130,7 @@ public class ChatResource {
 				date = new Date(l);
 				orientation = inputJsonObj.optString(ChatMessage.ORIENTATION);
 				numberMessages =  inputJsonObj.optInt(ChatMessage.NUM_MSG);	
-				res = chatMid.getMessages(appId,chatRoomId,date,orientation,numberMessages);
+				res = chatMid.getMessages(appId,userId,chatRoomId,date,orientation,numberMessages);
 				response = Response.status(Status.OK).entity(res).build();
 			} catch (JSONException e) {
 				Log.error("", this, "createUserAndLogin", "Error parsing the JSON.", e); 
@@ -185,7 +188,7 @@ public class ChatResource {
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
-			if(chatMid.existsChatRoom(appId,chatRoomId)){			
+			if(chatMid.existsChatRoom(appId,chatRoomId)){
 				try {
 					Result res = null;
 					if(imageInputStream!=null && imageDetail!=null){
@@ -219,6 +222,7 @@ public class ChatResource {
 					ChatMessage msg = chatMid.sendMessage(appId,userId,chatRoomId,fileText,messageText,imageText, audioText, videoText);
 					if(msg!=null){
 						response = Response.status(Status.OK).entity(msg).build();
+						noteMid.pushNotificationCombine(appId,userId,chatRoomId,fileText,messageText,imageText, audioText, videoText);
 					}else{
 						throw new Exception("Error sendMessage");
 					}
@@ -261,8 +265,9 @@ public class ChatResource {
 					res = chatMid.readMsgsFromUser(appId,userId,jsonArray);
 				}
 				response = Response.status(Status.OK).entity(res).build();
-			} catch (JSONException e) {
-				Log.error("", this, "createUserAndLogin", "Error parsing the JSON.", e); 
+				noteMid.pushBadge(appId,userId,chatRoomId);
+			} catch (Exception e) {
+				Log.error("", this, "readMessages", "Error in readMessages.", e);
 				return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
 			}
 		} else if(code == -2) {
@@ -271,7 +276,7 @@ public class ChatResource {
 			response = Response.status(Status.BAD_REQUEST).entity(new Error("Error handling the request.")).build();
 		}
 		Date endDate = Utils.getDate();
-		Log.info(sessionToken, this, "getMessages", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+		Log.info(sessionToken, this, "readMessages", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		return response;
 	}
 	

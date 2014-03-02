@@ -12,6 +12,7 @@ public class ChatMessage {
 	private String imageId;
 	private String audioId;
 	private String videoId;
+	private Boolean read;
 	
 	public final static String ORIENTATION = "orientation";
 	public final static String MSGSLIST = "msgsList";
@@ -78,79 +79,45 @@ public class ChatMessage {
 		this.messageText = messageText;
 	}
 
-
-
-
-
-
 	public String getFileId() {
 		return fileId;
 	}
-
-
-
-
-
 
 	public void setFileId(String fileId) {
 		this.fileId = fileId;
 	}
 
-
-
-
-
-
 	public String getImageId() {
 		return imageId;
 	}
-
-
-
-
-
 
 	public void setImageId(String imageId) {
 		this.imageId = imageId;
 	}
 
-
-
-
-
-
 	public String getAudioId() {
 		return audioId;
 	}
-
-
-
-
-
 
 	public void setAudioId(String audioId) {
 		this.audioId = audioId;
 	}
 
-
-
-
-
-
 	public String getVideoId() {
 		return videoId;
 	}
-
-
-
-
-
 
 	public void setVideoId(String videoId) {
 		this.videoId = videoId;
 	}
 
-	
-	
+	public Boolean getRead() {
+		return read;
+	}
+
+	public void setRead(Boolean read) {
+		this.read = read;
+	}
+
 	
 }

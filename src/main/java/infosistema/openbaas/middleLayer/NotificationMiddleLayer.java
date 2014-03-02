@@ -1,20 +1,30 @@
 package infosistema.openbaas.middleLayer;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javapns.devices.Device;
+import infosistema.openbaas.data.models.Application;
+import infosistema.openbaas.data.models.Certificate;
 import infosistema.openbaas.data.models.DeviceOB;
+import infosistema.openbaas.dataaccess.models.AppModel;
+import infosistema.openbaas.dataaccess.models.ChatModel;
 import infosistema.openbaas.dataaccess.models.NotificationsModel;
+import infosistema.openbaas.utils.ApplePushNotifications;
 import infosistema.openbaas.utils.Const;
-import infosistema.openbaas.utils.Utils;
+import infosistema.openbaas.utils.Log;
 
 
 public class NotificationMiddleLayer {
 
 	private NotificationsModel noteModel;
+	private ChatModel chatModel;
+	private AppModel appModel;
 
 
 	// *** INSTANCE *** //
@@ -23,6 +33,8 @@ public class NotificationMiddleLayer {
 	private NotificationMiddleLayer() {
 		super();
 		noteModel = new NotificationsModel();
+		chatModel = new ChatModel();
+		appModel = new AppModel();
 	}
 	
 	public static NotificationMiddleLayer getInstance() {
@@ -33,13 +45,12 @@ public class NotificationMiddleLayer {
 	public Map<String, Device> addDeviceToken(String appId, String userId, String clientId, String deviceToken) {
 		Map<String, Device> res = new HashMap<String, Device>();
 		Device device = new DeviceOB();
-		String devId = Utils.getRandomString(Const.getIdLength());
 		Timestamp time = new Timestamp(new Date().getTime());
-		device.setDeviceId(devId);
+		device.setDeviceId(deviceToken);
 		device.setLastRegister(time);
 		device.setToken(deviceToken);
+		Boolean addId = noteModel.addDeviceId(appId, userId, clientId, deviceToken); 
 		Boolean addDev = noteModel.createUpdateDevice(appId, userId, clientId, device);
-		Boolean addId = noteModel.addDeviceId(appId, userId, clientId, deviceToken); //TODO mete id repetidos na lista
 		if(addId && addDev)
 			res.put(clientId, device);
 		else 
@@ -47,21 +58,99 @@ public class NotificationMiddleLayer {
 		return res;
 	}
 	
-	public Boolean remDeviceToken(String appId, String userId, String clientId, String deviceToken) {
+	public Boolean remDeviceToken(String appId, String clientId, String deviceToken) {
 		Boolean res = false;
 		
-		Boolean remDev = noteModel.removeDevice(appId, userId, clientId, deviceToken);
+		String userId = noteModel.removeDevice(appId, clientId, deviceToken);
 		Boolean remId = noteModel.removeDeviceId(appId, userId, clientId, deviceToken);
-		if(remDev && remId)
+		if(userId!=null && remId)
 			res = true;
 		return res;
 	}
+
+	public List<Certificate> getAllCertificates() {
+		return noteModel.getAllCertificateList();
+	}
+
+	public void pushBadge(String appId, String userId, String chatRoomId) {
+		try {
+			Application app = appModel.getApplication(appId);
+			Boolean flagNotification = chatModel.hasNotification(appId,chatRoomId);
+			List<Certificate> certList = new ArrayList<Certificate>();
+			
+			if(flagNotification){
+				List<String> clientsList = app.getClients();
+				Iterator<String> it2 = clientsList.iterator();
+				while(it2.hasNext()){
+					String clientId = it2.next();
+					certList.add(noteModel.getCertificate(appId,clientId));
+				}
+				Iterator<Certificate> it3 = certList.iterator();
+				while(it3.hasNext()){
+					Certificate certi = it3.next();
+					List<Device> devices = noteModel.getDeviceIdList(appId, userId, certi.getClientId());
+					if(devices!=null && devices.size()>0){
+						int numberBadge = chatModel.getTotalUnreadMsg(appId, userId).size();
+						ApplePushNotifications.pushBadgeService(numberBadge, certi.getCertificatePath(), certi.getAPNSPassword(), Const.getAPNS_PROD(), devices);
+					}
+				}
+			}
+		} catch (Exception e) {
+			Log.error("", this, "pushBadge", "Error pushing the badge.", e);
+		}
 	
+		
+		
+		
+	}
+
+	public void pushNotificationCombine(String appId, String sender,String chatRoomId, String fileText, 
+			String messageText,	String imageText, String audioText, String videoText) {
 	
-	//TODO JM
-	
-	
-	
-	
-	
+		List<String> participants = new ArrayList<String>();
+		participants = chatModel.getListParticipants(appId, chatRoomId);
+		try{
+			if(participants.size()>0 && participants!=null){
+				Boolean flagNotification = chatModel.hasNotification(appId,chatRoomId);
+				Application app = appModel.getApplication(appId);
+				List<String> clientsList = app.getClients();
+				List<Certificate> certList = new ArrayList<Certificate>();
+				if(flagNotification){
+					Iterator<String> it2 = clientsList.iterator();
+					while(it2.hasNext()){
+						String clientId = it2.next();
+						certList.add(noteModel.getCertificate(appId,clientId));
+					}
+				}
+				List<String> unReadUsers = new ArrayList<String>();
+				Iterator<String> it = participants.iterator();
+				while(it.hasNext()){
+					String curr = it.next();
+					if(!curr.equals(sender)){
+						unReadUsers.add(curr);
+						if(flagNotification){
+							if(app!=null){
+								if(clientsList!= null && clientsList.size()>0){
+									if(certList.size()>0){
+										Iterator<Certificate> it3 = certList.iterator();
+										while(it3.hasNext()){
+											Certificate certi = it3.next();
+											List<Device> devices = noteModel.getDeviceIdList(appId, curr, certi.getClientId());
+											if(devices!=null && devices.size()>0){
+												int badge = chatModel.getTotalUnreadMsg(appId, curr).size();
+												ApplePushNotifications.pushCombineNotification("Recebeu uma mensagem nova",badge,certi.getCertificatePath(), certi.getAPNSPassword(), Const.getAPNS_PROD(), devices);
+											}
+										}
+									}								
+								}
+							}
+						}
+					}
+				}
+			}
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+	}	
 }

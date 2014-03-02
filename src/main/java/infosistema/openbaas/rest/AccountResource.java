@@ -197,7 +197,7 @@ public class AccountResource {
 						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
 						Date endDate = Utils.getDate();
-						Log.info(((User)res.getData()).getReturnToken(), this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+						Log.info(((User)res.getData()).getReturnToken(), this, "signin", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					}
 				} else {
 					response = Response.status(Status.FORBIDDEN).entity(new Error(Const.getEmailConfirmationError())).build();
@@ -220,7 +220,7 @@ public class AccountResource {
 						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
 						Date endDate = Utils.getDate();
-						Log.info(((User)res.getData()).getReturnToken(), this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+						Log.info(((User)res.getData()).getReturnToken(), this, "signin", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					}
 				} else {
 					response = Response.status(Status.UNAUTHORIZED).entity(new Error("")).build();
@@ -263,7 +263,7 @@ public class AccountResource {
 
 			response = Response.status(Status.OK).entity(("SessionToken: "+sessionToken)).build();
 			Date endDate = Utils.getDate();
-			Log.info(sessionToken, this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+			Log.info(sessionToken, this, "patch session token", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		} else
 			response = Response.status(Status.FORBIDDEN).entity(new Error("You do not have permission to access.")).build();
 		return response;
@@ -316,7 +316,7 @@ public class AccountResource {
 						Result res = new Result("Signout OK", null);
 						response = Response.status(Status.OK).entity(res).build();
 						Date endDate = Utils.getDate();
-						Log.info(sessionToken, this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+						Log.info(sessionToken, this, "signout", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					}
 					else
 						response = Response.status(Status.NOT_FOUND).entity(new Error("No sessions exist")).build();
@@ -356,7 +356,7 @@ public class AccountResource {
 			Result res = new Result(userId, null);
 			response = Response.status(Status.OK).entity(res).build();
 			Date endDate = Utils.getDate();
-			Log.info(sessionToken, this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+			Log.info(sessionToken, this, "get session token", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		} else
 			response = Response.status(Status.NOT_FOUND).entity(new Error(sessionToken)).build();
 		return response;
@@ -387,7 +387,7 @@ public class AccountResource {
 			outUser.setReturnToken(sessionToken);
 			response = Response.status(Status.OK).entity(res).build();
 			Date endDate = Utils.getDate();
-			Log.info(sessionToken, this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+			Log.info(sessionToken, this, "get all session token", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		} else
 			response = Response.status(Status.NOT_FOUND).entity(new Error("Token NOT_FOUND")).build();
 		return response;
@@ -436,7 +436,7 @@ public class AccountResource {
 			Result res = new Result("Email sent with recovery details.", null);
 			response = Response.status(Status.OK).entity(res).build();
 			Date endDate = Utils.getDate();
-			Log.info(sessionToken, this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+			Log.info(sessionToken, this, "recovery", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 		}
 		else
 			response = Response.status(Status.BAD_REQUEST).entity(new Error("Wrong email.")).build();
@@ -483,7 +483,7 @@ public class AccountResource {
 					sessionMid.refreshSession(sessionToken, location, userAgent);
 				response = Response.status(Status.OK).entity("Passoword correctly changed.").build();
 				Date endDate = Utils.getDate();
-				Log.info(sessionToken, this, "signup", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
+				Log.info(sessionToken, this, "changepassword", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 			}else
 				response = Response.status(Status.BAD_REQUEST).entity(new Error("Wrong old password.")).build();
 		}catch (Exception e) {

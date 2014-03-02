@@ -155,7 +155,7 @@ public class ChatModel {
 		}
 
 		public List<ChatMessage> getMessageList(String appId, String roomId, Date date, Integer numberMessages, String orientation) {
-			Log.info("", this, "aqui1", "aqui0:" +"roomId:" +roomId+" - date:"+date+" - numberMessages:"+numberMessages+" - orientation:"+orientation);
+			//Log.info("", this, "aqui1", "aqui0:" +"roomId:" +roomId+" - date:"+date+" - numberMessages:"+numberMessages+" - orientation:"+orientation);
 			Jedis jedis = pool.getResource();
 			List<ChatMessage> res = new ArrayList<ChatMessage>();
 			if(orientation==null) orientation = "";
@@ -196,8 +196,8 @@ public class ChatModel {
 				if(startIndex>endIndex){
 					return new ArrayList<ChatMessage>();
 				}
+				Log.info("", this, "aqui1", "aqui1:" +"LRANGE:" +appId+SEPARATOR2+roomId+" - StartINDEX:"+startIndex+" - EndINDEX:"+endIndex);
 				for(int o=startIndex;o<=endIndex;o++){
-					Log.info("", this, "aqui1", "aqui1:" +"LRANGE:" +appId+SEPARATOR2+roomId+" - INDEX:"+o);
 					String msgId = jedis.lindex(appId+SEPARATOR2+roomId, o);
 					if(msgId!=null){
 						ChatMessage msg = new ChatMessage();
@@ -214,7 +214,7 @@ public class ChatModel {
 						if(audioText!=null) msg.setAudioId(audioText);
 						if(videoText!=null) msg.setVideoId(videoText);
 						if(imageText!=null) msg.setImageId(imageText);
-						Log.info("", this, "aqui2", "aqui2:" +appId+SEPARATOR1+msgId+" "+ChatMessage.DATE);
+						//Log.info("", this, "aqui2", "aqui2:" +appId+SEPARATOR1+msgId+" "+ChatMessage.DATE);
 						String aux = jedis.hget(appId+SEPARATOR1+msgId, ChatMessage.DATE);
 						long l = Long.valueOf(aux).longValue();
 						msg.setDate(new Date(l));

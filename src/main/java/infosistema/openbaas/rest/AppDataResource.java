@@ -203,7 +203,7 @@ public class AppDataResource {
 			@QueryParam(Const.ORDER_BY) String orderByStr, @QueryParam(Const.ORDER_TYPE) String orderTypeStr) {
 		Date startDate = Utils.getDate();
 		Response response = null;
-		Log.debug("", this, "get app data", "********get app data ************");
+		Log.info("", this, "get app data", "********get app data ************");
 		if (!sessionMid.checkAppForToken(Utils.getSessionToken(hh), appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		int code = Utils.treatParameters(ui, hh);

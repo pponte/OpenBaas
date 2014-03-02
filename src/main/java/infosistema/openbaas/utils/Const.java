@@ -64,6 +64,8 @@ public class Const {
 	
 	private static Boolean APNS_PROD = false;
 	
+	private static int APNS_FEEDBACK_CICLE = -1;
+	
 	
 	
 	private static String EMAIL_CONFIRMATION_ERROR = "Please confirm your email first.";
@@ -184,6 +186,9 @@ public class Const {
 				setAPNS_PROD(Boolean.parseBoolean(props.getProperty("APNS_PROD")));
 			} catch (Exception e) {}
 			
+			try {
+				setAPNS_PROD(Boolean.parseBoolean(props.getProperty("APNS_FEEDBACK_CICLE")));
+			} catch (Exception e) {}
 			
 
 			stmp = props.getProperty("MONGO_DB");
@@ -491,6 +496,14 @@ public class Const {
 
 	public static void setAPNS_PROD(Boolean aPNS_PROD) {
 		APNS_PROD = aPNS_PROD;
+	}
+	
+	public static int getAPNS_FEEDBACK_CICLE() {
+		return APNS_FEEDBACK_CICLE;
+	}
+
+	public static void setAPNS_FEEDBACK_CICLE(int aPNS_FEEDBACK_CICLE) {
+		APNS_FEEDBACK_CICLE = aPNS_FEEDBACK_CICLE;
 	}
 
 }

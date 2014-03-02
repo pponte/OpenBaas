@@ -5,7 +5,6 @@ import infosistema.openbaas.data.QueryParameters;
 import infosistema.openbaas.data.enums.OperatorEnum;
 import infosistema.openbaas.utils.Const;
 import infosistema.openbaas.utils.Log;
-import infosistema.openbaas.utils.Utils;
 import infosistema.openbaas.utils.geolocation.Geo;
 
 import java.net.UnknownHostException;
@@ -87,7 +86,7 @@ public abstract class ModelAbstract {
 	public ModelAbstract() {
 		
 		try {
-			Utils.printMemoryStats();
+			//Utils.printMemoryStats();
 			if(mongoClient == null){
 				if(Const.getMongoAuth()){
 					MongoCredential credential = MongoCredential.createMongoCRCredential(Const.getMongoUser(), Const.getMongoDb(), Const.getMongoPass().toCharArray());
@@ -334,8 +333,8 @@ public abstract class ModelAbstract {
 		
 		projection.append(_ID, 1);
 		DBObject sortQuery = getSortQuery(orderBy, orderType);
-		Log.debug(userId, "", "getDocuments", "Query: "+query.toString());
-		Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - Projection: "+projection+" - SortQuery: "+sortQuery);
+		//Log.debug(userId, "", "getDocuments", "Query: "+query.toString());
+		//Log.debug(userId, "", "getDocuments", "Query Obj: "+queryObj+" - Projection: "+projection+" - SortQuery: "+sortQuery);
 		DBCursor cursor = coll.find(queryObj, projection).sort(sortQuery);
 		List<DBObject> retObj = new ArrayList<DBObject>();
 		HashMap<DBObject, String> lstIdDists = new HashMap<DBObject, String>();

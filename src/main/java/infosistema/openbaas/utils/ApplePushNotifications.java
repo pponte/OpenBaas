@@ -5,14 +5,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import javapns.Push;
-import javapns.communication.KeystoreManager;
 import javapns.communication.exceptions.CommunicationException;
 import javapns.communication.exceptions.KeystoreException;
 import javapns.devices.Device;
-import javapns.notification.AppleNotificationServer;
-import javapns.notification.AppleNotificationServerBasicImpl;
-import javapns.notification.Payload;
-import javapns.notification.PushNotificationPayload;
 import javapns.notification.PushedNotification;
 
 public class ApplePushNotifications {
@@ -38,10 +33,30 @@ public class ApplePushNotifications {
 		*/
 	}
 	
+	public static List<Device> pushFeedbackService(String keystore, String password, Boolean production) throws CommunicationException, KeystoreException {
+		
+		List<Device> res = new ArrayList<Device>();
+		res = Push.feedback(keystore, password, production);
+		return res;
+	}
+	
+	public static void pushBadgeService(int badge,String keystore, String password, Boolean production, Object devices) throws CommunicationException, KeystoreException {
+		
+		List<Device> devs = (List<Device>)devices;
+		Iterator<Device> it = devs.iterator();
+		while(it.hasNext()){
+			Log.info("", "", "pushBadge", "pushBadge:" +"keystore:" +keystore+" - password:"+password+" - production:"+production+" - devices token:"+ it.next().getToken());
+		}
+		List<PushedNotification> notifications = Push.badge(badge, keystore, password, production, devices);
+		printPushedNotifications(notifications);
+		
+	}
+	
 	/**
 	 * Create a complex payload for test purposes.
 	 * @return
 	 */
+	/*
 	@SuppressWarnings("unchecked")
 	private static Payload createComplexPayload(String userId, String msg, String alertText, int badge, String keystore, String password, Boolean production, Object devices) {
 		PushNotificationPayload complexPayload = PushNotificationPayload.complex();
@@ -95,7 +110,7 @@ public class ApplePushNotifications {
 			}
 		}
 	}
-	
+	*/
 	
 	/**
 	 * Create a complex payload for test purposes.

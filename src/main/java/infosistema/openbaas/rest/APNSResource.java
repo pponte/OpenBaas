@@ -23,7 +23,6 @@ import java.util.Map;
 import javapns.devices.Device;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -155,7 +154,7 @@ public class APNSResource {
 		Log.debug("", this, "unRegisterDeviceToken", "********unRegisterDeviceToken ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
-		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
+		//String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParameters(ui, hh);
 		if (code == 1) {
 			try {
@@ -166,7 +165,7 @@ public class APNSResource {
 				return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
 			}
 			try {
-				Boolean res = noteMid.remDeviceToken(appId,userId,client,deviceToken);
+				Boolean res = noteMid.remDeviceToken(appId,client,deviceToken);
 				response = Response.status(Status.OK).entity(res).build();				
 			} catch (Exception e) {
 				Log.error("", this, "unRegisterDeviceToken", "Error registerDeviceToken", e); 
