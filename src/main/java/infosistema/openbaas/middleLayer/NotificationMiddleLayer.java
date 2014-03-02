@@ -105,7 +105,7 @@ public class NotificationMiddleLayer {
 	}
 
 	public void pushNotificationCombine(String appId, String sender,String chatRoomId, String fileText, 
-			String messageText,	String imageText, String audioText, String videoText) {
+			String videoText, String imageText, String audioText, String messageText) {
 	
 		List<String> participants = new ArrayList<String>();
 		participants = chatModel.getListParticipants(appId, chatRoomId);
@@ -149,8 +149,29 @@ public class NotificationMiddleLayer {
 				}
 			}
 		}catch (Exception e) {
-			// TODO: handle exception
+			Log.error("", this, "pushNotificationCombine", "Error in pushNotificationCombine.", e);
 		}
 		
+	}
+
+	public List<String> getPushNotificationsTODO() {
+		List<String> res = new ArrayList<String>();
+		try{
+			res = noteModel.getAllNotificationsTODO();
+		}catch(Exception e){
+			Log.error("", this, "getPushNotificationsTODO", "Error in getPushNotificationsTODO."+res.size(), e);
+		}
+		return res;
+	}	
+	
+	public Boolean setPushNotificationsTODO(String appId, String userId, String chatRoomId,String fileText,String videoText,
+			String imageText, String audioText, String messageText) {
+		Boolean res = false;
+		try{
+			res = noteModel.setNewNotifications(appId, userId, chatRoomId, fileText, videoText, imageText, audioText, messageText);
+		}catch(Exception e){
+			Log.error("", this, "getPushNotificationsTODO", "Error in getPushNotificationsTODO."+res, e);
+		}
+		return res;
 	}	
 }

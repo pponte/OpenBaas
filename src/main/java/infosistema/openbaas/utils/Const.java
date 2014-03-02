@@ -65,6 +65,7 @@ public class Const {
 	private static Boolean APNS_PROD = false;
 	
 	private static int APNS_FEEDBACK_CICLE = -1;
+	private static int APNS_PUSH_CICLE = -1;
 	
 	
 	
@@ -187,10 +188,13 @@ public class Const {
 			} catch (Exception e) {}
 			
 			try {
-				setAPNS_PROD(Boolean.parseBoolean(props.getProperty("APNS_FEEDBACK_CICLE")));
+				setAPNS_FEEDBACK_CICLE(Integer.parseInt(props.getProperty("APNS_FEEDBACK_CICLE")));
 			} catch (Exception e) {}
 			
-
+			try {
+				setAPNS_PUSH_CICLE(Integer.parseInt(props.getProperty("APNS_PUSH_CICLE")));
+			} catch (Exception e) {}
+			
 			stmp = props.getProperty("MONGO_DB");
 			if (stmp != null) MONGO_DB = stmp;
 			
@@ -501,9 +505,15 @@ public class Const {
 	public static int getAPNS_FEEDBACK_CICLE() {
 		return APNS_FEEDBACK_CICLE;
 	}
+	public static int getAPNS_PUSH_CICLE() {
+		return APNS_PUSH_CICLE;
+	}
 
 	public static void setAPNS_FEEDBACK_CICLE(int aPNS_FEEDBACK_CICLE) {
 		APNS_FEEDBACK_CICLE = aPNS_FEEDBACK_CICLE;
 	}
-
+	public static void setAPNS_PUSH_CICLE(int aPNS_PUSH_CICLE) {
+		APNS_PUSH_CICLE = aPNS_PUSH_CICLE;
+	}
+	
 }

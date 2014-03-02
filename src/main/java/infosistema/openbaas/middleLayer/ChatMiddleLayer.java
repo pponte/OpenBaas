@@ -215,7 +215,7 @@ public class ChatMiddleLayer extends MiddleLayerAbstract{
 				if(unreadMsg.contains(msg.get_id()))
 					msg.setRead(false);
 				else
-					msg.setRead(true);				
+					msg.setRead(true);
 			}
 		} catch (Exception e) {
 			Log.error("", this, "getMessages", "Error parsing the JSON.", e); 
@@ -246,7 +246,7 @@ public class ChatMiddleLayer extends MiddleLayerAbstract{
 		return res;
 	}
 	
-	public List<ChatMessage> getUnreadMsgs(String appId, String userId, String chatRoomId) {
+	public List<ChatMessage> getTotalUnreadMsgs(String appId, String userId) {
 		List<ChatMessage> res = new ArrayList<ChatMessage>();		
 		try {
 			List<String> msgList = chatModel.getTotalUnreadMsg(appId,userId);
@@ -260,6 +260,25 @@ public class ChatMiddleLayer extends MiddleLayerAbstract{
 			Log.error("", this, "getMessages", "Error parsing the JSON.", e); 
 		}
 		return res;
-	}	
+	}
+	
+	public List<ChatMessage> getUnreadMsgs(String appId, String userId, String chatRoomId) {
+		List<ChatMessage> res = new ArrayList<ChatMessage>();		
+		try {
+			List<String> msgList = chatModel.getTotalUnreadMsg(appId,userId);
+			List<String> list = chatModel.getMessageChatroom(appId,chatRoomId);
+			Iterator<String> it = msgList.iterator();
+			while(it.hasNext()){
+				String msgId = it.next();
+				if(list.contains(msgId)){
+					ChatMessage msg = chatModel.getMsg(appId, msgId);
+					res.add(msg);
+				}
+			}
+		} catch (Exception e) {
+			Log.error("", this, "getMessages", "Error parsing the JSON.", e); 
+		}
+		return res;
+	}
 	
 }

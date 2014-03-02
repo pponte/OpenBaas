@@ -22,7 +22,9 @@ public class NotificationsModel {
 
 	private static final String SEPARATOR1 = ":";
 	private static final String SEPARATOR2 = "_";
+	private static final String SEPARATOR3 = ":_:";
 	private static final String DTLIST = "DTList";
+	private static final String PUSHLIST = "PushList";
 	private static final String CERT = "Cert";
 	private static final String DEVICE = "Device";
 	private static final int MAXELEMS = 9999999;
@@ -215,9 +217,37 @@ public class NotificationsModel {
 		return res;
 	}
 
-	
+	public Boolean setNewNotifications(String appId, String userId, String chatRoomId,String fileText,String videoText,
+			String imageText, String audioText, String messageText) {
+		Jedis jedis = pool.getResource();
+		Boolean res = false;
+		try {
+			StringBuffer value = new StringBuffer();
+			value.append(appId+SEPARATOR3+userId+SEPARATOR3+chatRoomId+SEPARATOR3+fileText+SEPARATOR3);
+			value.append(videoText+SEPARATOR3+imageText+SEPARATOR3+audioText+SEPARATOR3+messageText+SEPARATOR3);
+			jedis.lrem(PUSHLIST, 0,value.toString() );
+			jedis.rpush(PUSHLIST, value.toString());
+			res = true;
+		} finally {
+			pool.returnResource(jedis);
+		}
+		return res;
+	}
 
+	public List<String> getAllNotificationsTODO() {
+		Jedis jedis = pool.getResource();
+		List<String> res = new ArrayList<String>();
+		try {
+			res = jedis.lrange(PUSHLIST, 0, MAXELEMS);		
+			if(res.size()>0)
+				jedis.del(PUSHLIST);
+		} catch (Exception e) {
+			Log.error("", this, "getAllNotificationsTODO", "Error in getAllNotificationsTODO redis."+ res.size(), e); 
+		}	
+		finally {
+			pool.returnResource(jedis);
+		}
+		return res;
+	}
 
-
-	
 }

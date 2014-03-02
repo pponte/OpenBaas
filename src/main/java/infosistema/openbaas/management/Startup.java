@@ -60,6 +60,7 @@ public class Startup implements ServletContextListener {
 		if(sessionMid.createSession(AdminSessionId, AdminAppId,AdminId, ADMINPASSWORD)){
 			Log.debug("", this, "contextInitialized", "Admin Session created. Id: ");
 			FeedBackSchedule.startManager();
+			NotificationsThread.startManager();
 		}
 		else{
 			Log.warning("", this, "contextInitialized", "No admin Session created.");

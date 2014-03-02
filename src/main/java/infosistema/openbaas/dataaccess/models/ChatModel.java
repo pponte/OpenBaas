@@ -266,6 +266,7 @@ public class ChatModel {
 		}
 		
 		public int readMessages(String appId, String userId, JSONArray jsonArray) {
+			Jedis jedis = pool.getResource();
 			int res = 0;
 			Long aux = (long) 0;
 			if(jsonArray.length()>0){
@@ -276,29 +277,39 @@ public class ChatModel {
 					}					
 				} catch (JSONException e) {
 					Log.error("", this, "readMessages", "Error readMessages redis.", e); 
+				} finally {
+					pool.returnResource(jedis);
 				}		
 			}
+			
+			
 			return res;
 		}
 
 		public Boolean existsKey(String appId, String key) {
+			Jedis jedis = pool.getResource();
 			Boolean res = false;
 			try {
 				res = jedis.exists(appId+SEPARATOR1+key);		
 			} catch (Exception e) {
-				Log.error("", this, "existsKey", "Error existsKey redis.", e); 
-			}	
+				Log.error("", this, "existsKey", "Error existsKey redis: "+ appId+SEPARATOR1+key, e); 
+			}finally {
+				pool.returnResource(jedis);
+			}
 			return res;
 		}
 
 		//max 99999999 elements
 		public List<String> getTotalUnreadMsg(String appId, String userId) {
+			Jedis jedis = pool.getResource();
 			List<String> res = new ArrayList<String>();
 			try {
 				res = jedis.lrange(appId+SEPARATOR2+"UnRead"+SEPARATOR2+userId, 0, MAXELEMS);		
 			} catch (Exception e) {
-				Log.error("", this, "getTotalListElements", "Error getTotalListElements redis.", e); 
-			}	
+				Log.error("", this, "getTotalListElements", "Error getTotalListElements redis."+ res.size(), e); 
+			}finally {
+				pool.returnResource(jedis);
+			}
 			return res;
 		}
 
@@ -308,6 +319,19 @@ public class ChatModel {
 			try {
 				res = (Boolean.parseBoolean(jedis.hget(appId+SEPARATOR1+roomId, ChatRoom.FLAG_NOTIFICATION)));
 			} finally {
+				pool.returnResource(jedis);
+			}
+			return res;
+		}
+
+		public List<String> getMessageChatroom(String appId, String chatRoomId) {
+			Jedis jedis = pool.getResource();
+			List<String> res = new ArrayList<String>();
+			try {
+				res = jedis.lrange(appId+SEPARATOR2+chatRoomId, 0, MAXELEMS);		
+			} catch (Exception e) {
+				Log.error("", this, "getMessageChatroom", "Error getMessageChatroom redis."+ res.size(), e); 
+			}finally {
 				pool.returnResource(jedis);
 			}
 			return res;
