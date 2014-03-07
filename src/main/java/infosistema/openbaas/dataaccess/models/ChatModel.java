@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -33,12 +34,12 @@ public class ChatModel {
 			
 		private static final String USER_FIELD_KEY_FORMAT = "app:%s:user:%s:%s";
 		*/
-		private static final String SEPARATOR1= ":";		
+		private static final String SEPARATOR1 = ":";		
 		private static final String SEPARATOR2 = "_";
-		private static final String SEPARATOR3= ";";
+		private static final String SEPARATOR3 = ";";
+		private static final String ASTERISCO = "*";
 		private static final int MAXELEMS = 9999999;
 		
-
 		public Boolean createMsg(String appId, ChatMessage msg) {
 			Boolean res = false;
 			Jedis jedis = pool.getResource();
@@ -229,29 +230,7 @@ public class ChatModel {
 			}
 			return res;
 		}
-/*
-		public String existsChat(JSONArray participants, String appId) {
-			Jedis jedis = pool.getResource();
-			String strParticipants = Utils.getStringByJSONArray(participants, SEPARATOR3);
-			try {
-				Set<String> chats = jedis.keys(appId+":Chat_*");
-				Iterator<String> it =  chats.iterator();
-				while(it.hasNext()){
-					String chatRoomId = it.next();
-					String strParticipantsCurr = jedis.hget(chatRoomId, ChatMessage.PARTICIPANTS);
-					if(strParticipantsCurr.equals(strParticipants)){
-						String[] aux = chatRoomId.split(SEPARATOR1);
-						return aux[1];
-					}
-				}
-			}catch(Exception e){
-				Log.error("", this, "getMessageList", "Error getMessageList redis.", e); 
-			} finally {
-				pool.returnResource(jedis);
-			}
-			return null;
-		}
-*/
+
 		public String existsChat(String participants, String appId) {
 			Jedis jedis = pool.getResource();
 			String res=null;
@@ -272,7 +251,7 @@ public class ChatModel {
 			if(jsonArray.length()>0){
 				try {
 					for(int i = 0;i<jsonArray.length();i++){
-						aux = jedis.lrem(appId+SEPARATOR2+"UnRead"+SEPARATOR2+userId,0, jsonArray.getString(i));
+						aux = jedis.lrem(appId+SEPARATOR2+"UnRead"+SEPARATOR2+userId, 0, jsonArray.getString(i));
 						res += ((int)(long)aux);
 					}					
 				} catch (JSONException e) {
@@ -336,8 +315,37 @@ public class ChatModel {
 			}
 			return res;
 		}
-
 		
-
-		
+		public List<String> getAllUserChats(String appId, String userId) {
+			List<String> res = new ArrayList<String>();
+			
+			Jedis jedis = pool.getResource();
+			try {
+				Set<String> keys = jedis.keys(appId + SEPARATOR1 + userId + SEPARATOR3 + ASTERISCO);
+				Iterator<String> i = keys.iterator();
+				while (i.hasNext()) {
+					String s = jedis.get(i.next());
+					if (!res.contains(s)) res.add(s);
+				}
+				
+				keys = jedis.keys(appId + SEPARATOR1 + ASTERISCO + SEPARATOR3 + userId + SEPARATOR3 + ASTERISCO);
+				i = keys.iterator();
+				while (i.hasNext()) {
+					String s = jedis.get(i.next());
+					if (!res.contains(s)) res.add(s);
+				}
+				
+				keys = jedis.keys(appId + SEPARATOR1 + ASTERISCO + SEPARATOR3 + userId);
+				i = keys.iterator();
+				while (i.hasNext()) {
+					String s = jedis.get(i.next());
+					if (!res.contains(s)) res.add(s);
+				}
+			}catch(Exception e){
+				Log.error("", this, "getMessageList", "Error getMessageList redis.", e); 
+			} finally {
+				pool.returnResource(jedis);
+			}
+			return res;
+		}
 }

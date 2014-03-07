@@ -15,8 +15,6 @@ public class ApplePushNotifications {
 	
 	
 	public static void pushCombineNotification(String alertText, int badge, String keystore, String password, Boolean production, Object devices) throws CommunicationException, KeystoreException {
-		
-
 		List<Device> devs = (List<Device>)devices;
 		Iterator<Device> it = devs.iterator();
 		while(it.hasNext()){
@@ -24,13 +22,6 @@ public class ApplePushNotifications {
 		}
 		List<PushedNotification> notifications = Push.combined(alertText, badge, "default", keystore, password, production, devices);
 		printPushedNotifications(notifications);
-
-		/*
-		List<Device> a = Push.feedback(keystore, password, production);
-		// Push a more complex payload 
-		List<PushedNotification> notifications = Push.payload(createComplexPayload(), keystore, password, production, token);
-		printPushedNotifications(notifications);
-		*/
 	}
 	
 	public static List<Device> pushFeedbackService(String keystore, String password, Boolean production) throws CommunicationException, KeystoreException {

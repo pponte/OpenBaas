@@ -177,7 +177,7 @@ public class ChatMiddleLayer extends MiddleLayerAbstract{
 		List<ChatMessage> res = new ArrayList<ChatMessage>();		
 		try {
 			List<String> msgList = chatModel.getTotalUnreadMsg(appId, userId);
-			List<String> list = chatModel.getMessageChatroom(appId,chatRoomId);
+			List<String> list = chatModel.getMessageChatroom(appId, chatRoomId);
 			Iterator<String> it = msgList.iterator();
 			while(it.hasNext()){
 				String msgId = it.next();

@@ -100,6 +100,15 @@ public class NotificationMiddleLayer {
 		}
 	}
 
+	public void pushAllBadges(String appId, String userId) {
+		try {
+			List<String> chats = chatModel.getAllUserChats(appId, userId);
+			for (String chatRoomId: chats) pushBadge(appId, userId, chatRoomId);
+		} catch (Exception e) {
+			Log.error("", this, "pushBadge", "Error pushing the badge.", e);
+		}
+	}
+
 	public void pushNotificationCombine(String appId, String sender,String chatRoomId, String fileText, 
 			String videoText, String imageText, String audioText, String messageText) {
 	
