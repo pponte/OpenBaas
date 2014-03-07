@@ -98,10 +98,6 @@ public class NotificationMiddleLayer {
 		} catch (Exception e) {
 			Log.error("", this, "pushBadge", "Error pushing the badge.", e);
 		}
-	
-		
-		
-		
 	}
 
 	public void pushNotificationCombine(String appId, String sender,String chatRoomId, String fileText, 

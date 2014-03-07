@@ -81,7 +81,7 @@ public class ChatResource {
 				roomName = (String) inputJsonObj.opt(ChatRoom.ROOM_NAME);
 				participants = (JSONArray) inputJsonObj.get(ChatRoom.PARTICIPANTS);
 				flagNotification =  inputJsonObj.optBoolean(ChatRoom.FLAG_NOTIFICATION);
-				for(int i = 0; i<participants.length(); i++){
+				for(int i = 0; i < participants.length(); i++){
 					String userCurr = participants.getString(i);
 					if(userCurr.equals(userId))
 						flag = true;
@@ -90,7 +90,7 @@ public class ChatResource {
 				if(roomName==null){
 					roomName = Utils.getStringByJSONArray(participants,";");
 				}
-				ChatRoom chatRoom = chatMid.createChatRoom(appId,roomName,userId,flagNotification,participants);
+				ChatRoom chatRoom = chatMid.createChatRoom(appId, roomName, userId, flagNotification, participants);
 				response = Response.status(Status.OK).entity(chatRoom).build();				
 			} catch (Exception e) {
 				Log.error("", this, "createChatRoom", "Error creating chat.", e); 

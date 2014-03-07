@@ -109,7 +109,7 @@ public class ChatModel {
 		}
 		
 		public ChatRoom getChatRoom(String appId, String roomId) {
-			ChatRoom res = new ChatRoom();;
+			ChatRoom res = new ChatRoom();
 			Jedis jedis = pool.getResource();
 			try {
 				res.set_id(roomId);

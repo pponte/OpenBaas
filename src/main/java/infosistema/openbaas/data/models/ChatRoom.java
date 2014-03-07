@@ -11,6 +11,7 @@ public class ChatRoom {
 	private String roomCreator;
 	private String[] participants;
 	private Date createdDate;
+	private Integer unreadMessages = 0;
 	
 	public final static String CREATEDDATE = "createdDate";
 	public final static String FLAG_NOTIFICATION = "flagNotification";
@@ -20,14 +21,10 @@ public class ChatRoom {
 	public final static String _ID = "_id";
 	public final static String SEPARATOR = ";";
 
-	
-	
-	public ChatRoom(){
-		
+	public ChatRoom() {
 	}
 	
 	public ChatRoom(String _id, String roomName, Boolean flagNotification) {
-		super();
 		this._id = _id;
 		this.roomName = roomName;
 		this.flagNotification = flagNotification;
@@ -79,6 +76,14 @@ public class ChatRoom {
 
 	public void setCreatedDate(Date createdDate) {
 		this.createdDate = createdDate;
+	}
+
+	public Integer getUnreadMessages() {
+		return unreadMessages;
+	}
+
+	public void setUnreadMessages(Integer unreadMessages) {
+		this.unreadMessages = unreadMessages;
 	}
 	
 }
