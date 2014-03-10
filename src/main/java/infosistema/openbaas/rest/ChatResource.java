@@ -222,7 +222,6 @@ public class ChatResource {
 					ChatMessage msg = chatMid.sendMessage(appId,userId,chatRoomId,fileText,messageText,imageText, audioText, videoText);
 					if(msg!=null){
 						response = Response.status(Status.OK).entity(msg).build();
-						//noteMid.pushNotificationCombine(appId,userId,chatRoomId,fileText,messageText,imageText, audioText, videoText);
 						noteMid.setPushNotificationsTODO(appId, userId, chatRoomId, fileText, videoText, imageText, audioText, messageText);
 					}else{
 						throw new Exception("Error sendMessage");

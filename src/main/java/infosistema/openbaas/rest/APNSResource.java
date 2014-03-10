@@ -111,7 +111,6 @@ public class APNSResource {
 		String deviceToken = null;
 		String client = null;
 		String sessionToken = Utils.getSessionToken(hh);
-		Log.debug("", this, "registerDeviceToken", "********registerDeviceToken ************");
 		if (!sessionMid.checkAppForToken(sessionToken, appId))
 			return Response.status(Status.UNAUTHORIZED).entity(new Error("Action in wrong app: "+appId)).build();
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
@@ -126,6 +125,7 @@ public class APNSResource {
 			}
 			try {
 				Map<String, Device> res = noteMid.addDeviceToken(appId,userId,client,deviceToken);
+				NotificationMiddleLayer.getInstance().setPushBadgesTODO(sessionToken, userId);
 				response = Response.status(Status.OK).entity(res).build();				
 			} catch (Exception e) {
 				Log.error("", this, "registerDeviceToken", "Error registerDeviceToken", e); 

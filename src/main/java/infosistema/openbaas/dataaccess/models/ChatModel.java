@@ -29,11 +29,6 @@ public class ChatModel {
 		}
 
 		// *** PRIVATE *** //
-		/*
-		private static final String APP_DATA_COLL_FORMAT = "app%sdata";
-			
-		private static final String USER_FIELD_KEY_FORMAT = "app:%s:user:%s:%s";
-		*/
 		private static final String SEPARATOR1 = ":";		
 		private static final String SEPARATOR2 = "_";
 		private static final String SEPARATOR3 = ";";

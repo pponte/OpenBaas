@@ -33,6 +33,7 @@ public class NotificationsModel {
 	public static final String CLIENTID = "clientId";
 	private static final String LASTREGISTER= "lastRegister";
 	private static final String USERID= "userId";
+	private static final String PUSH_BADGES_LIST = "PushBadgesList";
 	
 	private JedisPool pool;
 	
@@ -212,6 +213,36 @@ public class NotificationsModel {
 				res.add(getDevice(appId, clientId, it.next()));
 			}
 		} finally {
+			pool.returnResource(jedis);
+		}
+		return res;
+	}
+
+	public Boolean setNewBadgesTODO(String appId, String userId) {
+		Jedis jedis = pool.getResource();
+		Boolean res = false;
+		try {
+			StringBuffer value = new StringBuffer();
+			value.append(appId+SEPARATOR3+userId);
+			jedis.lrem(PUSH_BADGES_LIST, 0, value.toString() );
+			jedis.rpush(PUSH_BADGES_LIST, value.toString());
+			res = true;
+		} finally {
+			pool.returnResource(jedis);
+		}
+		return res;
+	}
+
+	public List<String> getAllBadgesTODO() {
+		Jedis jedis = pool.getResource();
+		List<String> res = new ArrayList<String>();
+		try {
+			res = jedis.lrange(PUSH_BADGES_LIST, 0, MAXELEMS);		
+			if (res.size()>0) jedis.del(PUSH_BADGES_LIST);
+		} catch (Exception e) {
+			Log.error("", this, "getAllBadgesTODO", "Error in getAllBadgesTODO redis."+ res.size(), e); 
+		}	
+		finally {
 			pool.returnResource(jedis);
 		}
 		return res;

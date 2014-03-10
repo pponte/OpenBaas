@@ -1,7 +1,6 @@
 package infosistema.openbaas.rest;
 
 import infosistema.openbaas.middleLayer.AppsMiddleLayer;
-import infosistema.openbaas.middleLayer.NotificationMiddleLayer;
 import infosistema.openbaas.middleLayer.SessionMiddleLayer;
 import infosistema.openbaas.middleLayer.UsersMiddleLayer;
 import infosistema.openbaas.data.Error;
@@ -61,7 +60,7 @@ public class AccountResource {
 
 	/**
 	 * Creates a user in the application, necessary fields: "password";
-	 * and "email". signin the user creating a session
+	 * and "email". sigup the user creating a session
 	 * 
 	 * @param inputJsonObj
 	 * @return
@@ -149,7 +148,6 @@ public class AccountResource {
 		Boolean refreshCode = false;
 		String lastLocation =null;
 		
-		boolean sendNotifications = false;
 		try {
 			email = (String) inputJsonObj.get("email");
 			attemptedPassword = (String) inputJsonObj.get("password");
@@ -198,7 +196,6 @@ public class AccountResource {
 						outUser.setLocation(lastLocation);
 						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
-						sendNotifications = true;
 						Date endDate = Utils.getDate();
 						Log.info(((User)res.getData()).getReturnToken(), this, "signin", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					}
@@ -222,7 +219,6 @@ public class AccountResource {
 						outUser.setLocation(lastLocation);
 						outUser.setOnline("true");
 						response = Response.status(Status.OK).entity(res).build();
-						sendNotifications = true;
 						Date endDate = Utils.getDate();
 						Log.info(((User)res.getData()).getReturnToken(), this, "signin", "Start: " + Utils.printDate(startDate) + " - Finish:" + Utils.printDate(endDate) + " - Time:" + (endDate.getTime()-startDate.getTime()));
 					}
@@ -232,9 +228,6 @@ public class AccountResource {
 			}
 		} else {
 			response = Response.status(Status.NOT_FOUND).entity(new Error("")).build();
-		}
-		if (sendNotifications) {
-			NotificationMiddleLayer.getInstance().pushAllBadges(appId, outUser.get_id());
 		}
 		return response;
 	}

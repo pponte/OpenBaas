@@ -73,10 +73,15 @@ public class NotificationsThread extends Thread {
         	while(it.hasNext()){
         		String notificationCurr = it.next(); 
 	        	String[] arrayNotifications =  notificationCurr.split(SEPARATOR3);
-	        	//appId,userId,chatRoomId,fileText,videoText,imageText, audioText, messageText
 	        	noteMid.pushNotificationCombine(arrayNotifications[0],arrayNotifications[1],arrayNotifications[2],arrayNotifications[3],arrayNotifications[4],arrayNotifications[5], arrayNotifications[6], arrayNotifications[7]);
         	}
-        	Log.info("PushNotifications", this, "processCommand", "PushNotifications - number:"+notificationList.size());
+        	List<String> badgesList = noteMid.getPushBadgesTODO();
+        	it = badgesList.iterator();
+        	while(it.hasNext()){
+        		String notificationCurr = it.next(); 
+	        	String[] arrayNotifications =  notificationCurr.split(SEPARATOR3);
+	        	noteMid.pushAllBadges(arrayNotifications[0], arrayNotifications[1]);
+        	}
         } catch (Exception e) {
         	Log.error("NotificationsThread", this, "Error in NotificationsThread", "Error in NotificationsThread",e);
         }

@@ -159,6 +159,26 @@ public class NotificationMiddleLayer {
 		
 	}
 
+	public List<String> getPushBadgesTODO() {
+		List<String> res = new ArrayList<String>();
+		try{
+			res = noteModel.getAllBadgesTODO();
+		}catch(Exception e){
+			Log.error("", this, "getPushNotificationsTODO", "Error in getPushNotificationsTODO."+res.size(), e);
+		}
+		return res;
+	}	
+	
+	public Boolean setPushBadgesTODO(String appId, String userId) {
+		Boolean res = false;
+		try {
+			res = noteModel.setNewBadgesTODO(appId, userId);
+		} catch(Exception e){
+			Log.error("", this, "getPushNotificationsTODO", "Error in getPushNotificationsTODO."+res, e);
+		}
+		return res;
+	}	
+	
 	public List<String> getPushNotificationsTODO() {
 		List<String> res = new ArrayList<String>();
 		try{
@@ -169,12 +189,12 @@ public class NotificationMiddleLayer {
 		return res;
 	}	
 	
-	public Boolean setPushNotificationsTODO(String appId, String userId, String chatRoomId,String fileText,String videoText,
+	public Boolean setPushNotificationsTODO(String appId, String userId, String chatRoomId, String fileText,String videoText,
 			String imageText, String audioText, String messageText) {
 		Boolean res = false;
-		try{
+		try {
 			res = noteModel.setNewNotifications(appId, userId, chatRoomId, fileText, videoText, imageText, audioText, messageText);
-		}catch(Exception e){
+		} catch(Exception e){
 			Log.error("", this, "getPushNotificationsTODO", "Error in getPushNotificationsTODO."+res, e);
 		}
 		return res;
