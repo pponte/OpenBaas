@@ -80,7 +80,9 @@ public class NotificationsThread extends Thread {
         	while(it.hasNext()){
         		String notificationCurr = it.next(); 
 	        	String[] arrayNotifications =  notificationCurr.split(SEPARATOR3);
+    			Log.debug("", "#1#", "#1#", "appid:" + arrayNotifications[0] + "; userID: "+ arrayNotifications[1]);
 	        	noteMid.pushAllBadges(arrayNotifications[0], arrayNotifications[1]);
+    			Log.debug("", "#1#", "#1#", "OK");
         	}
         } catch (Exception e) {
         	Log.error("NotificationsThread", this, "Error in NotificationsThread", "Error in NotificationsThread",e);

@@ -74,27 +74,33 @@ public class NotificationMiddleLayer {
 
 	public void pushBadge(String appId, String userId, String chatRoomId) {
 		try {
+			Log.debug("", "#1#", "#3#", "appId:" + appId + "; userId: "+ userId + "; chatRoomId: " + chatRoomId);
 			Application app = appModel.getApplication(appId);
 			Boolean flagNotification = chatModel.hasNotification(appId,chatRoomId);
 			List<Certificate> certList = new ArrayList<Certificate>();
 			
 			if(flagNotification){
+				Log.debug("", "#2#", "#3#", "appId:" + appId + "; userId: "+ userId + "; chatRoomId: " + chatRoomId + "; flagNotification:" + flagNotification);
 				List<String> clientsList = app.getClients();
 				Iterator<String> it2 = clientsList.iterator();
 				while(it2.hasNext()){
 					String clientId = it2.next();
+					Log.debug("", "#3#", "#3#", "clientId: " + clientId);
 					certList.add(noteModel.getCertificate(appId,clientId));
 				}
 				Iterator<Certificate> it3 = certList.iterator();
 				while(it3.hasNext()){
+					Log.debug("", "#4#", "#3#", "certi");
 					Certificate certi = it3.next();
 					List<Device> devices = noteModel.getDeviceIdList(appId, userId, certi.getClientId());
 					if(devices!=null && devices.size()>0){
+						Log.debug("", "#4#", "#3#", "device");
 						int numberBadge = chatModel.getTotalUnreadMsg(appId, userId).size();
 						ApplePushNotifications.pushBadgeService(numberBadge, certi.getCertificatePath(), certi.getAPNSPassword(), Const.getAPNS_PROD(), devices);
 					}
 				}
 			}
+			Log.debug("", "#4#", "#3#", "OK");
 		} catch (Exception e) {
 			Log.error("", this, "pushBadge", "Error pushing the badge.", e);
 		}
@@ -103,7 +109,12 @@ public class NotificationMiddleLayer {
 	public void pushAllBadges(String appId, String userId) {
 		try {
 			List<String> chats = chatModel.getAllUserChats(appId, userId);
-			for (String chatRoomId: chats) pushBadge(appId, userId, chatRoomId);
+			Log.debug("", "#1#", "#2#", "appId:" + appId + "; userId: "+ userId);
+			for (String chatRoomId: chats){ 
+				Log.debug("", "#2#", "#2#", "chatRoomId:" + chatRoomId);
+				pushBadge(appId, userId, chatRoomId);
+			}
+			Log.debug("", "#2#", "#2#", "OK");
 		} catch (Exception e) {
 			Log.error("", this, "pushBadge", "Error pushing the badge.", e);
 		}

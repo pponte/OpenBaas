@@ -125,7 +125,7 @@ public class APNSResource {
 			}
 			try {
 				Map<String, Device> res = noteMid.addDeviceToken(appId,userId,client,deviceToken);
-				NotificationMiddleLayer.getInstance().setPushBadgesTODO(sessionToken, userId);
+				NotificationMiddleLayer.getInstance().setPushBadgesTODO(appId, userId);
 				response = Response.status(Status.OK).entity(res).build();				
 			} catch (Exception e) {
 				Log.error("", this, "registerDeviceToken", "Error registerDeviceToken", e); 
