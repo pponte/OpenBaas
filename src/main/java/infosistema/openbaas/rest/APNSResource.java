@@ -69,7 +69,6 @@ public class APNSResource {
 		Date startDate = Utils.getDate();
 		String certificatePath;
 		String sessionToken = Utils.getSessionToken(hh);
-		Log.debug("", this, "createCertificate", "********createCertificate ************");
 		String userId = sessionMid.getUserIdUsingSessionToken(sessionToken);
 		int code = Utils.treatParametersAdmin(ui, hh);
 		if (code == 1) {
@@ -124,7 +123,7 @@ public class APNSResource {
 				return Response.status(Status.BAD_REQUEST).entity("Error parsing the JSON.").build();
 			}
 			try {
-				Map<String, Device> res = noteMid.addDeviceToken(appId,userId,client,deviceToken);
+				Map<String, Device> res = noteMid.addDeviceToken(appId, userId, client, deviceToken);
 				NotificationMiddleLayer.getInstance().setPushBadgesTODO(appId, userId);
 				response = Response.status(Status.OK).entity(res).build();				
 			} catch (Exception e) {

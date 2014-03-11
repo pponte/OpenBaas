@@ -94,7 +94,7 @@ public class NotificationsModel {
 		return res;
 	}
 		
-	public Boolean createUpdateDevice(String appId,String userId,String clientId, Device device) {
+	public Boolean createUpdateDevice(String appId, String userId, String clientId, Device device) {
 		Boolean res = false;
 		Jedis jedis = pool.getResource();
 		Long milliseconds = device.getLastRegister().getTime();
@@ -158,7 +158,6 @@ public class NotificationsModel {
 		Jedis jedis = pool.getResource();
 		try {
 			String user = getDeviceUser(appId, clientId, deviceToken);
-			Log.info("", this, "addDeviceId","user:"+user + " - userId:"+userId + " - "+appId+SEPARATOR2+DTLIST+SEPARATOR2+user+SEPARATOR2+clientId+" - dt:"+deviceToken);
 			Long a= (long) -1;
 			Long b= (long) -1;
 			if(user!=userId){
@@ -184,14 +183,6 @@ public class NotificationsModel {
 		Jedis jedis = pool.getResource();
 		try {
 			Long a=(long) -1;
-			//String user = getDeviceUser(appId, clientId, deviceToken);
-			/*if(user!=userId){
-				a = jedis.lrem(appId+SEPARATOR2+DTLIST+SEPARATOR2+user+SEPARATOR2+clientId, 0, deviceToken);
-			}
-			else{
-				a = jedis.lrem(appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId, 0, deviceToken);
-			}
-			*/
 			a = jedis.lrem(appId+SEPARATOR2+DTLIST+SEPARATOR2+userId+SEPARATOR2+clientId, 0, deviceToken);
 			if(a>0)				
 				res = true;

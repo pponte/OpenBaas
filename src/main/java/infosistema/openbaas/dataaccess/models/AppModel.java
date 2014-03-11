@@ -23,15 +23,11 @@ import redis.clients.jedis.JedisPoolConfig;
 public class AppModel {
 
 	// request types
-	private JedisPool pool;// = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
-	//private Jedis jedis;
+	private JedisPool pool;
 	private static final int MAXELEMS = 9999999;
 	
 	public AppModel() {
 		pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
-		//jedis = pool.getResource();
-		
-		//jedis = new Jedis(Const.getRedisGeneralServer(), Const.getRedisGeneralPort());
 	}
 
 	public Object clone() throws CloneNotSupportedException {
