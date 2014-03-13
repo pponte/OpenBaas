@@ -6,6 +6,7 @@ public class Const {
 
 	//CONSTANTS
 	
+	public static final String SEMICOLON = ";";
 	public static final String SESSION_TOKEN = "sessionToken";
 	public static final String MESSAGE = "message";
 	public static final String FILE = "file";	

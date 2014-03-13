@@ -24,18 +24,24 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class SessionModel {
 
-	// *** MEMBERS *** //
+	// *** CONTRUCTORS *** //
 
-	private Geo geo = Geo.getInstance();
-	UserModel userModel;
-	
-	// *** CONSTRUCTOR *** //
-	
 	public SessionModel() {
 		userModel  = new UserModel();
+		geo = Geo.getInstance();
 	}
 	
+
+	// *** PRIVATE *** //
 	
+	private Geo geo;
+	private UserModel userModel;
+
+	
+	// *** CONSTANTS *** //
+
+	// *** KEYS *** //
+
 	// *** CREATE *** //
 	
 	public void createAdmin(String OPENBAASADMIN, byte[] adminSalt, byte[] adminHash) throws UnsupportedEncodingException {
@@ -65,20 +71,6 @@ public class SessionModel {
 			jedis.hset("sessions:" + sessionId, Const.USER_ID, userId);
 			jedis.expire("sessions:" + sessionId, Const.getSessionExpireTime());
 			jedis.sadd("user:sessions:" + userId, sessionId);
-		} finally {
-			pool.returnResource(jedis);
-		}
-		pool.destroy();
-	}
-
-	// *** AUX *** //
-
-	private void updateLocationToSession(String appId, String userId, String sessionToken, String location) {
-		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
-		Jedis jedis = pool.getResource();
-		try {
-			jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
-			userModel.updateUserLocation(appId, userId, location);
 		} finally {
 			pool.returnResource(jedis);
 		}
@@ -144,6 +136,18 @@ public class SessionModel {
 		return true;
 	}
 	
+	private void updateLocationToSession(String appId, String userId, String sessionToken, String location) {
+		JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisSessionServer(), Const.getRedisSessionPort());
+		Jedis jedis = pool.getResource();
+		try {
+			jedis.hset("sessions:" + sessionToken, Const.LOCATION, location);
+			userModel.updateUserLocation(appId, userId, location);
+		} finally {
+			pool.returnResource(jedis);
+		}
+		pool.destroy();
+	}
+
 	
 	// *** DELETE *** //
 	

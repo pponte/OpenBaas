@@ -21,31 +21,20 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class UserModel extends ModelAbstract {
 
-	// request types
-	private JedisPool pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
-	Jedis jedis;
-	
+	// *** CONTRUCTORS *** //
+
 	public UserModel() {
-		jedis = new Jedis(Const.getRedisGeneralServer(), Const.getRedisGeneralPort());
+		pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
 	}
+
 
 	// *** PRIVATE *** //
-	
-	private static final String APP_DATA_COLL_FORMAT = "app%sdata";
-		
-	private static final String USER_FIELD_KEY_FORMAT = "app:%s:user:%s:%s";
+
+	private JedisPool pool;
 	private static final String ALL = "all";
-	
-	private String getKey(String appId, String field, String id) {
-		return String.format(USER_FIELD_KEY_FORMAT, appId, field, id); 
-	}
-
-	private String getUserKey(String appId, String userId) {
-		return getKey(appId, ALL, userId); 
-	}
-
 	private static BasicDBObject dataProjection = null;
 	private static BasicDBObject dataProjectionMetadata = null; 	
+
 
 	// *** PROTECTED *** //
 
@@ -86,6 +75,22 @@ public class UserModel extends ModelAbstract {
 	}
 
 	
+	// *** CONSTANTS *** //
+
+	// *** KEYS *** //
+	
+	private static final String USER_FIELD_KEY_FORMAT = "app:%s:user:%s:%s";
+	private static final String APP_DATA_COLL_FORMAT = "app%sdata";
+	
+	private String getKey(String appId, String field, String id) {
+		return String.format(USER_FIELD_KEY_FORMAT, appId, field, id); 
+	}
+
+	private String getUserKey(String appId, String userId) {
+		return getKey(appId, ALL, userId); 
+	}
+
+
 	// *** CREATE *** //
 
 	public JSONObject createUser(String appId, String userId, Map<String, String> userFields, Map<String, String> extraMetadata) {
@@ -177,6 +182,7 @@ public class UserModel extends ModelAbstract {
 
 	@Override
 	protected synchronized void updateMetadata(String appId, String userId, Map<String, String> metadata) {
+		Jedis jedis = pool.getResource();
 		JSONObject geolocation = getGeolocation(getMetadaJSONObject(metadata));
 		String userKey = getUserKey(appId, userId);
 		try {

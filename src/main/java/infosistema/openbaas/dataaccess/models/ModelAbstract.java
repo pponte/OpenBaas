@@ -38,53 +38,9 @@ import com.mongodb.util.JSON;
 
 public abstract class ModelAbstract {
 
-	// *** CONSTANTS *** //
-
-	public static final String _ID = "_id"; 
-	public static final String DATA = "data"; 
-	public static final String METADATA = "metadata";
-	protected static final String _USER_ID = "_userId";
-	public static final String _METADATA = "_metadata";
-	public static final String _TYPE = "_type";
-	public static final String _GEO = "_geo"; 
-
-	protected static final String DESC = "desc";
-	protected static final String _DIST = "_dist";
-
-	private static final String LATITUDE = "latitude";
-	private static final String LONGITUDE = "longitude";
-	private static final String GRID_LATITUDE = "gridLatitude";
-	private static final String GRID_LONGITUDE = "gridLongitude";
-	
-	private static final String AND_QUERY_FORMAT = "{%s, %s}";
-	private static final String OR_QUERY_FORMAT = "{$or: [%s, %s]}";
-	private static final String NOT_QUERY_FORMAT = "{$not: %s}";
-	private static final String CONTAINS_QUERY_FORMAT = "{\"%s\": \"*%s*\"}";
-	private static final String EQUALS_QUERY_FORMAT = "{\"%s\": %s}";
-	private static final String GREATER_QUERY_FORMAT = "{\"%s\": {$gt: %s} }";
-	private static final String LESSER_QUERY_FORMAT = "{\"%s\": {$lt: %s} }";
-	private static final String KEY_EXISTS_QUERY_FORMAT = "{\"" + _ID +"\": \"%s\", \"%s\": {$exists: true}}";
-	private static final String ID_QUERY_FORMAT = "{\"" + _ID +"\": \"%s\"}";
-	private static final String USER_ID_QUERY_FORMAT = "{\"" + _USER_ID +"\": \"%s\"}";
-	private static final String CHILD_IDS_TO_REMOVE_QUERY_FORMAT = "{\"" + _ID +"\":  {$regex: \"%s.\"}}";
-	private static final String LOCATION_QUERY_FORMAT = "{\"" + _GEO + "." + GRID_LATITUDE + "\": {$gte: %s}, \"" +
-																_GEO + "." + GRID_LATITUDE + "\": {$lte: %s}, \"" + 
-																_GEO + "." + GRID_LONGITUDE + "\": {$gte: %s}, \"" + 
-																_GEO + "." + GRID_LONGITUDE + "\": {$lte: %s}, }";
-	
-	
-	private static final String METADATA_KEY_FORMAT = _METADATA + ".%s"; 
-	private static final String GEO_FORMAT = "{" + LATITUDE + ": %s, " + LONGITUDE + ": %s, " + GRID_LATITUDE + ": %s, " + GRID_LONGITUDE + ": %s}";
-	
-	
-	// *** VARIABLES *** //
-	
-	private static MongoClient mongoClient = null;
-	private DB db;
-	private static Geo geo;
+	// *** CONTRUCTORS *** //
 
 	public ModelAbstract() {
-		
 		try {
 			//Utils.printMemoryStats();
 			if(mongoClient == null){
@@ -102,9 +58,19 @@ public abstract class ModelAbstract {
 		}
 	}
 	
-	
+
+	// *** PRIVATE *** //
+
+	private static MongoClient mongoClient = null;
+	private DB db;
+	private static Geo geo;
+
 	
 	// *** PROTECTED *** //
+	
+	protected static final String _USER_ID = "_userId";
+	protected static final String DESC = "desc";
+	protected static final String _DIST = "_dist";
 
 	protected abstract BasicDBObject getDataProjection(boolean getMetadata, List<String> toShow, List<String> toHide);
 
@@ -120,8 +86,6 @@ public abstract class ModelAbstract {
 		db = mongoClient.getDB(Const.getMongoDb());
 		return db.getCollection(collStr); 
 	}
-	
-	
 
 	protected JSONObject getJSonObject(Map<String, String> fields) throws JSONException  {
 		JSONObject obj = new JSONObject();
@@ -207,6 +171,42 @@ public abstract class ModelAbstract {
 		return map;
 	}
 
+	
+	// *** CONSTANTS *** //
+	
+	public static final String _ID = "_id"; 
+	public static final String DATA = "data"; 
+	public static final String METADATA = "metadata";
+	public static final String _METADATA = "_metadata";
+	public static final String _TYPE = "_type";
+	public static final String _GEO = "_geo"; 
+	private static final String LATITUDE = "latitude";
+	private static final String LONGITUDE = "longitude";
+	private static final String GRID_LATITUDE = "gridLatitude";
+	private static final String GRID_LONGITUDE = "gridLongitude";
+
+
+	// *** KEYS *** //
+
+	private static final String AND_QUERY_FORMAT = "{%s, %s}";
+	private static final String OR_QUERY_FORMAT = "{$or: [%s, %s]}";
+	private static final String NOT_QUERY_FORMAT = "{$not: %s}";
+	private static final String CONTAINS_QUERY_FORMAT = "{\"%s\": \"*%s*\"}";
+	private static final String EQUALS_QUERY_FORMAT = "{\"%s\": %s}";
+	private static final String GREATER_QUERY_FORMAT = "{\"%s\": {$gt: %s} }";
+	private static final String LESSER_QUERY_FORMAT = "{\"%s\": {$lt: %s} }";
+	private static final String KEY_EXISTS_QUERY_FORMAT = "{\"" + _ID +"\": \"%s\", \"%s\": {$exists: true}}";
+	private static final String ID_QUERY_FORMAT = "{\"" + _ID +"\": \"%s\"}";
+	private static final String USER_ID_QUERY_FORMAT = "{\"" + _USER_ID +"\": \"%s\"}";
+	private static final String CHILD_IDS_TO_REMOVE_QUERY_FORMAT = "{\"" + _ID +"\":  {$regex: \"%s.\"}}";
+	private static final String LOCATION_QUERY_FORMAT = "{\"" + _GEO + "." + GRID_LATITUDE + "\": {$gte: %s}, \"" +
+																_GEO + "." + GRID_LATITUDE + "\": {$lte: %s}, \"" + 
+																_GEO + "." + GRID_LONGITUDE + "\": {$gte: %s}, \"" + 
+																_GEO + "." + GRID_LONGITUDE + "\": {$lte: %s}, }";
+	private static final String METADATA_KEY_FORMAT = _METADATA + ".%s"; 
+	private static final String GEO_FORMAT = "{" + LATITUDE + ": %s, " + LONGITUDE + ": %s, " + GRID_LATITUDE + ": %s, " + GRID_LONGITUDE + ": %s}";
+	
+	
 	// *** CREATE *** //
 
  	protected JSONObject insert(String appId, JSONObject value, JSONObject metadata, JSONObject geolocation) throws JSONException{

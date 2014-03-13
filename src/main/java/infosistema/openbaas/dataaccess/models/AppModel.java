@@ -22,21 +22,40 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class AppModel {
 
-	// request types
-	private JedisPool pool;
-	private static final int MAXELEMS = 9999999;
-	
+	// *** CONTRUCTORS *** //
+
 	public AppModel() {
 		pool = new JedisPool(new JedisPoolConfig(), Const.getRedisGeneralServer(),Const.getRedisGeneralPort());
 	}
 
+	// isto é preciso?
 	public Object clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException();
 	}
 
-	// *** *** APPS *** *** //
-	
 	// *** PRIVATE *** //
+	
+	private JedisPool pool;
+	
+
+	// *** CONSTANTS *** //
+	
+	private static final int MAXELEMS = 9999999;
+
+	
+	// *** KEYS *** //
+	
+	private static final String APP_KEY_FORMAT = "apps:%s";
+	private static final String APP_CLIENTS_LIST_KEY_FORMAT = "apps_%sClientsList_";
+	
+	private String getAppKey(String appId) {
+		return String.format(APP_KEY_FORMAT, appId);
+	}
+	
+	private String getAppClientsListKey(String appId) {
+		return String.format(APP_CLIENTS_LIST_KEY_FORMAT, appId);
+	}
+
 	
 	// *** CREATE *** //
 	
@@ -48,31 +67,33 @@ public class AppModel {
 	 * @return
 	 * @throws UnsupportedEncodingException 
 	 */
-	public Application createApp(String appId, String appKey, byte[] hash, byte[] salt, String appName, String creationDate, 
+	public Application createApp(String appId, String appKeyId, byte[] hash, byte[] salt, String appName, String creationDate, 
 			Boolean confirmUsersEmail, Boolean AWS, Boolean FTP, Boolean FileSystem, List<String> clientsList) throws UnsupportedEncodingException {
 		Jedis jedis = pool.getResource();
 		try {
-			if (!jedis.exists("apps:" + appId)) {
-				jedis.hset("apps:" + appId, Application.CREATION_DATE, creationDate);
-				jedis.hset("apps:" + appId, Application.CREATION_DATE, creationDate);
-				jedis.hset("apps:" + appId, Application.ALIVE, "true");
-				jedis.hset("apps:" + appId, Application.APP_NAME, appName);
-				jedis.hset("apps:" + appId, Application.APP_KEY, appKey);
-				jedis.hset("apps:" + appId, Application.SALT, new String(salt, "ISO-8859-1"));
-				jedis.hset("apps:" + appId, Application.HASH, new String(hash, "ISO-8859-1"));
-				jedis.hset("apps:" + appId, Application.CONFIRM_USERS_EMAIL, ""+confirmUsersEmail);
-				jedis.hset("apps:" + appId, FileMode.aws.toString(), "" + AWS);
-				jedis.hset("apps:" + appId, FileMode.ftp.toString(), "" + FTP);
-				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), "" + FileSystem);
+			String appKey = getAppKey(appId);
+			if (!jedis.exists(appKey)) {
+				jedis.hset(appKey, Application.CREATION_DATE, creationDate);
+				jedis.hset(appKey, Application.CREATION_DATE, creationDate);
+				jedis.hset(appKey, Application.ALIVE, "true");
+				jedis.hset(appKey, Application.APP_NAME, appName);
+				jedis.hset(appKey, Application.APP_KEY, appKeyId);
+				jedis.hset(appKey, Application.SALT, new String(salt, "ISO-8859-1"));
+				jedis.hset(appKey, Application.HASH, new String(hash, "ISO-8859-1"));
+				jedis.hset(appKey, Application.CONFIRM_USERS_EMAIL, ""+confirmUsersEmail);
+				jedis.hset(appKey, FileMode.aws.toString(), "" + AWS);
+				jedis.hset(appKey, FileMode.ftp.toString(), "" + FTP);
+				jedis.hset(appKey, FileMode.filesystem.toString(), "" + FileSystem);
 				if (clientsList != null && clientsList.size()>0){
 					Iterator<String> it = clientsList.iterator();
 					while(it.hasNext()){
-						jedis.lpush("apps_" + appId + "ClientsList_",it.next());
+						jedis.lpush(getAppClientsListKey(appId), it.next());
 					}
 				}
 				return getApplication(appId);
 			}
 		} catch (Exception e) {
+			Log.error("", this, "createApp", "Error creating app.", e);
 		} finally {
 			pool.returnResource(jedis);
 		}
@@ -82,12 +103,13 @@ public class AppModel {
 	public JSONObject createAppResolutions(JSONObject res, String appId, ModelEnum type) {
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.del("apps:" + appId + ":"+type.toString());
+			String appKey = getAppKey(appId);
+			jedis.del(appKey + ":"+type.toString());
 			Iterator<?> keys = res.keys();
 			while(keys.hasNext()){
 				String key = (String)keys.next();
 				String value = res.getString(key);
-				jedis.hset("apps:" + appId + ":"+type.toString(), key, value);
+				jedis.hset(appKey + ":"+type.toString(), key, value);
 			}
 			return res;
 		} catch (Exception e) {
@@ -104,14 +126,16 @@ public class AppModel {
 			Boolean aws, Boolean ftp, Boolean fileSystem,List<String> clientsList) {
 		Jedis jedis = pool.getResource();
 		try {
+			String appKey = getAppKey(appId);
+			String appClientListKey = getAppClientsListKey(appId);
 			if (newAppName != null)
-				jedis.hset("apps:" + appId, Application.APP_NAME, newAppName);
+				jedis.hset(appKey, Application.APP_NAME, newAppName);
 			if (alive != null)
-				jedis.hset("apps:" + appId, Application.ALIVE, alive);
+				jedis.hset(appKey, Application.ALIVE, alive);
 			if (newAppName != null)
-				jedis.hset("apps:" + appId, Application.APP_NAME, newAppName);
+				jedis.hset(appKey, Application.APP_NAME, newAppName);
 			if (confirmUsersEmail != null)
-				jedis.hset("apps:" + appId, Application.CONFIRM_USERS_EMAIL, ""+confirmUsersEmail);
+				jedis.hset(appKey, Application.CONFIRM_USERS_EMAIL, ""+confirmUsersEmail);
 			if (fileSystem != null && fileSystem)
 				aws = ftp = false;
 			if (aws != null && aws)
@@ -119,16 +143,16 @@ public class AppModel {
 			if (ftp != null && ftp)
 				fileSystem = aws = false;
 			if (aws != null)
-				jedis.hset("apps:" + appId, FileMode.aws.toString(), ""+aws);
+				jedis.hset(appKey, FileMode.aws.toString(), ""+aws);
 			if (ftp != null)
-				jedis.hset("apps:" + appId, FileMode.ftp.toString(), ""+ftp);
+				jedis.hset(appKey, FileMode.ftp.toString(), ""+ftp);
 			if (fileSystem != null)
-				jedis.hset("apps:" + appId, FileMode.filesystem.toString(), ""+fileSystem);
+				jedis.hset(appKey, FileMode.filesystem.toString(), ""+fileSystem);
 			if (clientsList != null && clientsList.size()>0){
-				jedis.del("apps_" + appId + "ClientsList_");
+				jedis.del(appClientListKey);
 				Iterator<String> it = clientsList.iterator();
 				while(it.hasNext()){
-					jedis.lpush("apps_" + appId + "ClientsList_",it.next());
+					jedis.lpush(appClientListKey,it.next());
 				}
 			}
 		} finally {
@@ -153,8 +177,9 @@ public class AppModel {
 		if(key!=null){
 			Jedis jedis = pool.getResource();
 			try {
-				if (jedis.exists("apps:" + appId + ":"+type.toString())) {
-					res = jedis.hget("apps:" + appId + ":"+type.toString(),key);
+				String appKey = getAppKey(appId);
+				if (jedis.exists(appKey + ":"+type.toString())) {
+					res = jedis.hget(appKey + ":"+type.toString(),key);
 				}
 			} finally {
 				pool.returnResource(jedis);
@@ -176,13 +201,14 @@ public class AppModel {
 		Map<String, String> barsColors = null;
 		List<String> clients = null;
 		try {
-			if (jedis.exists("apps:" + appId)) {
-				fields = jedis.hgetAll("apps:" + appId);
-				imageRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.image);
-				videoRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.video);
-				audioRes = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.audio);
-				barsColors = jedis.hgetAll("apps:" + appId + ":"+ModelEnum.bars);
-				clients = jedis.lrange("apps_" + appId + "ClientsList_", 0, MAXELEMS);
+			String appKey = getAppKey(appId);
+			if (jedis.exists(appKey)) {
+				fields = jedis.hgetAll(appKey);
+				imageRes = jedis.hgetAll(appKey + ":"+ModelEnum.image);
+				videoRes = jedis.hgetAll(appKey + ":"+ModelEnum.video);
+				audioRes = jedis.hgetAll(appKey + ":"+ModelEnum.audio);
+				barsColors = jedis.hgetAll(appKey + ":"+ModelEnum.bars);
+				clients = jedis.lrange(getAppClientsListKey(appId), 0, MAXELEMS);
 			}
 			if (fields != null) {
 				res.setCreationDate(fields.get(Application.CREATION_DATE));
@@ -224,9 +250,10 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		HashMap<String, String> fieldsAuth = new HashMap<String, String>();
 		try {
-			if (jedis.exists("apps:" + appId)) {
-				fieldsAuth.put(Application.HASH, jedis.hget("apps:"+appId, Application.HASH));
-				fieldsAuth.put(Application.SALT, jedis.hget("apps:"+appId, Application.SALT));
+			String appKey = getAppKey(appId);
+			if (jedis.exists(appKey)) {
+				fieldsAuth.put(Application.HASH, jedis.hget(appKey, Application.HASH));
+				fieldsAuth.put(Application.SALT, jedis.hget(appKey, Application.SALT));
 			}
 		} finally {
 			pool.returnResource(jedis);
@@ -238,7 +265,7 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		Boolean confirmUsersEmail = false;
 		try {
-			confirmUsersEmail = Boolean.parseBoolean(jedis.hget("apps:"+appId, Application.CONFIRM_USERS_EMAIL));
+			confirmUsersEmail = Boolean.parseBoolean(jedis.hget(getAppKey(appId), Application.CONFIRM_USERS_EMAIL));
 		}finally {
 			pool.returnResource(jedis);
 		}
@@ -249,14 +276,15 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		boolean aws = false;
 		boolean ftp = false;
+		String appKey = getAppKey(appId);
 		try {
-			aws =  Boolean.parseBoolean(jedis.hget("apps:" + appId, FileMode.aws.toString()));
+			aws =  Boolean.parseBoolean(jedis.hget(appKey, FileMode.aws.toString()));
 		} catch (Exception e) { }
 		finally {
 			pool.returnResource(jedis);
 		}
 		try {
-			ftp = Boolean.parseBoolean(jedis.hget("apps:" + appId, FileMode.ftp.toString()));
+			ftp = Boolean.parseBoolean(jedis.hget(appKey, FileMode.ftp.toString()));
 		} catch (Exception e) { }
 		finally {
 			pool.returnResource(jedis);
@@ -279,7 +307,8 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		Boolean sucess = false;
 		try {
-			if (jedis.exists("apps:" + appId)) {
+			String appKey = getAppKey(appId);
+			if (jedis.exists(appKey)) {
 				Set<String> inactiveApps = jedis.smembers("apps:inactive");
 				Iterator<String> it = inactiveApps.iterator();
 				Boolean inactive = false;
@@ -288,7 +317,7 @@ public class AppModel {
 						inactive = true;
 				}
 				if (!inactive) {
-					jedis.hset("apps:" + appId, Application.ALIVE, "false");
+					jedis.hset(appKey, Application.ALIVE, "false");
 					jedis.sadd("apps:inactive", appId);
 					sucess = true;
 				}
@@ -306,7 +335,7 @@ public class AppModel {
 		Jedis jedis = pool.getResource();
 		Boolean op;
 		try {
-			op = jedis.exists("apps:" + appId);
+			op = jedis.exists(getAppKey(appId));
 		}finally {
 			pool.returnResource(jedis);
 		}
@@ -319,7 +348,7 @@ public class AppModel {
 	public void reviveApp(String appId) {
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.hset("apps:" + appId, Application.ALIVE, "true");
+			jedis.hset(getAppKey(appId), Application.ALIVE, "true");
 		} finally {
 			pool.returnResource(jedis);
 		}

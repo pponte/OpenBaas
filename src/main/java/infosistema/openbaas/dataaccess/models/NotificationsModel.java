@@ -20,6 +20,11 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class NotificationsModel {
 
+	// *** CONTRUCTORS *** //
+	// *** PRIVATE *** //
+	// *** CONSTANTS *** //
+	// *** KEYS *** //
+
 	private static final String SEPARATOR1 = ":";
 	private static final String SEPARATOR2 = "_";
 	private static final String SEPARATOR3 = ":_:";

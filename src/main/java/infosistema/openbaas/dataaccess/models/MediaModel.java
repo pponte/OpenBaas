@@ -18,20 +18,19 @@ import com.mongodb.DBObject;
 
 public class MediaModel extends ModelAbstract {
 
-	// request types
-	public static final String APP_MEDIA_COLL_FORMAT = "app%sdata";
-	protected static final String _TYPE = "_type";
-	private static final String TYPE_QUERY_FORMAT = "{" + _TYPE + ": \"%s\"";
-
-	private static BasicDBObject dataProjection = null; 	
-	private static BasicDBObject dataProjectionMetadata = null; 	
+	// *** CONTRUCTORS *** //
 
 	public MediaModel() {
 	}
 
-	// *** *** MEDIA *** *** //
-	
+
 	// *** PRIVATE *** //
+
+	private static BasicDBObject dataProjection = null; 	
+	private static BasicDBObject dataProjectionMetadata = null; 	
+
+	
+	// *** PROTECTED *** //
 	
 	@Override
 	protected DBCollection getCollection(String appId) {
@@ -55,10 +54,22 @@ public class MediaModel extends ModelAbstract {
 		}
 	}
 
+
+	// *** CONSTANTS *** //
+
+	protected static final String _TYPE = "_type";
+	
+	
+	// *** KEYS *** //
+
+	public static final String APP_MEDIA_COLL_FORMAT = "app%sdata";
+	private static final String TYPE_QUERY_FORMAT = "{" + _TYPE + ": \"%s\"";
+
 	private String getTypeQuery(ModelEnum type) {
 		if (type == null) return "";
 		return String.format(TYPE_QUERY_FORMAT, type.toString());
 	}
+
 
 	// *** CREATE *** //
 	
