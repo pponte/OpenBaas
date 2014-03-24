@@ -191,35 +191,32 @@ public class ChatResource {
 			if(chatMid.existsChatRoom(appId,chatRoomId)){
 				try {
 					Result res = null;
-					if(imageInputStream!=null && imageDetail!=null){
+					if (imageInputStream!=null && imageDetail!=null) {
 						res = mediaMid.createMedia(imageInputStream, imageDetail, appId, userId, ModelEnum.image, location, Metadata.getNewMetadata(location));
 						flag = ModelEnum.image;
-					}else 
-						if(videoInputStream!=null && videoDetail!=null){
-							res = mediaMid.createMedia(videoInputStream, videoDetail, appId, userId, ModelEnum.video, location, Metadata.getNewMetadata(location));
-							flag = ModelEnum.video;
-							}else 
-								if(audioInputStream!=null && audioDetail!=null){
-									res = mediaMid.createMedia(audioInputStream, audioDetail, appId, userId, ModelEnum.audio, location, Metadata.getNewMetadata(location));
-									flag = ModelEnum.audio;
-								}else
-									if(fileInputStream!=null && fileDetail!=null){
-										res = mediaMid.createMedia(fileInputStream, fileDetail, appId, userId, ModelEnum.storage, location, Metadata.getNewMetadata(location));
-										flag = ModelEnum.storage;
-									}
-						if(res!=null && flag!=null){
-							String fileId = ((Media)res.getData()).get_id();
-							if(flag.equals(ModelEnum.image)) inputJsonObj.put(ChatMessage.IMAGE_TEXT, fileId);
-							if(flag.equals(ModelEnum.storage))inputJsonObj.put(ChatMessage.FILE_TEXT, fileId);
-							if(flag.equals(ModelEnum.audio))inputJsonObj.put(ChatMessage.AUDIO_TEXT, fileId);
-							if(flag.equals(ModelEnum.video))inputJsonObj.put(ChatMessage.VIDEO_TEXT, fileId);
-						}
+					} else if (videoInputStream!=null && videoDetail!=null) {
+						res = mediaMid.createMedia(videoInputStream, videoDetail, appId, userId, ModelEnum.video, location, Metadata.getNewMetadata(location));
+						flag = ModelEnum.video;
+					} else if (audioInputStream!=null && audioDetail!=null) {
+						res = mediaMid.createMedia(audioInputStream, audioDetail, appId, userId, ModelEnum.audio, location, Metadata.getNewMetadata(location));
+						flag = ModelEnum.audio;
+					} else if (fileInputStream!=null && fileDetail!=null) {
+						res = mediaMid.createMedia(fileInputStream, fileDetail, appId, userId, ModelEnum.storage, location, Metadata.getNewMetadata(location));
+						flag = ModelEnum.storage;
+					}
+					if (res!=null && flag!=null) {
+						String fileId = ((Media)res.getData()).get_id();
+						if(flag.equals(ModelEnum.image)) inputJsonObj.put(ChatMessage.IMAGE_TEXT, fileId);
+						if(flag.equals(ModelEnum.storage))inputJsonObj.put(ChatMessage.FILE_TEXT, fileId);
+						if(flag.equals(ModelEnum.audio))inputJsonObj.put(ChatMessage.AUDIO_TEXT, fileId);
+						if(flag.equals(ModelEnum.video))inputJsonObj.put(ChatMessage.VIDEO_TEXT, fileId);
+					}
 					imageText = inputJsonObj.optString(ChatMessage.IMAGE_TEXT);
 					audioText = inputJsonObj.optString(ChatMessage.AUDIO_TEXT);
 					videoText = inputJsonObj.optString(ChatMessage.VIDEO_TEXT);
 					fileText = inputJsonObj.optString(ChatMessage.FILE_TEXT);
 					messageText = inputJsonObj.optString(ChatMessage.MESSAGE_TEXT);
-					ChatMessage msg = chatMid.sendMessage(appId,userId,chatRoomId,fileText,messageText,imageText, audioText, videoText);
+					ChatMessage msg = chatMid.sendMessage(appId, userId, chatRoomId, fileText, messageText, imageText, audioText, videoText);
 					if(msg!=null){
 						response = Response.status(Status.OK).entity(msg).build();
 						noteMid.setPushNotificationsTODO(appId, userId, chatRoomId, fileText, videoText, imageText, audioText, messageText);
